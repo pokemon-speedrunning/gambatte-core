@@ -1,6 +1,7 @@
 #!/bin/sh
 cd "$(dirname "$0")/../libgambatte"
 if [ -e "../../../BizHawk.sln" ]; then
+	echo "copying output for BizHawk..."
 	rm -f ../../../Assets/dll/libgambatte.*
 	cp -v -t ../../../Assets/dll libgambatte.dll libgambatte.so
 	if [ -e "../../../output/dll" ]; then
