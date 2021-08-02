@@ -3,14 +3,18 @@
 echo "cd libgambatte && scons shlib"
 (cd libgambatte && scons -c shlib && scons shlib)
 
-if [ -d	 "../../../Assets/" ]
+if [ -d "../../Assets/" ]
 then
-cp ./libgambatte.dll ../../../Assets/libgambatte.dll
-cp ./libgambatte.so ../../../Assets/libgambatte.dll.so
+echo "cp libgambatte/libgambatte.dll ../../Assets/dll/libgambatte.dll"
+(cp libgambatte/libgambatte.dll ../../Assets/dll/libgambatte.dll)
+echo "cp libgambatte/libgambatte.so ../../Assets/dll/libgambatte.dll.so"
+(cp libgambatte/libgambatte.so ../../Assets/dll/libgambatte.dll.so)
 fi
 
-if [ -d	 "../../../output/" ]
+if [ -d "../../output/" ]
 then
-cp ./libgambatte.dll ../../../output/libgambatte.dll
-cp ./libgambatte.so ../../../output/libgambatte.dll.so
+echo "cp libgambatte/libgambatte.dll ../../output/dll/dll/libgambatte.dll"
+(cp libgambatte/libgambatte.dll ../../output/dll/dll/libgambatte.dll)
+echo "cp libgambatte/libgambatte.so ../../output/dll/dll/libgambatte.dll.so"
+(cp libgambatte/libgambatte.so ../../output/dll/dll/libgambatte.dll.so)
 fi
