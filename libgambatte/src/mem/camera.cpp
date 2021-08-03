@@ -96,7 +96,7 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 				lastCycles_ = cc;
 			}
 		}
-		trigger_ = data & 0x03;
+		trigger_ = data & 0x07;
 		break;
 	}
 	case 0x01:
