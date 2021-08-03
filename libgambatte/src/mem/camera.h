@@ -32,9 +32,12 @@ public:
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
 
-	bool isCameraActive(unsigned long const cycleCounter);
-    
-	unsigned char read(unsigned p, unsigned long const cycleCounter);
+	void resetCc(unsigned long oldCc, unsigned long newCc);
+	void speedChange(unsigned long cycleCounter);
+
+	bool cameraIsActive(unsigned long cycleCounter);
+
+	unsigned char read(unsigned p, unsigned long cycleCounter);
 	void write(unsigned p, unsigned data, unsigned long cycleCounter);
 
 	template<bool isReader>void SyncState(NewState *ns);
@@ -48,8 +51,9 @@ private:
 	unsigned long lastCycles_;
 	long cameraCyclesLeft_;
 	bool cancelled_;
+	bool ds_;
 
-	void update(unsigned long const cycleCounter);
+	void update(unsigned long cycleCounter);
 };
 
 }

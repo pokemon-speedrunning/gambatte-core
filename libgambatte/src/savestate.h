@@ -248,7 +248,7 @@ struct SaveState {
 		unsigned short exposure;
 		unsigned short oldExposure;
 		unsigned long lastCycles;
-		long cameraCyclesLeft;
+		unsigned long /*signed*/ cameraCyclesLeft;
 		unsigned char /*bool*/ cancelled;
 	} camera;
 };

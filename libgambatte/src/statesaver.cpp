@@ -377,6 +377,14 @@ SaverList::SaverList()
 	{ static char const label[] = { h,NO3,m,f,     NUL }; ADD(huc3.modeflag); }
 	{ static char const label[] = { h,NO3,i,r,c,y, NUL }; ADD(huc3.irBaseCycle); }
 	{ static char const label[] = { h,NO3,i,r,a,c, NUL }; ADD(huc3.irReceivingPulse); }
+	{ static char const label[] = { c,a,m,t,r,i,g, NUL }; ADD(camera.trigger); }
+	{ static char const label[] = { c,a,m,n,e,g,   NUL }; ADD(camera.negative); }
+	{ static char const label[] = { c,a,m,o,n,e,g, NUL }; ADD(camera.oldNegative); }
+	{ static char const label[] = { c,a,m,e,x,p,   NUL }; ADD(camera.exposure); }
+	{ static char const label[] = { c,a,m,o,e,x,p, NUL }; ADD(camera.oldExposure); }
+	{ static char const label[] = { c,a,m,l,c,     NUL }; ADD(camera.lastCycles); }
+	{ static char const label[] = { c,a,m,c,l,     NUL }; ADD(camera.cameraCyclesLeft); }
+	{ static char const label[] = { c,a,m,c,a,n,   NUL }; ADD(camera.cancelled); }
 
 #undef ADD
 #undef ADDPTR

@@ -52,9 +52,20 @@ void Camera::loadState(SaveState const &state) {
 	lastCycles_ = state.camera.lastCycles;
 	cameraCyclesLeft_ = state.camera.cameraCyclesLeft;
 	cancelled_ = state.camera.cancelled;
+	ds_ = (!state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
 }
 
-bool Camera::isCameraActive(unsigned long const cc) {
+void Camera::resetCc(unsigned long const newCc, unsigned long const oldCc) {
+	update(oldCc);
+	lastCycles_ -= oldCc - newCc;
+}
+
+void Camera::speedChange(unsigned long const cc) {
+	update(cc);
+	ds_ = !ds_;
+}
+
+bool Camera::cameraIsActive(unsigned long const cc) {
 	update(cc);
 	return trigger_ & 0x01;
 }
@@ -71,9 +82,9 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 	switch (p & 0x7F) {
 	case 0x00:
 	{
-		bool cameraIsActive = isCameraActive(cc);
-		if ((data & 0x01) ^ cameraIsActive) {
-			if (cameraIsActive) {
+		bool cameraIsActive_ = cameraIsActive(cc);
+		if ((data & 0x01) ^ cameraIsActive_) {
+			if (cameraIsActive_) {
 				cameraCyclesLeft_ = 0;
 				oldNegative_ = negative_;
 				oldExposure_ = exposure_;
@@ -107,7 +118,7 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 
 void Camera::update(unsigned long const cc) {
 	if (cameraCyclesLeft_) {
-		cameraCyclesLeft_ -= (cc - lastCycles_);
+		cameraCyclesLeft_ -= (cc - lastCycles_) >> ds_;
 		lastCycles_ = cc;
 		if (cameraCyclesLeft_ <= 0) {
 			trigger_ &= 0xFE;
@@ -126,6 +137,7 @@ SYNCFUNC(Camera) {
 	NSS(lastCycles_);
 	NSS(cameraCyclesLeft_);
 	NSS(cancelled_);
+	NSS(ds_);
 }
 
 }

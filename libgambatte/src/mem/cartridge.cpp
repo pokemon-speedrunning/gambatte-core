@@ -938,7 +938,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	                     type_mbc5,
 	                     type_huc1,
 	                     type_huc3,
-						 type_pocketcamera,
+	                     type_pocketcamera,
 	                     type_wisdomtree };
 	Cartridgetype type = type_plain;
 	unsigned rambanks = 1;
@@ -1052,7 +1052,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 			mbc_.reset(new Mbc1(memptrs_));
 
 		break;
-	case type_mbc2: mbc_.reset(new Mbc2(memptrs_)); break;
+	case type_mbc2: mbc_.reset(new Mbc2(memptrs_)); mbc2_ = true; break;
 	case type_mbc3:
 		{
 			bool mbc30 = rombanks > 0x80 || rambanks > 0x04;
@@ -1069,7 +1069,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 		huc3_.set(true);
 		mbc_.reset(new HuC3(memptrs_, &huc3_));
 		break;
-	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); break;
+	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); pocketCamera_ = true; break;
 	case type_wisdomtree: mbc_.reset(new WisdomTree(memptrs_)); break;
 	}
 
@@ -1088,7 +1088,7 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	                     type_mbc5,
 	                     type_huc1,
 	                     type_huc3,
-						 type_pocketcamera,
+	                     type_pocketcamera,
 	                     type_wisdomtree };
 	Cartridgetype type = type_plain;
 	unsigned rambanks = 1;
@@ -1213,7 +1213,7 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 		huc3_.set(true);
 		mbc_.reset(new HuC3(memptrs_, &huc3_));
 		break;
-	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); break;
+	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); pocketCamera_ = true; break;
 	case type_wisdomtree: mbc_.reset(new WisdomTree(memptrs_)); break;
 	}
 

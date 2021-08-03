@@ -168,6 +168,11 @@ public:
 			lastCartBusUpdate_ = cc;
 			return cartBus_;
 		}
+		if (cart_.isPocketCamera() && cart_.cameraIsActive(cc) && (p >= mm_sram_begin && p < mm_wram_begin)) {
+			return cart_.rmem(p >> 12)
+				? 0x00
+				: nontrivial_read(p, cc);
+		}
 		return cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
 	}
 
@@ -197,6 +202,11 @@ public:
 			cartBus_ = cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
 			lastCartBusUpdate_ = cc;
 			return cartBus_;
+		}
+		if (cart_.isPocketCamera() && cart_.cameraIsActive(cc) && (p >= mm_sram_begin && p < mm_wram_begin)) {
+			return cart_.rmem(p >> 12)
+				? 0x00
+				: nontrivial_read(p, cc);
 		}
 		return cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
 	}

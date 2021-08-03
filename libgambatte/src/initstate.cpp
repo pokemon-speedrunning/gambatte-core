@@ -3461,6 +3461,15 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.huc3.shift = 0;
 	state.huc3.ramValue = 1;
 	state.huc3.modeflag = 2; // huc3_none
+
+	state.camera.trigger = 0;
+	state.camera.negative = false;
+	state.camera.oldNegative = false;
+	state.camera.exposure = 0;
+	state.camera.oldExposure = 0;
+	state.camera.lastCycles = state.cpu.cycleCounter;
+	state.camera.cameraCyclesLeft = 0;
+	state.camera.cancelled = false;
 }
 
 void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb) {
