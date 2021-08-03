@@ -240,6 +240,17 @@ struct SaveState {
 		unsigned char modeflag;
 		unsigned char /*bool*/ irReceivingPulse;
 	} huc3;
+
+	struct Camera {
+		unsigned char trigger;
+		unsigned char /*bool*/ negative;
+		unsigned char /*bool*/ oldNegative;
+		unsigned short exposure;
+		unsigned short oldExposure;
+		unsigned long lastCycles;
+		long cameraCyclesLeft;
+		unsigned char /*bool*/ cancelled;
+	} camera;
 };
 
 }

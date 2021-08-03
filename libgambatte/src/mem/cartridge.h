@@ -24,6 +24,7 @@
 #include "time.h"
 #include "rtc.h"
 #include "huc3.h"
+#include "camera.h"
 #include "savestate.h"
 #include "scoped_ptr.h"
 #include "newstate.h"
@@ -132,6 +133,7 @@ private:
 	Time time_;
 	Rtc rtc_;
 	HuC3Chip huc3_;
+	Camera camera_;
 	scoped_ptr<Mbc> mbc_;
 	std::string defaultSaveBasePath_;
 	std::string saveDir_;
