@@ -91,8 +91,8 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 				cancelled_ = true;
 			} else {
 				cameraCyclesLeft_ = cancelled_
-					? 129784 + (!oldNegative_ * 512) + (oldExposure_ << 4)
-					: 129784 + (   !negative_ * 512) + (   exposure_ << 4);
+					? 129784 + (!oldNegative_ * 2048) + (oldExposure_ << 6)
+					: 129784 + (   !negative_ * 2048) + (   exposure_ << 6);
 				lastCycles_ = cc;
 			}
 		}
