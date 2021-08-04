@@ -756,8 +756,8 @@ private:
 class WisdomTree : public Mbc {
 public:
 	explicit WisdomTree(MemPtrs& memptrs)
-		: memptrs_(memptrs)
-		, rombank_(0)
+	: memptrs_(memptrs)
+	, rombank_(0)
 	{
 	}
 
@@ -877,7 +877,9 @@ int asHex(char c) {
 }
 
 Cartridge::Cartridge()
-: rtc_(time_)
+: mbc2_(false)
+, pocketCamera_(false)
+, rtc_(time_)
 , huc3_(time_)
 , camera_()
 {

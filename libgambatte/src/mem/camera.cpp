@@ -29,6 +29,7 @@ Camera::Camera()
 , oldExposure_(0)
 , cameraCyclesLeft_(0)
 , cancelled_(false)
+, ds_(false)
 {
 }
 

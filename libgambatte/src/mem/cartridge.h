@@ -128,8 +128,8 @@ public:
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
-	bool mbc2_ = false;
-	bool pocketCamera_ = false;
+	bool mbc2_;
+	bool pocketCamera_;
 	struct AddrData {
 		unsigned long addr;
 		unsigned char data;
