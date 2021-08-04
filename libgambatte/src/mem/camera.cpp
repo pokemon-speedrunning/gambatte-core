@@ -32,7 +32,8 @@ Camera::Camera()
 {
 }
 
-void Camera::saveState(SaveState &state) const {
+void Camera::saveState(SaveState &state, unsigned long const cc) {
+	update(cc);
 	state.camera.trigger = trigger_;
 	state.camera.negative = negative_;
 	state.camera.oldNegative = oldNegative_;

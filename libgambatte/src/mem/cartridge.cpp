@@ -897,9 +897,11 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 	time_.saveState(state, cc, isHuC3());
 	rtc_.saveState(state);
 	huc3_.saveState(state);
+	camera_.saveState(state, cc);
 }
 
 void Cartridge::loadState(SaveState const &state) {
+	camera_.loadState(state);
 	huc3_.loadState(state);
 	rtc_.loadState(state);
 	time_.loadState(state);

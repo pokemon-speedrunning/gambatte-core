@@ -29,7 +29,7 @@ class Camera {
 public:
 	Camera();
 
-	void saveState(SaveState &state) const;
+	void saveState(SaveState &state, unsigned long cycleCounter);
 	void loadState(SaveState const &state);
 
 	void resetCc(unsigned long oldCc, unsigned long newCc);
