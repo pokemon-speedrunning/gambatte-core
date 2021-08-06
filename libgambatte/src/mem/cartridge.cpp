@@ -683,6 +683,8 @@ public:
 	, rambank_(0)
 	, enableRam_(false)
 	{
+		if (rambanks(memptrs_))
+			camera_->set(memptrs_.rambankdata()[0x100]);
 	}
 
 	virtual unsigned char curRomBank() const {
@@ -889,6 +891,8 @@ void Cartridge::setStatePtrs(SaveState &state) {
 	state.mem.vram.set(memptrs_.vramdata(), memptrs_.vramdataend() - memptrs_.vramdata());
 	state.mem.sram.set(memptrs_.rambankdata(), memptrs_.rambankdataend() - memptrs_.rambankdata());
 	state.mem.wram.set(memptrs_.wramdata(0), memptrs_.wramdataend() - memptrs_.wramdata(0));
+
+	camera_.setStatePtrs(state);
 }
 
 void Cartridge::saveState(SaveState &state, unsigned long const cc) {
@@ -899,7 +903,7 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 	time_.saveState(state, cc, isHuC3());
 	rtc_.saveState(state);
 	huc3_.saveState(state);
-	camera_.saveState(state, cc);
+	camera_.saveState(state);
 }
 
 void Cartridge::loadState(SaveState const &state) {

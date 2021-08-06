@@ -242,11 +242,23 @@ struct SaveState {
 	} huc3;
 
 	struct Camera {
+		Ptr<unsigned char> matrix;
+		Ptr<unsigned char> oldMatrix;
+
 		unsigned char trigger;
 		unsigned char /*bool*/ negative;
-		unsigned char /*bool*/ oldNegative;
+		unsigned char voltage;
 		unsigned short exposure;
+		unsigned char /*float*/ edgeAlpha;
+		unsigned char /*bool*/ blank;
+		unsigned char /*bool*/ invert;
+		unsigned char oldTrigger;
+		unsigned char /*bool*/ oldNegative;
+		unsigned char oldVoltage;
 		unsigned short oldExposure;
+		unsigned char /*float*/ oldEdgeAlpha;
+		unsigned char /*bool*/ oldBlank;
+		unsigned char /*bool*/ oldInvert;
 		unsigned long lastCycles;
 		unsigned long /*signed*/ cameraCyclesLeft;
 		unsigned char /*bool*/ cancelled;

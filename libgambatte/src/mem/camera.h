@@ -21,6 +21,9 @@
 
 #include "newstate.h"
 
+#include <algorithm>
+#include <cstdint>
+
 namespace gambatte {
 
 struct SaveState;
@@ -29,7 +32,10 @@ class Camera {
 public:
 	Camera();
 
-	void saveState(SaveState &state, unsigned long cycleCounter);
+	void set(unsigned char &cameraRam) { cameraRam_ = &cameraRam; }
+
+	void setStatePtrs(SaveState &);
+	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
 
 	void resetCc(unsigned long oldCc, unsigned long newCc);
@@ -40,20 +46,40 @@ public:
 	unsigned char read(unsigned p, unsigned long cycleCounter);
 	void write(unsigned p, unsigned data, unsigned long cycleCounter);
 
+	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) { cameraCallback_ = callback; }
+
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
+	unsigned char * cameraRam_;
+	int32_t cameraBuf_[128 * 112];
+
 	unsigned char trigger_;
 	bool negative_;
-	bool oldNegative_;
+	unsigned char voltage_;
 	unsigned short exposure_;
+	float edgeAlpha_;
+	bool blank_;
+	bool invert_;
+	unsigned char matrix_[4 * 4 * 3];
+
+	unsigned char oldTrigger_;
+	bool oldNegative_;
+	unsigned char oldVoltage_;
 	unsigned short oldExposure_;
+	float oldEdgeAlpha_;
+	bool oldBlank_;
+	bool oldInvert_;
+	unsigned char oldMatrix_[4 * 4 * 3];
+
 	unsigned long lastCycles_;
 	long cameraCyclesLeft_;
 	bool cancelled_;
 	bool ds_;
 
 	void update(unsigned long cycleCounter);
+	void process();
+	bool (*cameraCallback_)(int32_t *cameraBuf);
 };
 
 }

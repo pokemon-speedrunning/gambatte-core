@@ -308,6 +308,11 @@ public:
 		this->linkCallback_ = callback;
 	}
 
+	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
+		if (cart_.isPocketCamera())
+			cart_.setCameraCallback(callback);
+	}
+
 	void setEndtime(unsigned long cc, unsigned long inc);
 	void setBasetime(unsigned long cc) { basetime_ = cc; }
 
