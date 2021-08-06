@@ -377,6 +377,25 @@ SaverList::SaverList()
 	{ static char const label[] = { h,NO3,m,f,     NUL }; ADD(huc3.modeflag); }
 	{ static char const label[] = { h,NO3,i,r,c,y, NUL }; ADD(huc3.irBaseCycle); }
 	{ static char const label[] = { h,NO3,i,r,a,c, NUL }; ADD(huc3.irReceivingPulse); }
+	{ static char const label[] = { c,a,m,m,t,x,   NUL }; ADDPTR(camera.matrix); }
+	{ static char const label[] = { c,a,m,o,m,t,x, NUL }; ADDPTR(camera.oldMatrix); }
+	{ static char const label[] = { c,a,m,t,r,g,   NUL }; ADD(camera.trigger); }
+	{ static char const label[] = { c,a,m,n,e,g,   NUL }; ADD(camera.negative); }
+	{ static char const label[] = { c,a,m,v,l,t,   NUL }; ADD(camera.voltage); }
+	{ static char const label[] = { c,a,m,e,x,p,   NUL }; ADD(camera.exposure); }
+	{ static char const label[] = { c,a,m,e,a,l,   NUL }; ADD(camera.edgeAlpha); }
+	{ static char const label[] = { c,a,m,b,l,k,   NUL }; ADD(camera.blank); }
+	{ static char const label[] = { c,a,m,i,n,v,   NUL }; ADD(camera.invert); }
+	{ static char const label[] = { c,a,m,o,t,r,g, NUL }; ADD(camera.oldTrigger); }
+	{ static char const label[] = { c,a,m,o,n,e,g, NUL }; ADD(camera.oldNegative); }
+	{ static char const label[] = { c,a,m,o,v,l,t, NUL }; ADD(camera.oldVoltage); }
+	{ static char const label[] = { c,a,m,o,e,x,p, NUL }; ADD(camera.oldExposure); }
+	{ static char const label[] = { c,a,m,o,e,a,l, NUL }; ADD(camera.oldEdgeAlpha); }
+	{ static char const label[] = { c,a,m,o,b,l,k, NUL }; ADD(camera.oldBlank); }
+	{ static char const label[] = { c,a,m,o,i,n,v, NUL }; ADD(camera.oldInvert); }
+	{ static char const label[] = { c,a,m,l,c,     NUL }; ADD(camera.lastCycles); }
+	{ static char const label[] = { c,a,m,c,l,     NUL }; ADD(camera.cameraCyclesLeft); }
+	{ static char const label[] = { c,a,m,c,a,n,   NUL }; ADD(camera.cancelled); }
 
 #undef ADD
 #undef ADDPTR

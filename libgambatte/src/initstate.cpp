@@ -3461,6 +3461,27 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.huc3.shift = 0;
 	state.huc3.ramValue = 1;
 	state.huc3.modeflag = 2; // huc3_none
+
+	std::memset(   state.camera.matrix.ptr, 0,    state.camera.matrix.size());
+	std::memset(state.camera.oldMatrix.ptr, 0, state.camera.oldMatrix.size());
+
+	state.camera.trigger = 0;
+	state.camera.negative = false;
+	state.camera.voltage = 0;
+	state.camera.exposure = 0;
+	state.camera.edgeAlpha = 0.50 * 4;
+	state.camera.blank = false;
+	state.camera.invert = false;
+	state.camera.oldTrigger = 0;
+	state.camera.oldNegative = false;
+	state.camera.oldVoltage = 0;
+	state.camera.oldExposure = 0;
+	state.camera.oldEdgeAlpha = 0.50 * 4;
+	state.camera.oldBlank = false;
+	state.camera.oldInvert = false;
+	state.camera.lastCycles = state.cpu.cycleCounter;
+	state.camera.cameraCyclesLeft = 0;
+	state.camera.cancelled = false;
 }
 
 void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb) {

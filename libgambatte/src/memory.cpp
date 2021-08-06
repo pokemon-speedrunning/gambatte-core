@@ -735,6 +735,9 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 
 			if (cart_.isHuC3())
 				return cart_.HuC3Read(p, cc);
+			
+			if (cart_.isPocketCamera())
+				return cart_.cameraRead(p, cc);
 
 			return cart_.rtcRead();
 		}
@@ -814,10 +817,10 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 			if (cart_.disabledRam())
 				return cartBus_;
 
-			if (!cart_.isHuC3())
-				return cart_.rtcRead();
+			if (cart_.isHuC3() || cart_.isPocketCamera())
+				return 0xFF; // unsafe to peek
 
-			return 0xFF;
+			return cart_.rtcRead(); // safe to peek
 		}
 
 		if (p < mm_oam_begin)
@@ -1331,6 +1334,8 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 				cart_.wsrambankptr()[p] = data;
 			else if (cart_.isHuC3())
 				cart_.HuC3Write(p, data, cc);
+			else if (cart_.isPocketCamera())
+				cart_.cameraWrite(p, data, cc);
 			else
 				cart_.rtcWrite(data, cc);
 		} else

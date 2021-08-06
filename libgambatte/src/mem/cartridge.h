@@ -24,6 +24,7 @@
 #include "time.h"
 #include "rtc.h"
 #include "huc3.h"
+#include "camera.h"
 #include "savestate.h"
 #include "scoped_ptr.h"
 #include "newstate.h"
@@ -80,6 +81,7 @@ public:
 			rtc_.update(oldCc);
 
 		time_.resetCc(oldCc, newCc, isHuC3);
+		camera_.resetCc(oldCc, newCc);
 	}
 	void speedChange(unsigned long const cc) {
 		bool isHuC3 = huc3_.isHuC3();
@@ -87,6 +89,7 @@ public:
 			rtc_.update(cc);
 
 		time_.speedChange(cc, isHuC3);
+		camera_.speedChange(cc);
 	}
 	void setTimeMode(bool useCycles, unsigned long const cc) {
 		bool isHuC3 = huc3_.isHuC3();
@@ -118,10 +121,16 @@ public:
 	bool isHuC3() const { return huc3_.isHuC3(); }
 	unsigned char HuC3Read(unsigned p, unsigned long const cc) { return huc3_.read(p, cc); }
 	void HuC3Write(unsigned p, unsigned data, unsigned long const cc) { huc3_.write(p, data, cc); }
+	bool isPocketCamera() const { return pocketCamera_; }
+	bool cameraIsActive(unsigned long cc) { return camera_.cameraIsActive(cc); }
+	unsigned char cameraRead(unsigned p, unsigned long const cc) { return camera_.read(p, cc); }
+	void cameraWrite(unsigned p, unsigned data, unsigned long const cc) { camera_.write(p, data, cc); }
+	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) { camera_.setCameraCallback(callback); }
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
-	bool mbc2_ = false;
+	bool mbc2_;
+	bool pocketCamera_;
 	struct AddrData {
 		unsigned long addr;
 		unsigned char data;
@@ -132,6 +141,7 @@ private:
 	Time time_;
 	Rtc rtc_;
 	HuC3Chip huc3_;
+	Camera camera_;
 	scoped_ptr<Mbc> mbc_;
 	std::string defaultSaveBasePath_;
 	std::string saveDir_;
