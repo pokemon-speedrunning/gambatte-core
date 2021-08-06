@@ -1,5 +1,5 @@
 global_cflags = ARGUMENTS.get('CFLAGS', '-Wall -Wextra -O2 -fomit-frame-pointer')
-global_cxxflags = ARGUMENTS.get('CXXFLAGS', global_cflags + ' -fno-exceptions -fno-rtti')
+global_cxxflags = ARGUMENTS.get('CXXFLAGS', global_cflags + ' -fno-exceptions -fno-rtti -std=c++17')
 global_defines = ' -DHAVE_STDINT_H'
 vars = Variables()
 vars.Add('CC')
@@ -27,6 +27,7 @@ sourceFiles = Split('''
 			src/statesaver.cpp
 			src/tima.cpp
 			src/video.cpp
+			src/mem/camera.cpp
 			src/mem/cartridge.cpp
 			src/mem/huc3.cpp
 			src/mem/memptrs.cpp

@@ -22,9 +22,10 @@
 #include "gbint.h"
 #include "inputgetter.h"
 #include "loadres.h"
+#include "../src/newstate.h"
+
 #include <cstddef>
 #include <string>
-#include "../src/newstate.h"
 
 namespace gambatte {
 
@@ -207,6 +208,12 @@ public:
 
 	/** Sets the link data sent callback. */
 	void setLinkCallback(void(*callback)());
+
+	/** Sets the camera data request callback.
+	  * The callback will receive the pointer to the buffer.
+	  * A 128x112 rgb32 image should be copied to the buffer, with success returned.
+	  */
+	void setCameraCallback(bool(*callback)(int32_t *cameraBuf));
 
 	/** adjust the assumed clock speed of the CPU compared to the RTC */
 	void setRtcDivisorOffset(long const rtcDivisorOffset);

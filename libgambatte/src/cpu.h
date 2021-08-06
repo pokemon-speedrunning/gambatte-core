@@ -76,6 +76,10 @@ public:
 		mem_.setLinkCallback(callback);
 	}
 
+	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
+		mem_.setCameraCallback(callback);
+	}
+
 	void setSaveDir(std::string const &sdir) {
 		mem_.setSaveDir(sdir);
 	}

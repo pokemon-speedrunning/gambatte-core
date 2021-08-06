@@ -174,6 +174,10 @@ void GB::setLinkCallback(void(*callback)()) {
 	p_->cpu.setLinkCallback(callback);
 }
 
+void GB::setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
+	p_->cpu.setCameraCallback(callback);
+}
+
 void GB::setCartBusPullUpTime(unsigned long const cartBusPullUpTime) {
 	p_->cpu.setCartBusPullUpTime(cartBusPullUpTime);
 }
