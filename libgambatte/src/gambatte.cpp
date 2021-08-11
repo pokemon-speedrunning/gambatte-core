@@ -50,8 +50,6 @@ struct GB::Priv {
 	unsigned loadflags;
 	unsigned layersMask;
 
-	uint_least32_t vbuff[160 * 144];
-
 	Priv() : stateNo(1), loadflags(0), layersMask(layer_mask_bg | layer_mask_window | layer_mask_obj) {}
 
 	unsigned criticalLoadflags() {
@@ -89,35 +87,8 @@ std::ptrdiff_t GB::runFor(gambatte::uint_least32_t *const videoBuf, std::ptrdiff
 	     : cyclesSinceBlit;
 }
 
-std::ptrdiff_t GB::runFor(gambatte::uint_least32_t *const soundBuf, std::size_t &samples) {
-	if (!p_->cpu.loaded()) {
-		samples = 0;
-		return -1;
-	}
-
-	p_->cpu.setVideoBuffer(p_->vbuff, 160);
-	p_->cpu.setSoundBuffer(soundBuf);
-
-	long const cyclesSinceBlit = p_->cpu.runFor(samples * 2);
-	samples = p_->cpu.fillSoundBuffer();
-	return cyclesSinceBlit >= 0
-	     ? static_cast<std::ptrdiff_t>(samples) - (cyclesSinceBlit >> 1)
-	     : cyclesSinceBlit;
-}
-
 void GB::setLayers(unsigned mask) {
 	p_->cpu.setLayers(mask);
-}
-
-void GB::blitTo(gambatte::uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
-	gambatte::uint_least32_t *src = p_->vbuff;
-	gambatte::uint_least32_t *dst = videoBuf;
-
-	for (int i = 0; i < 144; i++) {
-		std::memcpy(dst, src, sizeof (gambatte::uint_least32_t) * 160);
-		src += 160;
-		dst += pitch;
-	}
 }
 
 void GB::reset(std::size_t samplesToStall, std::string const &build) {
@@ -496,5 +467,4 @@ void GB::setSpeedupFlags(unsigned flags) {
 SYNCFUNC(GB) {
 	SSS(p_->cpu);
 	NSS(p_->loadflags);
-	NSS(p_->vbuff);
 }

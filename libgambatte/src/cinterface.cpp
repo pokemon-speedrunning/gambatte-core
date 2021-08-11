@@ -75,17 +75,6 @@ GBEXPORT int gambatte_runfor(GB *g, unsigned *videoBuf, int pitch, unsigned *aud
 	return g->runFor(videoBuf, pitch, audioBuf, *(std::size_t *)samples);
 }
 
-GBEXPORT int gambatte_altrunfor(GB *g, short *soundbuf, unsigned *samples) {
-	std::size_t sampv = *samples;
-	int ret = g->runFor((unsigned int *) soundbuf, sampv);
-	*samples = sampv;
-	return ret;
-}
-
-GBEXPORT void gambatte_blitto(GB *g, unsigned int *videobuf, int pitch) {
-	g->blitTo((unsigned int *)videobuf, pitch);
-}
-
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {
 	g->setLayers(mask);
 }

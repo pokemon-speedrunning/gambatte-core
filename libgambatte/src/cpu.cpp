@@ -549,7 +549,7 @@ void CPU::process(unsigned long const cycles) {
 
 			int result[14];
 			if (tracecallback) {
-				result[0] = cycleCounter;
+				result[0] = (cycleCounter - cycleCounter_) >> 1;
 				result[1] = pc;
 				result[2] = sp;
 				result[3] = a;

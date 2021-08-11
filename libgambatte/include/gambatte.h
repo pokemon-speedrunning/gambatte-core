@@ -136,24 +136,6 @@ public:
 	                      gambatte::uint_least32_t *audioBuf, std::size_t &samples);
 
 	/**
-	  * @param audioBuf buffer with space >= samples + 2064
-	  * @param samples  in: number of stereo samples to produce,
-	  *                out: actual number of samples produced
-	  * @return sample offset in audioBuf at which the video frame was completed, or -1
-	  *         if no new video frame was completed.
-	  */
-	std::ptrdiff_t runFor(gambatte::uint_least32_t *soundBuf, std::size_t &samples);
-
-	/**
-	  * Blit from internal framebuffer to provided framebuffer.
-	  *
-	  * @param videoBuf 160x144 RGB32 (native endian) video frame buffer or 0
-	  * @param pitch distance in number of pixels (not bytes) from the start of one line
-	  *              to the next in videoBuf.
-	  */
-	void blitTo(gambatte::uint_least32_t *videoBuf, std::ptrdiff_t pitch);
-
-	/**
 	  * Sets layers to be rendered.
 	  * @param layermask, 1=BG, 2=OBJ, 4=WINDOW
 	  */
