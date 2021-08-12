@@ -74,6 +74,8 @@ public:
 	void mapSo(unsigned nr51);
 	unsigned getStatus() const;
 
+	std::size_t callbackCycleOffset(unsigned long cycleCounter, bool doubleSpeed);
+
 	void setSpeedupFlags(unsigned flags) { speedupFlags_ = flags; }
 
 	template<bool isReader>void SyncState(NewState *ns);

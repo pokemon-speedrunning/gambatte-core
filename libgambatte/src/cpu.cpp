@@ -46,7 +46,6 @@ CPU::CPU()
 }
 
 long CPU::runFor(unsigned long const cycles) {
-	mem_.setBasetime(cycleCounter_);
 	process(cycles);
 
 	long const csb = mem_.cyclesSinceBlit(cycleCounter_);
@@ -549,7 +548,7 @@ void CPU::process(unsigned long const cycles) {
 
 			int result[14];
 			if (tracecallback) {
-				result[0] = (cycleCounter - cycleCounter_) >> 1;
+				result[0] = mem_.callbackCycleOffset(cycleCounter);
 				result[1] = pc;
 				result[2] = sp;
 				result[3] = a;
@@ -563,7 +562,6 @@ void CPU::process(unsigned long const cycles) {
 				result[11] = prefetched_;
 				result[13] = mem_.getLy(cycleCounter);
 			}
-
 
 			if (!prefetched_) {
 				PC_READ_OPCODE(opcode);

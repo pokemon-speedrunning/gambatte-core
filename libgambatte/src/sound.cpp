@@ -229,6 +229,11 @@ unsigned PSG::getStatus() const {
 	     | ch4_.isActive() << 3;
 }
 
+std::size_t PSG::callbackCycleOffset(unsigned long const cpuCc, bool const doubleSpeed) {
+	generateSamples(cpuCc, doubleSpeed);
+	return bufferPos_;
+}
+
 // the buffer and position are not saved, as they're set and flushed on each runfor() call
 SYNCFUNC(PSG) {
 	SSS(ch1_);

@@ -94,7 +94,7 @@ public:
 
 	unsigned ff_read(unsigned p, unsigned long cc) {
 		if (readCallback_)
-			readCallback_(p, (cc - basetime_) >> 1);
+			readCallback_(p, callbackCycleOffset(cc));
 
 		return p < 0x80 ? nontrivial_ff_read(p, cc) : ioamhram_[p + 0x100];
 	}
@@ -143,7 +143,7 @@ public:
 
 	unsigned read(unsigned p, unsigned long cc) {
 		if (readCallback_)
-			readCallback_(p, (cc - basetime_) >> 1);
+			readCallback_(p, callbackCycleOffset(cc));
 
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
@@ -178,7 +178,7 @@ public:
 
 	unsigned read_excb(unsigned p, unsigned long cc, bool opcode) {
 		if (opcode && execCallback_)
-			execCallback_(p, (cc - basetime_) >> 1);
+			execCallback_(p, callbackCycleOffset(cc));
 
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
@@ -249,7 +249,7 @@ public:
 			nontrivial_write(p, data, cc);
 
 		if (writeCallback_)
-			writeCallback_(p, (cc - basetime_) >> 1);
+			writeCallback_(p, callbackCycleOffset(cc));
 
 		if (cdCallback_ && !biosMode_) {
 			CDMapResult map = CDMap(p);
@@ -265,7 +265,7 @@ public:
 			nontrivial_ff_write(p, data, cc);
 
 		if (writeCallback_)
-			writeCallback_(mm_io_begin + p, (cc - basetime_) >> 1);
+			writeCallback_(mm_io_begin + p, callbackCycleOffset(cc));
 		if (cdCallback_ && !biosMode_) {
 			CDMapResult map = CDMap(mm_io_begin + p);
 			if (map.type != eCDLog_AddrType_None)
@@ -314,7 +314,8 @@ public:
 	}
 
 	void setEndtime(unsigned long cc, unsigned long inc);
-	void setBasetime(unsigned long cc) { basetime_ = cc; }
+
+	std::size_t callbackCycleOffset(unsigned long const cc) { return psg_.callbackCycleOffset(cc, isDoubleSpeed()); }
 
 	void setSoundBuffer(uint_least32_t *buf) { psg_.setBuffer(buf); }
 	std::size_t fillSoundBuffer(unsigned long cc);
@@ -400,7 +401,6 @@ private:
 	bool biosMode_;
 	bool agbFlag_;
 	bool gbIsSgb_;
-	unsigned long basetime_;
 	bool stopped_;
 	enum HdmaState { hdma_low, hdma_high, hdma_requested } haltHdmaState_;
 
