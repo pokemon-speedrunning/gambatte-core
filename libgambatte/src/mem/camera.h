@@ -55,8 +55,8 @@ private:
 	int32_t cameraBuf_[128 * 112];
 
 	unsigned char trigger_;
-	bool negative_;
-	unsigned char voltage_;
+	bool n_;
+	unsigned char vh_;
 	unsigned short exposure_;
 	float edgeAlpha_;
 	bool blank_;
@@ -64,8 +64,8 @@ private:
 	unsigned char matrix_[4 * 4 * 3];
 
 	unsigned char oldTrigger_;
-	bool oldNegative_;
-	unsigned char oldVoltage_;
+	bool oldN_;
+	unsigned char oldVh_;
 	unsigned short oldExposure_;
 	float oldEdgeAlpha_;
 	bool oldBlank_;

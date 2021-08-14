@@ -26,15 +26,15 @@ namespace gambatte {
 Camera::Camera()
 : cameraRam_(NULL)
 , trigger_(0)
-, negative_(false)
-, voltage_(0)
+, n_(false)
+, vh_(0)
 , exposure_(0)
 , edgeAlpha_(0.50)
 , blank_(false)
 , invert_(false)
 , oldTrigger_(0)
-, oldNegative_(false)
-, oldVoltage_(0)
+, oldN_(false)
+, oldVh_(0)
 , oldExposure_(0)
 , oldEdgeAlpha_(0.50)
 , oldBlank_(false)
@@ -55,15 +55,15 @@ void Camera::setStatePtrs(SaveState &state) {
 
 void Camera::saveState(SaveState &state) const {
 	state.camera.trigger = trigger_;
-	state.camera.negative = negative_;
-	state.camera.voltage = voltage_;
+	state.camera.n = n_;
+	state.camera.vh = vh_;
 	state.camera.exposure = exposure_;
 	state.camera.edgeAlpha = edgeAlpha_ * 4;
 	state.camera.blank = blank_;
 	state.camera.invert = invert_;
 	state.camera.oldTrigger = oldTrigger_;
-	state.camera.oldNegative = oldNegative_;
-	state.camera.oldVoltage = oldVoltage_;
+	state.camera.oldN = oldN_;
+	state.camera.oldVh = oldVh_;
 	state.camera.oldExposure = oldExposure_;
 	state.camera.oldEdgeAlpha = oldEdgeAlpha_ * 4;
 	state.camera.oldBlank = oldBlank_;
@@ -75,15 +75,15 @@ void Camera::saveState(SaveState &state) const {
 
 void Camera::loadState(SaveState const &state) {
 	trigger_ = state.camera.trigger;
-	negative_ = state.camera.negative;
-	voltage_ = state.camera.voltage;
+	n_ = state.camera.n;
+	vh_ = state.camera.vh;
 	exposure_ = state.camera.exposure;
 	edgeAlpha_ = state.camera.edgeAlpha / 4.0;
 	blank_ = state.camera.blank;
 	invert_ = state.camera.invert;
 	oldTrigger_ = state.camera.oldTrigger;
-	oldNegative_ = state.camera.oldNegative;
-	oldVoltage_ = state.camera.oldVoltage;
+	oldN_ = state.camera.oldN;
+	oldVh_ = state.camera.oldVh;
 	oldExposure_ = state.camera.oldExposure;
 	oldEdgeAlpha_ = state.camera.oldEdgeAlpha / 4.0;
 	oldBlank_ = state.camera.oldBlank;
@@ -126,8 +126,8 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 			if (active) {
 				cameraCyclesLeft_ = 0;
 				oldTrigger_ = trigger_;
-				oldNegative_ = negative_;
-				oldVoltage_ = voltage_;
+				oldN_ = n_;
+				oldVh_ = vh_;
 				oldExposure_ = exposure_;
 				oldEdgeAlpha_ = edgeAlpha_;
 				oldBlank_ = blank_;
@@ -135,8 +135,8 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 				cancelled_ = true;
 			} else {
 				cameraCyclesLeft_ = cancelled_
-					? 129784 + (!oldNegative_ * 2048) + (oldExposure_ << 6)
-					: 129784 + (   !negative_ * 2048) + (   exposure_ << 6);
+					? 129792 + (!oldN_ * 2048) + (oldExposure_ * 68)
+					: 129792 + (   !n_ * 2048) + (   exposure_ * 68);
 				lastCycles_ = cc;
 				bool success = false;
 				if (cameraCallback_)
@@ -150,8 +150,8 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 		break;
 	}
 	case 0x01:
-		negative_ = data & 0x80;
-		voltage_ = (data & 0x60) >> 5;
+		n_ = data & 0x80;
+		vh_ = (data & 0x60) >> 5;
 		break;
 	case 0x02:
 		exposure_ &= 0xFF;
@@ -198,8 +198,8 @@ void Camera::update(unsigned long const cc) {
 
 void Camera::process() {
 	unsigned char trigger;
-	bool negative;
-	unsigned char voltage;
+	bool n;
+	unsigned char vh;
 	unsigned short exposure;
 	float edgeAlpha;
 	bool blank;
@@ -208,8 +208,8 @@ void Camera::process() {
 
 	if (cancelled_) {
 		trigger = oldTrigger_;
-		negative = oldNegative_;
-		voltage = oldVoltage_;
+		n = oldN_;
+		vh = oldVh_;
 		exposure = oldExposure_;
 		edgeAlpha = oldEdgeAlpha_;
 		blank = oldBlank_;
@@ -217,8 +217,8 @@ void Camera::process() {
 		std::memcpy(matrix, oldMatrix_, sizeof matrix);
 	} else {
 		trigger = trigger_;
-		negative = negative_;
-		voltage = voltage_;
+		n = n_;
+		vh = vh_;
 		exposure = exposure_;
 		edgeAlpha = edgeAlpha_;
 		blank = blank_;
@@ -243,7 +243,7 @@ void Camera::process() {
 
 	int tempBuf[128 * 112];
 
-	switch ((negative << 3) | (voltage << 1) | blank) {
+	switch ((n << 3) | (vh << 1) | blank) {
 	case 0x00: // 1-D filtering
 		std::memcpy(tempBuf, cameraBuf_, sizeof tempBuf);
 		for (unsigned i = 0; i < (128 * 112); i++) {
@@ -351,16 +351,16 @@ SYNCFUNC(Camera) {
 	NSS(cameraRam_);
 	NSS(cameraBuf_);
 	NSS(trigger_);
-	NSS(negative_);
-	NSS(voltage_);
+	NSS(n_);
+	NSS(vh_);
 	NSS(exposure_);
 	NSS(edgeAlpha_);
 	NSS(blank_);
 	NSS(invert_);
 	NSS(matrix_);
 	NSS(oldTrigger_);
-	NSS(oldNegative_);
-	NSS(oldVoltage_);
+	NSS(oldN_);
+	NSS(oldVh_);
 	NSS(oldExposure_);
 	NSS(oldEdgeAlpha_);
 	NSS(oldBlank_);

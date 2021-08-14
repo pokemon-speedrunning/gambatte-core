@@ -246,15 +246,15 @@ struct SaveState {
 		Ptr<unsigned char> oldMatrix;
 
 		unsigned char trigger;
-		unsigned char /*bool*/ negative;
-		unsigned char voltage;
+		unsigned char /*bool*/ n;
+		unsigned char vh;
 		unsigned short exposure;
 		unsigned char /*float*/ edgeAlpha;
 		unsigned char /*bool*/ blank;
 		unsigned char /*bool*/ invert;
 		unsigned char oldTrigger;
-		unsigned char /*bool*/ oldNegative;
-		unsigned char oldVoltage;
+		unsigned char /*bool*/ oldN;
+		unsigned char oldVh;
 		unsigned short oldExposure;
 		unsigned char /*float*/ oldEdgeAlpha;
 		unsigned char /*bool*/ oldBlank;

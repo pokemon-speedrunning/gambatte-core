@@ -3466,15 +3466,15 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	std::memset(state.camera.oldMatrix.ptr, 0, state.camera.oldMatrix.size());
 
 	state.camera.trigger = 0;
-	state.camera.negative = false;
-	state.camera.voltage = 0;
+	state.camera.n = false;
+	state.camera.vh = 0;
 	state.camera.exposure = 0;
 	state.camera.edgeAlpha = 0.50 * 4;
 	state.camera.blank = false;
 	state.camera.invert = false;
 	state.camera.oldTrigger = 0;
-	state.camera.oldNegative = false;
-	state.camera.oldVoltage = 0;
+	state.camera.oldN = false;
+	state.camera.oldVh = 0;
 	state.camera.oldExposure = 0;
 	state.camera.oldEdgeAlpha = 0.50 * 4;
 	state.camera.oldBlank = false;
