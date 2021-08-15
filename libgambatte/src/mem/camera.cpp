@@ -40,6 +40,7 @@ Camera::Camera()
 , oldBlank_(false)
 , oldInvert_(false)
 , cameraCyclesLeft_(0)
+, odd_(false)
 , cancelled_(false)
 , ds_(false)
 {
@@ -70,6 +71,7 @@ void Camera::saveState(SaveState &state) const {
 	state.camera.oldInvert = oldInvert_;
 	state.camera.lastCycles = lastCycles_;
 	state.camera.cameraCyclesLeft = cameraCyclesLeft_;
+	state.camera.odd = odd_;
 	state.camera.cancelled = cancelled_;
 }
 
@@ -90,6 +92,7 @@ void Camera::loadState(SaveState const &state) {
 	oldInvert_ = state.camera.oldInvert;
 	lastCycles_ = state.camera.lastCycles;
 	cameraCyclesLeft_ = state.camera.cameraCyclesLeft;
+	odd_ = state.camera.odd;
 	cancelled_ = state.camera.cancelled;
 	ds_ = (!state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
 }
@@ -135,9 +138,10 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 				cancelled_ = true;
 			} else {
 				cameraCyclesLeft_ = cancelled_
-					? 129792 + (!oldN_ * 2048) + (oldExposure_ * 68)
-					: 129792 + (   !n_ * 2048) + (   exposure_ * 68);
+					? 129792 + (!oldN_ * 2048) + (oldExposure_ * 64) + (odd_ * 4)
+					: 129792 + (   !n_ * 2048) + (   exposure_ * 64) + (odd_ * 4);
 				lastCycles_ = cc;
+				odd_ = !odd_;
 				bool success = false;
 				if (cameraCallback_)
 					success = cameraCallback_(cameraBuf_);
@@ -262,7 +266,7 @@ void Camera::process() {
 	case 0x01: // blank out???
 		std::memset(cameraBuf_, 0x00, sizeof cameraBuf_);
 		break;
-	case 0x2: // 1-D filtering + Horizontal enhancement
+	case 0x02: // 1-D filtering + Horizontal enhancement
 		for (unsigned i = 0; i < (128 * 112); i++) {
 			int x = i % 128;
 			int y = i / 128;
@@ -285,6 +289,53 @@ void Camera::process() {
 			cameraBuf_[i] = std::clamp(pixel, -0x80, 0x7F);
 		}
 		break;
+	case 0x03: // 1-D filtering + Horizontal extraction
+		for (unsigned i = 0; i < (128 * 112); i++) {
+			int x = i % 128;
+			int y = i / 128;
+			int mw = cameraBuf_[std::max(0, x - 1) + (y * 128)];
+			int me = cameraBuf_[std::min(x + 1, 127) + (y * 128)];
+			int px = cameraBuf_[i];
+
+			tempBuf[i] = std::clamp((int)((2 * px - mw - me) * edgeAlpha), 0x00, 0xFF);
+		}
+		for (unsigned i = 0; i < (128 * 112); i++) {
+			int x = i % 128;
+			int y = i / 128;
+			int ms = tempBuf[x + std::min(y + 1, 111) * 128];
+			int px = tempBuf[i];
+
+			int pixel = (trigger & 0x06) ? px : -px;
+			if (trigger & 0x04)
+				pixel -= ms;
+
+			cameraBuf_[i] = std::clamp(pixel, -0x80, 0x7F);
+		}
+		break;
+	case 0x0C: // Vertical enhancement
+		for (unsigned i = 0; i < (128 * 112); i++) {
+			int x = i % 128;
+			int y = i / 128;
+			int ms = cameraBuf_[x + std::min(y + 1, 111) * 128];
+			int mn = cameraBuf_[x + std::max(0, y - 1) * 128];
+			int px = cameraBuf_[i];
+
+			tempBuf[i] = std::clamp((int)(px + ((2 * px - mn - ms) * edgeAlpha)), -0x80, 0x7F);
+		}
+		std::memcpy(cameraBuf_, tempBuf, sizeof cameraBuf_);
+		break;
+	case 0x0D: // Vertical extraction
+		for (unsigned i = 0; i < (128 * 112); i++) {
+			int x = i % 128;
+			int y = i / 128;
+			int ms = cameraBuf_[x + std::min(y + 1, 111) * 128];
+			int mn = cameraBuf_[x + std::max(0, y - 1) * 128];
+			int px = cameraBuf_[i];
+
+			tempBuf[i] = std::clamp((int)((2 * px - mn - ms) * edgeAlpha), -0x80, 0x7F);
+		}
+		std::memcpy(cameraBuf_, tempBuf, sizeof cameraBuf_);
+		break;
 	case 0x0E: // 2D enhancement
 		for (unsigned i = 0; i < (128 * 112); i++) {
 			int x = i % 128;
@@ -296,6 +347,20 @@ void Camera::process() {
 			int px = cameraBuf_[i];
 
 			tempBuf[i] = std::clamp((int)(px + ((4 * px - mw - me - mn - ms) * edgeAlpha)), -0x80, 0x7F);
+		}
+		std::memcpy(cameraBuf_, tempBuf, sizeof cameraBuf_);
+		break;
+	case 0x0F: // 2D extraction
+		for (unsigned i = 0; i < (128 * 112); i++) {
+			int x = i % 128;
+			int y = i / 128;
+			int ms = cameraBuf_[x + std::min(y + 1, 111) * 128];
+			int mn = cameraBuf_[x + std::max(0, y - 1) * 128];
+			int mw = cameraBuf_[std::max(0, x - 1) + (y * 128)];
+			int me = cameraBuf_[std::min(x + 1, 127) + (y * 128)];
+			int px = cameraBuf_[i];
+
+			tempBuf[i] = std::clamp((int)((4 * px - mw - me - mn - ms) * edgeAlpha), -0x80, 0x7F);
 		}
 		std::memcpy(cameraBuf_, tempBuf, sizeof cameraBuf_);
 		break;

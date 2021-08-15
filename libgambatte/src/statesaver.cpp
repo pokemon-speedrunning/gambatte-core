@@ -395,6 +395,7 @@ SaverList::SaverList()
 	{ static char const label[] = { c,a,m,o,i,n,v, NUL }; ADD(camera.oldInvert); }
 	{ static char const label[] = { c,a,m,l,c,     NUL }; ADD(camera.lastCycles); }
 	{ static char const label[] = { c,a,m,c,l,     NUL }; ADD(camera.cameraCyclesLeft); }
+	{ static char const label[] = { c,a,m,o,d,d,   NUL }; ADD(camera.odd); }
 	{ static char const label[] = { c,a,m,c,a,n,   NUL }; ADD(camera.cancelled); }
 
 #undef ADD
