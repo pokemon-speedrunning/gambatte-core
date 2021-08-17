@@ -413,7 +413,6 @@ void Camera::process() {
 }
 
 SYNCFUNC(Camera) {
-	NSS(cameraRam_);
 	NSS(cameraBuf_);
 	NSS(trigger_);
 	NSS(n_);
@@ -433,6 +432,7 @@ SYNCFUNC(Camera) {
 	NSS(oldMatrix_);
 	NSS(lastCycles_);
 	NSS(cameraCyclesLeft_);
+	NSS(odd_);
 	NSS(cancelled_);
 	NSS(ds_);
 }
