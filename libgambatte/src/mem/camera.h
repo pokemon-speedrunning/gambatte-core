@@ -74,7 +74,6 @@ private:
 
 	unsigned long lastCycles_;
 	long cameraCyclesLeft_;
-	bool odd_;
 	bool cancelled_;
 	bool ds_;
 

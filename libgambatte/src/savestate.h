@@ -261,7 +261,6 @@ struct SaveState {
 		unsigned char /*bool*/ oldInvert;
 		unsigned long lastCycles;
 		unsigned long /*signed*/ cameraCyclesLeft;
-		unsigned char /*bool*/ odd;
 		unsigned char /*bool*/ cancelled;
 	} camera;
 };

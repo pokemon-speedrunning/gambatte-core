@@ -40,7 +40,6 @@ Camera::Camera()
 , oldBlank_(false)
 , oldInvert_(false)
 , cameraCyclesLeft_(0)
-, odd_(false)
 , cancelled_(false)
 , ds_(false)
 {
@@ -71,7 +70,6 @@ void Camera::saveState(SaveState &state) const {
 	state.camera.oldInvert = oldInvert_;
 	state.camera.lastCycles = lastCycles_;
 	state.camera.cameraCyclesLeft = cameraCyclesLeft_;
-	state.camera.odd = odd_;
 	state.camera.cancelled = cancelled_;
 }
 
@@ -92,7 +90,6 @@ void Camera::loadState(SaveState const &state) {
 	oldInvert_ = state.camera.oldInvert;
 	lastCycles_ = state.camera.lastCycles;
 	cameraCyclesLeft_ = state.camera.cameraCyclesLeft;
-	odd_ = state.camera.odd;
 	cancelled_ = state.camera.cancelled;
 	ds_ = (!state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
 }
@@ -138,10 +135,9 @@ void Camera::write(unsigned p, unsigned data, unsigned long const cc) {
 				cancelled_ = true;
 			} else {
 				cameraCyclesLeft_ = cancelled_
-					? 129792 + (!oldN_ * 2048) + (oldExposure_ * 64) + (odd_ * 4)
-					: 129792 + (   !n_ * 2048) + (   exposure_ * 64) + (odd_ * 4);
+					? 129792 + (!oldN_ * 2048) + (oldExposure_ * 64) + (cc & 4)
+					: 129792 + (   !n_ * 2048) + (   exposure_ * 64) + (cc & 4);
 				lastCycles_ = cc;
-				odd_ = !odd_;
 				bool success = false;
 				if (cameraCallback_)
 					success = cameraCallback_(cameraBuf_);
@@ -432,7 +428,6 @@ SYNCFUNC(Camera) {
 	NSS(oldMatrix_);
 	NSS(lastCycles_);
 	NSS(cameraCyclesLeft_);
-	NSS(odd_);
 	NSS(cancelled_);
 	NSS(ds_);
 }

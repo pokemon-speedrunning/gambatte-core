@@ -3481,7 +3481,6 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.camera.oldInvert = false;
 	state.camera.lastCycles = state.cpu.cycleCounter;
 	state.camera.cameraCyclesLeft = 0;
-	state.camera.odd = false;
 	state.camera.cancelled = false;
 }
 

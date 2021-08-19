@@ -413,7 +413,7 @@ private:
 	}
 
 	void setRombank() const {
-		memptrs_.setRombank(std::max((unsigned) rombank_, 1u) & (rombanks(memptrs_) - 1));
+		memptrs_.setRombank(std::max((unsigned)rombank_, 1u) & (rombanks(memptrs_) - 1));
 	}
 };
 
@@ -698,7 +698,7 @@ public:
 	virtual void romWrite(unsigned const p, unsigned const data, unsigned long const /*cc*/) {
 		switch (p >> 13 & 3) {
 		case 0:
-			enableRam_ = data == 0xA; // fixme: do all 8 bits matter?
+			enableRam_ = (data & 0xF) == 0xA;
 			setRambank();
 			break;
 		case 1:
@@ -753,7 +753,7 @@ private:
 	}
 
 	void setRombank() const {
-		memptrs_.setRombank(rombank_ & (rombanks(memptrs_) - 1)); // fixme: does 0->1 rombank rule apply?
+		memptrs_.setRombank(rombank_ & (rombanks(memptrs_) - 1));
 	}
 };
 
