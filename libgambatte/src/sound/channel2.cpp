@@ -140,6 +140,8 @@ void Channel2::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 		}
 	}
 
+	vol_ = dutyUnit_.isHighState(cc) ? envelopeUnit_.getVolume() : 0;
+
 	if (cc >= SoundUnit::counter_max) {
 		dutyUnit_.resetCounters(cc);
 		lengthCounter_.resetCounters(cc);

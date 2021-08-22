@@ -38,6 +38,7 @@ public:
 	void setNr3(unsigned data, unsigned long cc) { lfsr_.nr3Change(data, cc); }
 	void setNr4(unsigned data, unsigned long cc);
 	void setSo(unsigned long soMask, unsigned long cc);
+	unsigned char getVolume() const { return vol_; }
 	bool isActive() const { return master_; }
 	void update(uint_least32_t *buf, unsigned long soBaseVol, unsigned long cc, unsigned long end);
 	void reset(unsigned long cc);
@@ -53,6 +54,7 @@ private:
 		virtual void event();
 		virtual void resetCounters(unsigned long oldCc);
 		bool isHighState() const { return ~reg_ & 1; }
+		bool isHighState(unsigned long cc);
 		void nr3Change(unsigned newNr3, unsigned long cc);
 		void nr4Init(unsigned long cc);
 		void reset(unsigned long cc);
@@ -93,6 +95,7 @@ private:
 	unsigned long soMask_;
 	unsigned long prevOut_;
 	unsigned char nr4_;
+	unsigned char vol_;
 	bool master_;
 
 	void setEvent();

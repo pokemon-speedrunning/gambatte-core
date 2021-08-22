@@ -75,6 +75,8 @@ public:
 	unsigned getStatus() const;
 
 	std::size_t callbackCycleOffset(unsigned long cycleCounter, bool doubleSpeed);
+	unsigned char pcm12Read(unsigned long cycleCounter, bool doubleSpeed);
+	unsigned char pcm34Read(unsigned long cycleCounter, bool doubleSpeed);
 
 	void setSpeedupFlags(unsigned flags) { speedupFlags_ = flags; }
 

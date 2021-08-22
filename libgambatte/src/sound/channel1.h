@@ -40,6 +40,7 @@ public:
 	void setNr3(unsigned data, unsigned long cc);
 	void setNr4(unsigned data, unsigned long cc, unsigned long ref);
 	void setSo(unsigned long soMask, unsigned long cc);
+	unsigned char getVolume() const { return vol_; }
 	bool isActive() const { return master_; }
 	void update(uint_least32_t *buf, unsigned long soBaseVol, unsigned long cc, unsigned long end);
 	void reset();
@@ -85,6 +86,7 @@ private:
 	unsigned long soMask_;
 	unsigned long prevOut_;
 	unsigned char nr4_;
+	unsigned char vol_;
 	bool master_;
 
 	void setEvent();

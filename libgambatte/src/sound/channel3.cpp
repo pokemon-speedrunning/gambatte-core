@@ -205,6 +205,8 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 		updateWaveCounter(cc);
 	}
 
+	vol_ = (wavePos_ % 2 ? sampleBuf_ & 0xF : sampleBuf_ >> 4) >> rshift_;
+
 	if (cc >= SoundUnit::counter_max) {
 		lengthCounter_.resetCounters(cc);
 		lastReadTime_ -= SoundUnit::counter_max;

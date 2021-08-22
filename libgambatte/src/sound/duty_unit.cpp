@@ -96,6 +96,15 @@ void DutyUnit::event() {
 	inc_ = inc[duty_][high_];
 }
 
+bool DutyUnit::isHighState(unsigned long const cc) const {
+	if (nextPosUpdate_ == counter_disabled)
+		return false;
+
+	unsigned long const inc = (cc - nextPosUpdate_) / period_ + 1;
+	unsigned char const pos = (pos_ + inc) % duty_pattern_len;
+	return toOutState(duty_, pos);
+}
+
 void DutyUnit::nr1Change(unsigned newNr1, unsigned long cc) {
 	updatePos(cc);
 	duty_ = newNr1 >> 6;

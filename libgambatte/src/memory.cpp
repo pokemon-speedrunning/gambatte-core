@@ -687,6 +687,16 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 			return lcd_.cgbSpColorRead(ioamhram_[0x16A] & 0x3F, cc);
 
 		break;
+	case 0x76:
+		if (isCgb())
+			return psg_.pcm12Read(cc, isDoubleSpeed());
+
+		break;
+	case 0x77:
+		if (isCgb())
+			return psg_.pcm34Read(cc, isDoubleSpeed());
+
+		break;
 	default:
 		break;
 	}

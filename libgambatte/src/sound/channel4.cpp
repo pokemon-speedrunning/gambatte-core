@@ -95,6 +95,11 @@ inline void Channel4::Lfsr::event() {
 	backupCounter_ = counter_;
 }
 
+bool Channel4::Lfsr::isHighState(unsigned long const cc) {
+	updateBackupCounter(cc);
+	return ~reg_ & 1;
+}
+
 void Channel4::Lfsr::nr3Change(unsigned newNr3, unsigned long cc) {
 	updateBackupCounter(cc);
 	nr3_ = newNr3;
@@ -263,6 +268,8 @@ void Channel4::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 			setEvent();
 		}
 	}
+
+	vol_ = lfsr_.isHighState(cc) ? envelopeUnit_.getVolume() : 0;
 
 	if (cc >= SoundUnit::counter_max) {
 		lengthCounter_.resetCounters(cc);
