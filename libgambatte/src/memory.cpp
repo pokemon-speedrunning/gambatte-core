@@ -689,12 +689,12 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 		break;
 	case 0x76:
 		if (isCgb())
-			return psg_.pcm12Read(cc, isDoubleSpeed());
+			return psg_.isEnabled() ? psg_.pcm12Read(cc, isDoubleSpeed()) : 0;
 
 		break;
 	case 0x77:
 		if (isCgb())
-			return psg_.pcm34Read(cc, isDoubleSpeed());
+			return psg_.isEnabled() ? psg_.pcm34Read(cc, isDoubleSpeed()) : 0;
 
 		break;
 	default:

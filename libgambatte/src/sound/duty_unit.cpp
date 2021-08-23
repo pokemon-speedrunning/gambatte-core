@@ -100,9 +100,13 @@ bool DutyUnit::isHighState(unsigned long const cc) const {
 	if (nextPosUpdate_ == counter_disabled)
 		return false;
 
-	unsigned long const inc = (cc - nextPosUpdate_) / period_ + 1;
-	unsigned char const pos = (pos_ + inc) % duty_pattern_len;
-	return toOutState(duty_, pos);
+	bool high = high_;
+	if (cc >= nextPosUpdate_) {
+		unsigned long const inc = (cc - nextPosUpdate_) / period_ + 1;
+		unsigned char const pos = (pos_ + inc) % duty_pattern_len;
+		high = toOutState(duty_, pos);
+	}
+	return high;
 }
 
 void DutyUnit::nr1Change(unsigned newNr1, unsigned long cc) {
