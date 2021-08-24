@@ -761,6 +761,9 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 
 		if (!lcd_.oamReadable(cc) || oamDmaPos_ < oam_size)
 			return 0xFF;
+
+		if (p >= (mm_oam_begin + oam_size) && isCgb() && !agbFlag_)
+			return ioamhram_[(p - mm_oam_begin) & 0xE7];
 	}
 
 	return ioamhram_[p - mm_oam_begin];
@@ -842,6 +845,9 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 
 		if (oamDmaPos_ < oam_size)
 			return 0xFF;
+
+		if (p >= (mm_oam_begin + oam_size) && isCgb() && !agbFlag_)
+			return ioamhram_[(p - mm_oam_begin) & 0xE7];
 	}
 
 	return ioamhram_[p - mm_oam_begin];
@@ -1353,11 +1359,11 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 	} else if (p - mm_hram_begin >= 0x7Fu) {
 		long const ffp = static_cast<long>(p) - mm_io_begin;
 		if (ffp < 0) {
+			bool const validOam = p < (mm_oam_begin + oam_size);
 			if (lcd_.oamWritable(cc) && oamDmaPos_ >= oam_size
-					&& (p < mm_oam_begin + oam_size || isCgb())) {
+					&& (validOam || (isCgb() && !agbFlag_))) {
 				lcd_.oamChange(cc);
-				if (!agbFlag_ || (p < (mm_oam_begin + oam_size)))
-					ioamhram_[p - mm_oam_begin] = data;
+				ioamhram_[(p - mm_oam_begin) & (validOam ? 0xFF : 0xE7)] = data;
 			}
 		} else
 			nontrivial_ff_write(ffp, data, cc);

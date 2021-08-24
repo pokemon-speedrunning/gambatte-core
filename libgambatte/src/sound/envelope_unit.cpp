@@ -69,16 +69,46 @@ void EnvelopeUnit::event() {
 		counter_ += 8ul << 15;
 }
 
-bool EnvelopeUnit::nr2Change(unsigned const newNr2) {
-	if (!(nr2_ & psg_nr2_step) && counter_ != counter_disabled)
-		++volume_;
-	else if (!(nr2_ & psg_nr2_inc))
-		volume_ += 2;
+bool EnvelopeUnit::nr2Change(unsigned const newNr2, unsigned long const cc) {
+	counter_ = cc + ((newNr2 & psg_nr2_step) << 15);
 
-	if ((nr2_ ^ newNr2) & psg_nr2_inc)
-		volume_ = 0x10 - volume_;
+	bool tick = (newNr2 & psg_nr2_step) && !(nr2_ & psg_nr2_step) && counter_ != counter_disabled;
+	bool invert = (newNr2 & psg_nr2_inc) ^ (nr2_ & psg_nr2_inc);
 
-	volume_ &= 0xF;
+	if ((newNr2 & 0xF) == psg_nr2_inc && (nr2_ & 0xF) == psg_nr2_inc && counter_ != counter_disabled)
+		tick = true;
+
+	if (invert) {
+		if (newNr2 & psg_nr2_inc) {
+			if (!(nr2_ & psg_nr2_step) && counter_ != counter_disabled)
+				volume_ ^= 0xF;
+			else {
+				volume_ = 0xE - volume_;
+				volume_ &= 0xF;
+			}
+			tick = false;
+		}
+		else {
+			volume_ = 0x10 - volume_;
+			volume_ &= 0xF;
+		}
+	}
+
+	if (tick) {
+		if (newNr2 & psg_nr2_inc)
+			++volume_;
+		else
+			--volume_;
+
+		volume_ &= 0xF;
+	} else if (!(newNr2 & psg_nr2_step)) {
+		if (invert) {
+			if (volume_ == ((newNr2 & psg_nr2_inc) ? 0xE : 0x1))
+				counter_ = counter_disabled;
+		} else if (volume_ == ((newNr2 & psg_nr2_inc) ? 0xF : 0x0))
+			counter_ = counter_disabled;
+	}
+
 	nr2_ = newNr2;
 	return !(newNr2 & (psg_nr2_initvol | psg_nr2_inc));
 }

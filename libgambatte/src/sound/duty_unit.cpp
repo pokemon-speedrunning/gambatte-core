@@ -97,9 +97,6 @@ void DutyUnit::event() {
 }
 
 bool DutyUnit::isHighState(unsigned long const cc) const {
-	if (nextPosUpdate_ == counter_disabled)
-		return false;
-
 	bool high = high_;
 	if (cc >= nextPosUpdate_) {
 		unsigned long const inc = (cc - nextPosUpdate_) / period_ + 1;

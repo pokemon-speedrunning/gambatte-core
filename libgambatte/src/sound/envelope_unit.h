@@ -36,7 +36,7 @@ public:
 	void event();
 	bool dacIsOn() const { return nr2_ & 0xF8; }
 	unsigned getVolume() const { return volume_; }
-	bool nr2Change(unsigned newNr2);
+	bool nr2Change(unsigned newNr2, unsigned long cc);
 	bool nr4Init(unsigned long cycleCounter);
 	void reset();
 	void saveState(SaveState::SPU::Env &estate) const;

@@ -50,7 +50,7 @@ void Channel2::setNr1(unsigned data, unsigned long cc) {
 }
 
 void Channel2::setNr2(unsigned data, unsigned long cc) {
-	if (envelopeUnit_.nr2Change(data))
+	if (envelopeUnit_.nr2Change(data, cc))
 		disableMaster_();
 	else
 		staticOutputTest_(cc);
