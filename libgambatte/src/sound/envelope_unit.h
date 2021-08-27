@@ -57,7 +57,7 @@ private:
 			return false;
 
 		bool clock = (cc & 0x7800) == 0x1800 && clock_;
-		clock_ = (cc % counter_) & ~0x7FFF;
+		clock_ = (counter_ % cc) & ~0x7FFF;
 		return clock;
 	}
 };
