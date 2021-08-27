@@ -231,7 +231,7 @@ unsigned PSG::getStatus() const {
 	     | ch4_.isActive() << 3;
 }
 
-std::size_t PSG::callbackCycleOffset(unsigned long const cpuCc, bool const doubleSpeed) {
+unsigned long PSG::callbackCycleOffset(unsigned long const cpuCc, bool const doubleSpeed) const {
 	unsigned long const cyclesOff = (cpuCc - lastUpdate_) >> (1 + doubleSpeed);
 	return bufferPos_ + cyclesOff;
 }
