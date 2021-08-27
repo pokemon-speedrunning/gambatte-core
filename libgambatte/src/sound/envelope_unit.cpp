@@ -30,16 +30,8 @@ EnvelopeUnit::EnvelopeUnit(VolOnOffEvent &volOnOffEvent)
 , nr2_(0)
 , volume_(0)
 , clock_(false)
+, agb_(false)
 {
-}
-
-bool EnvelopeUnit::clock(unsigned long const cc) {
-	if (counter_ == counter_disabled)
-		return false;
-
-	bool clock = (cc & 0x7800) == 0x1800 && clock_;
-	clock_ = cc & -0x7FFF;
-	return clock;
 }
 
 void EnvelopeUnit::reset() {
@@ -49,12 +41,14 @@ void EnvelopeUnit::reset() {
 void EnvelopeUnit::saveState(SaveState::SPU::Env &estate) const {
 	estate.counter = counter_;
 	estate.volume = volume_;
+	estate.clock = clock_;
 }
 
 void EnvelopeUnit::loadState(SaveState::SPU::Env const &estate, unsigned nr2, unsigned long cc) {
 	counter_ = std::max(estate.counter, cc);
 	volume_ = estate.volume;
 	nr2_ = nr2;
+	clock_ = estate.clock;
 }
 
 void EnvelopeUnit::event() {
@@ -149,4 +143,6 @@ SYNCFUNC(EnvelopeUnit) {
 	NSS(counter_);
 	NSS(nr2_);
 	NSS(volume_);
+	NSS(clock_);
+	NSS(agb_);
 }

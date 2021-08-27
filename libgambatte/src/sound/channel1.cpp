@@ -123,6 +123,7 @@ Channel1::Channel1()
 , soMask_(0)
 , prevOut_(0)
 , nr4_(0)
+, vol_(0)
 , master_(false)
 {
 	setEvent();
@@ -190,8 +191,9 @@ void Channel1::reset() {
 	setEvent();
 }
 
-void Channel1::init(bool cgb) {
+void Channel1::init(bool cgb, bool agb) {
 	sweepUnit_.init(cgb);
+	envelopeUnit_.init(agb);
 }
 
 void Channel1::saveState(SaveState &state, unsigned long cc) {

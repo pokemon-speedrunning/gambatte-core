@@ -54,7 +54,7 @@ void Channel4::Lfsr::updateBackupCounter(unsigned long const cc) {
 		unsigned long periods = (cc - backupCounter_) / period + 1;
 		backupCounter_ += periods * period;
 
-		if (master_ && nr3_ < 0xE * (1u * psg_nr43_s & -psg_nr43_s)) {
+		if ((master_ || !cgb_) && nr3_ < 0xE * (1u * psg_nr43_s & -psg_nr43_s)) {
 			if (nr3_ & psg_nr43_7biten) {
 				while (periods > 6) {
 					unsigned const xored = (reg_ << 1 ^ reg_) & 0x7E;
@@ -154,6 +154,7 @@ void Channel4::Lfsr::SyncState(NewState *ns) {
 	NSS(reg_);
 	NSS(nr3_);
 	NSS(master_);
+	NSS(cgb_);
 }
 
 Channel4::Channel4()
@@ -165,6 +166,7 @@ Channel4::Channel4()
 , soMask_(0)
 , prevOut_(0)
 , nr4_(0)
+, vol_(0)
 , master_(false)
 {
 	setEvent();
@@ -217,6 +219,11 @@ void Channel4::reset(unsigned long cc) {
 	lfsr_.reset(cc);
 	envelopeUnit_.reset();
 	setEvent();
+}
+
+void Channel4::init(bool cgb, bool agb) {
+	lfsr_.init(cgb);
+	envelopeUnit_.init(agb);
 }
 
 void Channel4::saveState(SaveState &state, unsigned long cc) {

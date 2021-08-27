@@ -1381,7 +1381,7 @@ LoadRes Memory::loadROM(std::string const &romfile, unsigned const flags) {
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
 	gbIsSgb_ = flags & GB::LoadFlag::SGB_MODE;
 
-	psg_.init(cart_.isCgb());
+	psg_.init(cart_.isCgb(), agbFlag_);
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 	interrupter_.setGameShark(std::string());
 
@@ -1406,7 +1406,7 @@ LoadRes Memory::loadROM(char const *romfiledata, unsigned romfilelength, unsigne
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
 	gbIsSgb_ = flags & GB::LoadFlag::SGB_MODE;
 
-	psg_.init(cart_.isCgb());
+	psg_.init(cart_.isCgb(), agbFlag_);
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 
 	return LOADRES_OK;

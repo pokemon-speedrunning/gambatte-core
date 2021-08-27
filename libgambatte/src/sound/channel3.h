@@ -104,6 +104,10 @@ private:
 	bool cgb_;
 
 	void updateWaveCounter(unsigned long cc);
+
+	inline unsigned char waveSample(unsigned pos, unsigned char s, unsigned char rsh) const {
+		return (pos % 2 ? s & 0xF : s >> 4) >> rsh;
+	}
 };
 
 }

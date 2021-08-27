@@ -43,6 +43,7 @@ public:
 	void update(uint_least32_t *buf, unsigned long soBaseVol, unsigned long cc, unsigned long end);
 	void reset(unsigned long cc);
 	void resetCc(unsigned long cc, unsigned long newCc) { lfsr_.resetCc(cc, newCc); }
+	void init(bool cgb, bool agb);
 	void saveState(SaveState &state, unsigned long cc);
 	void loadState(SaveState const &state);
 	template<bool isReader>void SyncState(NewState *ns);
@@ -59,6 +60,7 @@ private:
 		void nr4Init(unsigned long cc);
 		void reset(unsigned long cc);
 		void resetCc(unsigned long cc, unsigned long newCc);
+		void init(bool cgb) { cgb_ = cgb; }
 		void saveState(SaveState &state, unsigned long cc);
 		void loadState(SaveState const &state);
 		void disableMaster() { killCounter(); master_ = false; reg_ = 0x7FFF; }
@@ -71,6 +73,7 @@ private:
 		unsigned short reg_;
 		unsigned char nr3_;
 		bool master_;
+		bool cgb_;
 
 		void updateBackupCounter(unsigned long cc);
 	};

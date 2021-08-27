@@ -32,6 +32,7 @@ Channel2::Channel2()
 , soMask_(0)
 , prevOut_(0)
 , nr4_(0)
+, vol_(0)
 , master_(false)
 {
 	setEvent();
@@ -88,6 +89,10 @@ void Channel2::reset() {
 	dutyUnit_.reset();
 	envelopeUnit_.reset();
 	setEvent();
+}
+
+void Channel2::init(bool agb) {
+	envelopeUnit_.init(agb);
 }
 
 void Channel2::saveState(SaveState &state, unsigned long cc) {

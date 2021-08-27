@@ -30,7 +30,7 @@ namespace gambatte {
 class PSG {
 public:
 	PSG();
-	void init(bool cgb);
+	void init(bool cgb, bool agb);
 	void reset(bool ds);
 	void divReset(bool ds);
 	void setStatePtrs(SaveState &state);

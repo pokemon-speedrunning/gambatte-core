@@ -45,7 +45,7 @@ public:
 	void update(uint_least32_t *buf, unsigned long soBaseVol, unsigned long cc, unsigned long end);
 	void reset();
 	void resetCc(unsigned long cc, unsigned long ncc) { dutyUnit_.resetCc(cc, ncc); }
-	void init(bool cgb);
+	void init(bool cgb, bool agb);
 	void saveState(SaveState &state, unsigned long cc);
 	void loadState(SaveState const &state);
 	template<bool isReader>void SyncState(NewState *ns);
