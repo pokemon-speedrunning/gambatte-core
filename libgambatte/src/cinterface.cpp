@@ -75,6 +75,10 @@ GBEXPORT int gambatte_runfor(GB *g, unsigned *videoBuf, int pitch, unsigned *aud
 	return g->runFor(videoBuf, pitch, audioBuf, *(std::size_t *)samples);
 }
 
+GBEXPORT int gambatte_generatesgbsamples(GB *g, int16_t *audioBuf, uint64_t *samples) {
+	return g->generateSgbSamples(audioBuf, *samples);
+}
+
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {
 	g->setLayers(mask);
 }

@@ -325,6 +325,12 @@ public:
 		sgb_.setVideoBuffer(videoBuf, pitch);
 	}
 
+	unsigned generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
+		return isSgb()
+			? sgb_.generateSamples(soundBuf, samples)
+			: -1;
+	}
+
 	void setDmgPaletteColor(int palNum, int colorNum, unsigned long rgb32) {
 		if (!gbIsSgb_)
 			lcd_.setDmgPaletteColor(palNum, colorNum, rgb32);

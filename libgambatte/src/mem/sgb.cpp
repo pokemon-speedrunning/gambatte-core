@@ -18,13 +18,20 @@
 
 #include "sgb.h"
 #include "../savestate.h"
+#include "ipl.h"
+#include "spc_data.h"
+
 #include <cstring>
+#include <stdio.h>
 
 namespace gambatte {
 
 Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
+, spc(spc_new())
+, buffer_(0)
+, lastUpdate_(0)
 {
 	// FIXME: this code is ugly
 	int i = 0;
@@ -32,6 +39,15 @@ Sgb::Sgb()
 		for (int g = 0; g < 32; g++)
 			for (int r = 0; r < 32; r++)
 				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
+
+	spc_init_rom(spc, iplRom);
+	spc_reset(spc);
+	spc_load_spc(spc, spcData, 0x10224);
+
+	short buf[4096];
+	spc_set_output(spc, buf, 4096);
+	for (unsigned i = 0; i < 240; i++)
+		spc_end_frame(spc, 35104);
 }
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
@@ -87,7 +103,7 @@ void Sgb::updateScreen() {
 		onTransfer(frame);
 
 	if (mask != 0)
-		std::memset(frame, 0, sizeof frame);
+		memset(frame, 0, sizeof frame);
 
 	for (int j = 0; j < 144; j++) {
 		for (int i = 0; i < 160; i++) {
@@ -99,7 +115,7 @@ void Sgb::updateScreen() {
 
 void Sgb::handleTransfer(unsigned data) {
 	if ((data & 0x30) == 0) {
-		std::memset(packet, 0, sizeof packet);
+		memset(packet, 0, sizeof packet);
 		transfer = 0;
 	} else if (transfer != 0xFF) {
 		if (transfer < 128) {
@@ -107,7 +123,7 @@ void Sgb::handleTransfer(unsigned data) {
 			transfer++;
 		} else if ((data & 0x10) == 0) {
 			transfer = 0xFF;
-			std::memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
+			memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
 
 			if (++commandIndex == (command[0] & 7)) {
 				onCommand();
@@ -132,18 +148,62 @@ void Sgb::onCommand() {
 		palnn(1, 2);
 		break;
 	case ATTR_BLK:
-		attr_blk();
+		attrBlk();
+		break;
+	case ATTR_LIN:
+		attrLin();
+		break;
+	case ATTR_DIV:
+		attrDiv();
+		break;
+	case ATTR_CHR:
+		attrChr();
 		break;
 	case PAL_SET:
-		pal_set();
+		palSet();
+		break;
+	case SOUND:
+		cmdSound();
+		break;
+	case SOU_TRN:
+		if ((command[0] & 7) == 1 && pending == 0xFF) {
+			pending = SOU_TRN;
+			pendingCount = 4;
+		}
 		break;
 	case PAL_TRN:
-		pending = PAL_TRN;
-		pendingCount = 4;
+		if ((command[0] & 7) == 1 && pending == 0xFF) {
+			pending = PAL_TRN;
+			pendingCount = 4;
+		}
+		break;
+	case CHR_TRN:
+		if ((command[0] & 7) == 1 && pending == 0xFF) {
+			pending = CHR_TRN;
+			if (command[1] & 1)
+				pending |= HIGH;
+
+			pendingCount = 4;
+		}
+		break;
+	case PCT_TRN:
+		if ((command[0] & 7) == 1 && pending == 0xFF) {
+			pending = PCT_TRN;
+			pendingCount = 4;
+		}
+		break;
+	case ATTR_TRN:
+		if ((command[0] & 7) == 1 && pending == 0xFF) {
+			pending = ATTR_TRN;
+			pendingCount = 4;
+		}
 		break;
 	case MLT_REQ:
 		joypadMask = command[1];
 		joypadIndex &= joypadMask;
+		break;
+	case ATTR_SET:
+		attrSet();
 		break;
 	case MASK_EN:
 		mask = command[1];
@@ -153,31 +213,120 @@ void Sgb::onCommand() {
 
 void Sgb::onTransfer(unsigned char *frame) {
 	unsigned char vram[4096];
-	unsigned pos = 0;
 
 	for (int i = 0; i < 256; i++) {
-		unsigned char *src = frame + ((i / 20) * 160 + (i % 20)) * 8;
+		const int y = i / 20;
+		const int x = i % 20;
+		unsigned char *src = frame + y * 8 * 160 + x * 8;
+		unsigned char *dst = vram + 16 * i;
 
 		for (int j = 0; j < 8; j++) {
-			unsigned char a = (src[0] & 1) << 7;
-			unsigned char b = (src[7] & 2) >> 1;
+			unsigned char a = 0;
+			unsigned char b = 0;
 
-			for (int k = 0; k < 6; k++) {
-				a |= (src[7 - k] & 1) << k;
-				b |= (src[6 - k] & 2) << k;
-			}
+			a |= (src[7] & 1) << 0;
+			a |= (src[6] & 1) << 1;
+			a |= (src[5] & 1) << 2;
+			a |= (src[4] & 1) << 3;
+			a |= (src[3] & 1) << 4;
+			a |= (src[2] & 1) << 5;
+			a |= (src[1] & 1) << 6;
+			a |= (src[0] & 1) << 7;
 
-			vram[pos++] = a;
-			vram[pos++] = b;
+			b |= (src[7] & 2) >> 1;
+			b |= (src[6] & 2) << 0;
+			b |= (src[5] & 2) << 1;
+			b |= (src[4] & 2) << 2;
+			b |= (src[3] & 2) << 3;
+			b |= (src[2] & 2) << 4;
+			b |= (src[1] & 2) << 5;
+			b |= (src[0] & 2) << 6;
+
+			*dst++ = a;
+			*dst++ = b;
 			src += 160;
 		}
 	}
 
 	switch (pending) {
-	case PAL_TRN:
-		for (int i = 0; i < 2048; i++)
-			systemColors[i] = vram[i * 2] | vram[i * 2 + 1] << 8;
+	case SOU_TRN:
+	{
+		unsigned char *end = vram + 0x10000;
+		unsigned char *src = vram;
+		unsigned char *dst = spc_get_ram(spc);
+		
+		while (true) {
+			if (src + 4 > end)
+				break;
+			
+			int len = src[0] | src[1] << 8;
+			int addr = src[2] | src[3] << 8;
+			if (!len)
+				break;
+
+			src += 4;
+			if ((src + len) > end || (addr + len) >= 0x10000)
+				break;
+
+			memcpy(dst + addr, src, len);
+			src += len;
+		}
 		break;
+	}
+	case PAL_TRN:
+		for (unsigned i = 0; i < 2048; i++)
+			systemColors[i] = vram[i * 2] | vram[i * 2 + 1] << 8;
+
+		break;
+	case CHR_TRN & ~HIGH:
+	{
+		bool high = pending & HIGH;
+		unsigned char *src = vram;
+		unsigned char *dst = &tiles[(128 * high) * 64];
+		for (unsigned n = 0; n < 128; n++) {
+			for (unsigned y = 0; y < 8; y++) {
+				unsigned a = src[0];
+				unsigned b = src[1] << 1;
+				unsigned c = src[16] << 2;
+				unsigned d = src[17] << 3;
+				for (unsigned x = 8; x > 0; --x) {
+					dst[x] = (a & 1) | (b & 2) | (c & 4) | (d & 8);
+					a >>= 1;
+					b >>= 1;
+					c >>= 1;
+					d >>= 1;
+				}
+				dst += 8;
+				src += 2;
+			}
+			src += 16;
+		}
+		break;
+	}
+	case PCT_TRN:
+	{
+		unsigned char *src = vram;
+		memcpy(tilemap, src, sizeof tilemap);
+		unsigned short *palettes = (unsigned short *)(src + (sizeof tilemap));
+		unsigned short *dst = &colors[4 * 16];
+		for (int i = 0; i < 64; i++)
+			dst[i] = palettes[i];
+
+		break;
+	}
+	case ATTR_TRN:
+	{
+		unsigned char *src = vram;
+		unsigned char *dst = systemAttributes;
+		for (unsigned n = 0; n < 45 * 90; n++) {
+			unsigned char s = *src++;
+			*dst++ = s >> 6 & 3;
+			*dst++ = s >> 4 & 3;
+			*dst++ = s >> 2 & 3;
+			*dst++ = s >> 0 & 3;
+		}
+		break;
+	}
 	}
 
 	pending = 0xFF;
@@ -189,25 +338,37 @@ void Sgb::refreshPalettes() {
 }
 
 void Sgb::palnn(unsigned a, unsigned b) {
-	unsigned short color[7];
+	if ((command[0] & 7) == 1) {
+		unsigned short color[7];
+		for (int i = 0; i < 7; i++)
+			color[i] = command[1 + i * 2] | command[1 + i * 2 + 1] << 8;
 
-	for (int i = 0; i < 7; i++)
-		color[i] = command[1 + i * 2] | command[1 + i * 2 + 1] << 8;
+		colors[0 * 4 + 0] = color[0];
+		colors[1 * 4 + 0] = color[0];
+		colors[2 * 4 + 0] = color[0];
+		colors[3 * 4 + 0] = color[0];
+		colors[a * 4 + 1] = color[1];
+		colors[a * 4 + 2] = color[2];
+		colors[a * 4 + 3] = color[3];
+		colors[b * 4 + 1] = color[4];
+		colors[b * 4 + 2] = color[5];
+		colors[b * 4 + 3] = color[6];
 
-	colors[0] = color[0];
-	colors[a * 4 + 1] = color[1];
-	colors[a * 4 + 2] = color[2];
-	colors[a * 4 + 3] = color[3];
-	colors[b * 4 + 1] = color[4];
-	colors[b * 4 + 2] = color[5];
-	colors[b * 4 + 3] = color[6];
-
-	refreshPalettes();
+		refreshPalettes();
+	}
 }
 
-void Sgb::attr_blk() {
-	for (int i = 0; i < command[1]; i++) {
-		unsigned ctrl = command[2 + i * 6 + 0];
+void Sgb::attrBlk() {
+	unsigned nset = command[1];
+	if (!nset || nset >= 19)
+		return;
+
+	unsigned npacket = (nset * 6 + 16) / 16;
+	if ((command[0] & 7) != npacket)
+		return;
+	
+	for (unsigned i = 0; i < nset; i++) {
+		unsigned ctrl = command[2 + i * 6 + 0] & 7;
 		unsigned pals = command[2 + i * 6 + 1];
 		unsigned x1 = command[2 + i * 6 + 2];
 		unsigned y1 = command[2 + i * 6 + 3];
@@ -223,10 +384,10 @@ void Sgb::attr_blk() {
 		unsigned outsidepal = pals >> 4 & 3;
 
 		if (ctrl == 1) {
-			line = 2;
+			ctrl = 3;
 			linepal = insidepal;
 		} else if (ctrl == 4) {
-			line = 2;
+			ctrl = 6;
 			linepal = outsidepal;
 		}
 
@@ -234,29 +395,196 @@ void Sgb::attr_blk() {
 			unsigned x = j % 20;
 			unsigned y = j / 20;
 
-			if (x < x1 || y < y1 || x > x2 || y > y2) {
-				if (outside)
-					attributes[j] = outsidepal;
-			} else if (x == x1 || y == y1 || x == x2 || y == y2) {
-				if (line)
-					attributes[j] = linepal;
-			} else if (inside)
+			if (outside && (x < x1 || x > x2 || y < y1 || y > y2)) {
+				attributes[j] = outsidepal;
+			} else if (inside && x > x1 && x < x2 && y > y1 && y < y2) {
 				attributes[j] = insidepal;
+			} else if (line)
+				attributes[j] = linepal;
 		}
 	}
 }
 
-void Sgb::pal_set() {
-	for (int i = 0; i < 4; i++) {
-		unsigned p = command[1 + i * 2] | command[1 + i * 2 + 1] << 8;
+void Sgb::attrLin() {
+	unsigned nset = command[1];
+	if (!nset || nset >= 111)
+		return;
 
-		colors[0] = systemColors[p * 4 + 0];
-		colors[i * 4 + 1] = systemColors[p * 4 + 1];
-		colors[i * 4 + 2] = systemColors[p * 4 + 2];
-		colors[i * 4 + 3] = systemColors[p * 4 + 3];
+	unsigned npacket = (nset + 17) / 16;
+	if ((command[0] & 7) != npacket)
+		return;
+
+	for (unsigned i = 0; i < nset; i++) {
+		unsigned char v = command[i + 2];
+		unsigned line = v & 31;
+		unsigned a = v >> 5 & 3;
+		if (v & 0x80) { // horizontal
+			if (line > 17)
+				line = 17;
+
+			memset(attributes + line * 20, a, 20);
+		} else { // vertical
+			if (line > 19)
+				line = 19;
+
+			unsigned char *dst = attributes + line;
+			for (unsigned i = 0; i < 18; i++, dst += 20)
+				dst[0] = a;
+		}
 	}
+}
 
-	refreshPalettes();
+void Sgb::attrDiv() {
+	if ((command[0] & 7) == 1) {
+		unsigned char v = command[1];
+
+		unsigned c = v & 3;
+		unsigned a = v >> 2 & 3;
+		unsigned b = v >> 4 & 3;
+
+		unsigned pos = command[2];
+		unsigned char *dst = attributes;
+		if (v & 0x40) { // horizontal
+			if (pos > 17)
+				pos = 17;
+
+			unsigned i;
+			for (i = 0; i < pos; i++, dst += 20)
+				memset(dst, a, 20);
+
+			memset(dst, b, 20);
+			dst += 20;
+			for (i++; i < 18; i++, dst += 20)
+				memset(dst, c, 20);
+		} else { // vertical
+			if (pos > 19)
+				pos = 19;
+
+			for (unsigned j = 0; j < 18; j++) {
+				unsigned i;
+				for (i = 0; i < pos; i++)
+					*dst++ = a;
+
+				*dst++ = b;
+				for (i++; i < 20; i++)
+					*dst++ = c;
+			}
+		}
+	}
+}
+
+void Sgb::attrChr() {
+	unsigned x = command[1];
+	unsigned y = command[2];
+	unsigned n = command[3] | command[4] << 8;
+	if (n > 360)
+		return;
+
+	unsigned npacket = (n + 87) / 64;
+	if ((command[0] & 7) < npacket)
+		return;
+
+	if (x > 19)
+		x = 19;
+
+	if (y > 17)
+		y = 17;
+
+	unsigned vertical = command[5];
+	for (unsigned i = 0; i < n; i++) {
+		unsigned char v = command[i / 4 + 6];
+		unsigned a = v >> (2 * (3 - (i & 3))) & 3;
+		attributes[y * 20 + x] = a;
+		if (vertical) {
+			y++;
+			if (y == 18) {
+				y = 0;
+				x++;
+				if (x == 20)
+					return;
+			}
+		} else {
+			x++;
+			if (x == 20) {
+				x = 0;
+				y++;
+				if (y == 18)
+					return;
+			}
+		}
+	}
+}
+
+void Sgb::attrSet() {
+	if ((command[0] & 7) == 1) {
+		unsigned attr = command[1] & 0x3F;
+		if (attr >= 45)
+			attr = 44;
+
+		memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
+		if (command[1] & 0x40)
+			mask = 0;
+	}
+}
+
+void Sgb::palSet() {
+	if ((command[0] & 7) == 1) {
+		unsigned p0 = command[1] | ((command[2] << 8) & 0x100);
+		for (unsigned i = 0; i < 4; i++) {
+			unsigned p = command[1 + i * 2] | ((command[1 + i * 2 + 1] << 8) & 0x100);
+			colors[0 * 4 + 0] = systemColors[p0 * 4 + 0];
+			colors[i * 4 + 1] = systemColors[p  * 4 + 1];
+			colors[i * 4 + 2] = systemColors[p  * 4 + 2];
+			colors[i * 4 + 3] = systemColors[p  * 4 + 3];
+		}
+		if (command[9] & 0x80) {
+			unsigned attr = command[9] & 0x3F;
+			if (attr >= 45)
+				attr = 44;
+			
+			memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
+		}
+		if (command[9] & 0x40)
+			mask = 0;
+
+		refreshPalettes();
+	}
+}
+
+void Sgb::cmdSound() {
+	if ((command[0] & 7) == 1) {
+		soundControl[1] = command[1];
+		soundControl[2] = command[2];
+		soundControl[3] = command[3];
+		soundControl[0] = command[4];
+	}
+}
+
+unsigned Sgb::generateSamples(int16_t *soundBuf, uint64_t &samples) {
+	if (!soundBuf)
+		return -1;
+
+	short buf[4096];
+	unsigned diff = samples - lastUpdate_;
+	samples = diff / 65;
+	lastUpdate_ += samples * 65;
+	spc_set_output(spc, buf, 2048);
+	bool matched = true;
+	for (unsigned p = 0; p < 4; p++) {
+		if (spc_read_port(spc, 0, p) != soundControl[p])
+			matched = false;
+	}
+	if (matched) {
+		soundControl[0] = 0;
+		soundControl[1] = 0;
+		soundControl[2] = 0;
+	}
+	for (unsigned p = 0; p < 4; p++)
+		spc_write_port(spc, 0, p, soundControl[p]);
+
+	spc_end_frame(spc, samples * 32);
+	memcpy(soundBuf, buf, sizeof buf);
+	return diff % 65;
 }
 
 SYNCFUNC(Sgb) {

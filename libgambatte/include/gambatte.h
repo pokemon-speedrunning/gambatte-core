@@ -136,6 +136,17 @@ public:
 	                      gambatte::uint_least32_t *audioBuf, std::size_t &samples);
 
 	/**
+	  * Outputs SGB audio to the provided buffer.
+	  * Should be called after every runFor call if SGB audio is desired.
+	  *
+	  * @param audioBuf buffer with space >= 4096
+	  * @param samples  in: gb samples produced since gambatte_create
+	  *                out: number of samples produced
+	  * @return gb sample remainder, or -1 on failure
+	  */
+	unsigned generateSgbSamples(int16_t *audioBuf, uint64_t &samples);
+
+	/**
 	  * Sets layers to be rendered.
 	  * @param layermask, 1=BG, 2=OBJ, 4=WINDOW
 	  */

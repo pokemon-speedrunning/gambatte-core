@@ -38,10 +38,14 @@ public:
 	void loadSavedata() { mem_.loadSavedata(cycleCounter_); }
 	void saveSavedata() { mem_.saveSavedata(cycleCounter_); }
 
-	bool getMemoryArea(int which, unsigned char **data, int *length) { return mem_.getMemoryArea(which, data, length); }
+	bool getMemoryArea(int which, unsigned char **data, int *length) { return mem_.getMemoryArea(which, data, length); } 
 
 	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
 		mem_.setVideoBuffer(videoBuf, pitch);
+	}
+
+	unsigned generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
+		return mem_.generateSgbSamples(soundBuf, samples);
 	}
 
 	void setInputGetter(InputGetter *getInput, void *p) {
