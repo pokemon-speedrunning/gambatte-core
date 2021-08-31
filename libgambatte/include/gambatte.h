@@ -137,7 +137,7 @@ public:
 
 	/**
 	  * Outputs SGB audio to the provided buffer.
-	  * Should be called after every runFor call if SGB audio is desired.
+	  * Must be called after every runFor call if SGB audio is used.
 	  *
 	  * @param audioBuf buffer with space >= 4096
 	  * @param samples  in: gb samples produced since gambatte_create
@@ -145,6 +145,16 @@ public:
 	  * @return gb sample remainder, or -1 on failure
 	  */
 	unsigned generateSgbSamples(int16_t *audioBuf, uint64_t &samples);
+
+	/**
+	  * Resets SPC state. An SPC file must be provided.
+	  *
+	  * @param spcData buffer with spc data
+	  * @param len     length of buffer
+	  *
+	  * @return 0 on success, -1 on failure
+	  */
+	unsigned resetSpc(unsigned char *spcData, unsigned len);
 
 	/**
 	  * Sets layers to be rendered.

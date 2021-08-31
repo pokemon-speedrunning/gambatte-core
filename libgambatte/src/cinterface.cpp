@@ -79,6 +79,10 @@ GBEXPORT int gambatte_generatesgbsamples(GB *g, int16_t *audioBuf, uint64_t *sam
 	return g->generateSgbSamples(audioBuf, *samples);
 }
 
+GBEXPORT int gambatte_resetspc(GB *g, unsigned char *spcData, unsigned len) {
+	return g->resetSpc(spcData, len);
+}
+
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {
 	g->setLayers(mask);
 }

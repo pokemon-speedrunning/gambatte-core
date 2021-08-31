@@ -91,6 +91,10 @@ unsigned GB::generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
 	return p_->cpu.generateSgbSamples(soundBuf, samples);
 }
 
+unsigned GB::resetSpc(unsigned char *spcData, unsigned len) {
+	return p_->cpu.resetSpc(spcData, len);
+}
+
 void GB::setLayers(unsigned mask) {
 	p_->cpu.setLayers(mask);
 }

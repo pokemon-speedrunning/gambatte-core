@@ -331,6 +331,10 @@ public:
 			: -1;
 	}
 
+	unsigned resetSpc(unsigned char *spcData, unsigned len) {
+		return sgb_.resetSpc(spcData, len);
+	}
+
 	void setDmgPaletteColor(int palNum, int colorNum, unsigned long rgb32) {
 		if (!gbIsSgb_)
 			lcd_.setDmgPaletteColor(palNum, colorNum, rgb32);

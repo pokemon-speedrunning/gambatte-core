@@ -48,6 +48,10 @@ public:
 		return mem_.generateSgbSamples(soundBuf, samples);
 	}
 
+	unsigned resetSpc(unsigned char *spcData, unsigned len) {
+		return mem_.resetSpc(spcData, len);
+	}
+
 	void setInputGetter(InputGetter *getInput, void *p) {
 		mem_.setInputGetter(getInput, p);
 	}

@@ -32,6 +32,7 @@ struct SaveState;
 class Sgb {
 public:
 	Sgb();
+	unsigned resetSpc(unsigned char *spcData, unsigned len);
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
@@ -73,7 +74,7 @@ private:
 	std::ptrdiff_t pitch_;
 
 	unsigned short systemColors[512 * 4];
-	unsigned short colors[4 * 8 * 4];
+	unsigned short colors[4 * 4 * 8];
 	unsigned long palette[4 * 4];
 	unsigned char systemAttributes[45 * 20 * 18];
 	unsigned char attributes[20 * 18];
