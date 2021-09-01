@@ -87,6 +87,10 @@ std::ptrdiff_t GB::runFor(gambatte::uint_least32_t *const videoBuf, std::ptrdiff
 	     : cyclesSinceBlit;
 }
 
+unsigned GB::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+	return p_->cpu.updateScreenBorder(videoBuf, pitch);
+}
+
 unsigned GB::generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
 	return p_->cpu.generateSgbSamples(soundBuf, samples);
 }

@@ -44,6 +44,10 @@ public:
 		mem_.setVideoBuffer(videoBuf, pitch);
 	}
 
+	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+		return mem_.updateScreenBorder(videoBuf, pitch);
+	}
+
 	unsigned generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
 		return mem_.generateSgbSamples(soundBuf, samples);
 	}

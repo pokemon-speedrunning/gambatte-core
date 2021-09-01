@@ -325,6 +325,12 @@ public:
 		sgb_.setVideoBuffer(videoBuf, pitch);
 	}
 
+	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+		return isSgb()
+			? sgb_.updateScreenBorder(videoBuf, pitch)
+			: -1;
+	}
+
 	unsigned generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
 		return isSgb()
 			? sgb_.generateSamples(soundBuf, samples)
@@ -332,11 +338,13 @@ public:
 	}
 
 	unsigned resetSpc(unsigned char *spcData, unsigned len) {
-		return sgb_.resetSpc(spcData, len);
+		return isSgb()
+			? sgb_.resetSpc(spcData, len)
+			: -1;
 	}
 
 	void setDmgPaletteColor(int palNum, int colorNum, unsigned long rgb32) {
-		if (!gbIsSgb_)
+		if (!isSgb())
 			lcd_.setDmgPaletteColor(palNum, colorNum, rgb32);
 	}
     

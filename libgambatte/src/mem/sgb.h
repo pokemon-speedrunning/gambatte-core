@@ -46,8 +46,6 @@ public:
 
 	unsigned generateSamples(int16_t *soundBuf, uint64_t &samples);
 
-	unsigned long gbcToRgb32(const unsigned bgr15);
-
 	void setCgbPalette(unsigned *lut) {
 		for (int i = 0; i < 32768; i++)
 			cgbColorsRgb32_[i] = lut[i];
@@ -56,6 +54,7 @@ public:
 
 	void onJoypad(unsigned data);
 	void updateScreen();
+	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch);
 
 	template<bool isReader>void SyncState(NewState *ns);
 
@@ -72,14 +71,21 @@ private:
 
 	uint_least32_t *videoBuf_;
 	std::ptrdiff_t pitch_;
+	unsigned char frameBuf_[160 * 144];
 
 	unsigned short systemColors[512 * 4];
-	unsigned short colors[4 * 4 * 8];
+	unsigned short colors[4 * 4];
 	unsigned long palette[4 * 4];
 	unsigned char systemAttributes[45 * 20 * 18];
 	unsigned char attributes[20 * 18];
-	unsigned char tiles[256 * 64];
+
+	unsigned char systemTiles[256 * 8 * 4];
+	unsigned char tiles[256 * 8 * 4];
+	unsigned short systemTilemap[32 * 32];
 	unsigned short tilemap[32 * 32];
+	unsigned short systemTileColors[16 * 4];
+	unsigned short tileColors[16 * 4];
+	unsigned borderFade;
 
 	unsigned char pending;
 	unsigned char pendingCount;
@@ -87,7 +93,6 @@ private:
 
 	SNES_SPC *spc;
 	unsigned char soundControl[4];
-	uint_least32_t *buffer_;
 	uint64_t lastUpdate_;
 
 	enum Command {
@@ -115,6 +120,9 @@ private:
 	void handleTransfer(unsigned data);
 	void onCommand();
 	void onTransfer(unsigned char *frame);
+
+	unsigned long gbcToRgb32(unsigned bgr15);
+	unsigned long gbcToRgb32(unsigned bgr15, unsigned fade);
 	void refreshPalettes();
 
 	void palnn(unsigned a, unsigned b);

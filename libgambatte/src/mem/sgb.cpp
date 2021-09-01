@@ -21,7 +21,7 @@
 #include "ipl.h"
 
 #include <cstring>
-#include <stdio.h>
+#include <algorithm>
 
 namespace gambatte {
 
@@ -29,7 +29,6 @@ Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
 , spc(NULL)
-, buffer_(0)
 , lastUpdate_(0)
 {
 	// FIXME: this code is ugly
@@ -62,6 +61,13 @@ unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
 	return cgbColorsRgb32_[bgr15 & 0x7FFF];
+}
+
+unsigned long Sgb::gbcToRgb32(unsigned const bgr15, unsigned const fade) {
+    int const r = (bgr15 & 0x1F) - fade;
+    int const g = ((bgr15 >> 5) & 0x1F) - fade;
+    int const b = ((bgr15 >> 10) & 0x1F) - fade;
+	return cgbColorsRgb32_[(std::max(r, 0) | (std::max(g, 0) << 5) | (std::max(b, 0) << 10)) & 0x7FFF];
 }
 
 void Sgb::setStatePtrs(SaveState &state) {
@@ -112,20 +118,110 @@ void Sgb::updateScreen() {
 	if (pending != 0xFF && --pendingCount == 0)
 		onTransfer(frame);
 
-	if (mask != 0)
-		memset(frame, 0, sizeof frame);
+	if (!mask)
+		std::memcpy(frameBuf_, frame, sizeof frame);
 
-	for (unsigned j = 0; j < 144; j++) {
-		for (unsigned i = 0; i < 160; i++) {
-			unsigned attribute = attributes[(j / 8) * 20 + (i / 8)];
-			videoBuf_[j * pitch_ + i] = palette[attribute * 4 + frame[j * 160 + i]];
+	switch (mask) {
+	case 0:
+	case 1:
+		for (unsigned j = 0; j < 144; j++) {
+			for (unsigned i = 0; i < 160; i++) {
+				unsigned attribute = attributes[(j / 8) * 20 + (i / 8)];
+				videoBuf_[j * pitch_ + i] = palette[attribute * 4 + frameBuf_[j * 160 + i]];
+			}
+		}
+		break;
+	case 2:
+	{
+		unsigned long const black = gbcToRgb32(0);
+		for (unsigned j = 0; j < 144; j++) {
+			for (unsigned i = 0; i < 160; i++)
+				videoBuf_[j * pitch_ + i] = black;
+		}
+		break;
+	}
+	case 3:
+	{
+		unsigned long const pal0 = palette[0];
+		for (unsigned j = 0; j < 144; j++) {
+			for (unsigned i = 0; i < 160; i++)
+				videoBuf_[j * pitch_ + i] = pal0;
+		}
+		break;
+	}
+	}
+
+	if (borderFade && --borderFade == 32) {
+		std::memcpy(systemTiles,      tiles,      sizeof tiles);
+		std::memcpy(systemTilemap,    tilemap,    sizeof tilemap);
+		std::memcpy(systemTileColors, tileColors, sizeof tileColors);
+	}
+}
+
+unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+	if (!videoBuf_ || !videoBuf)
+		return -1;
+
+	uint_least32_t frame[256 * 224];
+
+	unsigned long colors[16 * 4];
+	if (!borderFade) {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i]);
+	} else if (borderFade > 32) {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i], 64 - borderFade);
+	} else {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i], borderFade);
+	}
+
+	for (unsigned tileY = 0; tileY < 28; tileY++) {
+		for (unsigned tileX = 0; tileX < 32; tileX++) {
+			if (tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23) // gb area
+				continue;
+
+			unsigned short tile = systemTilemap[tileX + tileY * 32];
+			unsigned char flipX = (tile & 0x4000) ? 0 : 7;
+			unsigned char flipY = (tile & 0x8000) ? 7 : 0;
+			unsigned char pal = (tile >> 10) & 3;
+			for (unsigned y = 0; y < 8; y++) {
+				unsigned base = (tile & 0xFF) * 32 + (y ^ flipY) * 2;
+				for (unsigned x = 0; x < 8; x++) {
+					unsigned char bit = 1 << (x ^ flipX);
+					unsigned char color =
+					((systemTiles[base + 00] & bit) ? 1 : 0) |
+					((systemTiles[base + 01] & bit) ? 2 : 0) |
+					((systemTiles[base + 16] & bit) ? 4 : 0) |
+					((systemTiles[base + 17] & bit) ? 8 : 0);
+
+					uint_least32_t *pixel = &frame[tileX * 8 + x + (tileY * 8 + y) * 256];
+					if (color == 0)
+						*pixel = palette[0];
+					else
+						*pixel = colors[color + pal * 16];
+				}
+			}
 		}
 	}
+
+	uint_least32_t *gbFrame = &frame[40 * 256 + 48];
+	for (unsigned j = 0; j < 144; j++) {
+		for (unsigned i = 0; i < 160; i++)
+			gbFrame[j * 256 + i] = videoBuf_[j * pitch_ + i];
+	}
+
+	for (unsigned j = 0; j < 224; j++) {
+		for (unsigned i = 0; i < 256; i++)
+			videoBuf[j * pitch + i] = frame[j * 256 + i];
+	}
+
+	return 0;
 }
 
 void Sgb::handleTransfer(unsigned data) {
 	if ((data & 0x30) == 0) {
-		memset(packet, 0, sizeof packet);
+		std::memset(packet, 0, sizeof packet);
 		transfer = 0;
 	} else if (transfer != 0xFF) {
 		if (transfer < 128) {
@@ -133,7 +229,7 @@ void Sgb::handleTransfer(unsigned data) {
 			transfer++;
 		} else if ((data & 0x10) == 0) {
 			transfer = 0xFF;
-			memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
+			std::memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
 
 			if (++commandIndex == (command[0] & 7)) {
 				onCommand();
@@ -271,7 +367,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 			if (/*(src + len) > end || */(addr + len) >= 0x10000)
 				break;
 
-			memcpy(dst + addr, src, len);
+			std::memcpy(dst + addr, src, len);
 			src += len;
 		}
 		break;
@@ -283,38 +379,27 @@ void Sgb::onTransfer(unsigned char *frame) {
 		break;
 	case CHR_TRN & ~HIGH:
 	{
-		bool high = pending & HIGH;
-		unsigned char *src = vram;
-		unsigned char *dst = &tiles[(128 * high) * 64];
-		for (unsigned n = 0; n < 128; n++) {
-			for (unsigned y = 0; y < 8; y++) {
-				unsigned a = src[0];
-				unsigned b = src[1] << 1;
-				unsigned c = src[16] << 2;
-				unsigned d = src[17] << 3;
-				for (unsigned x = 8; x > 0; --x) {
-					dst[x] = (a & 1) | (b & 2) | (c & 4) | (d & 8);
-					a >>= 1;
-					b >>= 1;
-					c >>= 1;
-					d >>= 1;
-				}
-				dst += 8;
-				src += 2;
-			}
-			src += 16;
-		}
+		unsigned char *tileAddr = (pending & HIGH) ? &tiles[4096] : &tiles[0];
+		unsigned short *src = (unsigned short *)vram;
+		unsigned short *dst = (unsigned short *)tileAddr;
+		for (unsigned i = 0; i < 2048; i++)
+			dst[i] = src[i];
+
 		break;
 	}
 	case PCT_TRN:
 	{
-		unsigned char *src = vram;
-		memcpy(tilemap, src, sizeof tilemap);
-		unsigned short *palettes = (unsigned short *)(src + (sizeof tilemap));
-		unsigned short *dst = &colors[4 * 4 * 4];
-		for (unsigned i = 0; i < 64; i++)
-			dst[i] = palettes[i];
+		unsigned short *src = (unsigned short *)vram;
+		unsigned short *dst = tilemap;
+		for (unsigned i = 0; i < 32 * 32; i++)
+			dst[i] = src[i];
+		
+		src += sizeof tilemap / sizeof tilemap[0];
+		dst = tileColors;
+		for (unsigned i = 0; i < 16 * 4; i++)
+			dst[i] = src[i];
 
+		borderFade = 64;
 		break;
 	}
 	case ATTR_TRN:
@@ -425,7 +510,7 @@ void Sgb::attrLin() {
 			if (line > 18)
 				continue;
 
-			memset(attributes + line * 20, pal, 20);
+			std::memset(attributes + line * 20, pal, 20);
 		} else { // vertical
 			if (line > 20)
 				continue;
@@ -510,7 +595,7 @@ void Sgb::attrSet() {
 	if (attr >= 45)
 		return;
 
-	memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
+	std::memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
 	if (command[1] & 0x40)
 		mask = 0;
 }
@@ -529,7 +614,7 @@ void Sgb::palSet() {
 		if (attr >= 45)
 			attr = 44;
 		
-		memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
+		std::memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
 	}
 	if (command[9] & 0x40)
 		mask = 0;
@@ -567,7 +652,7 @@ unsigned Sgb::generateSamples(int16_t *soundBuf, uint64_t &samples) {
 		spc_write_port(spc, 0, p, soundControl[p]);
 
 	spc_end_frame(spc, samples * 32);
-	memcpy(soundBuf, buf, sizeof buf);
+	std::memcpy(soundBuf, buf, sizeof buf);
 	return diff % 65;
 }
 
