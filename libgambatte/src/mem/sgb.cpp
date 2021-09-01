@@ -126,7 +126,7 @@ void Sgb::updateScreen() {
 	case 1:
 		for (unsigned j = 0; j < 144; j++) {
 			for (unsigned i = 0; i < 160; i++) {
-				unsigned attribute = attributes[(j / 8) * 20 + (i / 8)];
+				unsigned attribute = attributes[(j / 8) * 20 + (i / 8)] & 3;
 				videoBuf_[j * pitch_ + i] = palette[attribute * 4 + frameBuf_[j * 160 + i]];
 			}
 		}
@@ -165,7 +165,7 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	uint_least32_t frame[256 * 224];
 
 	unsigned long colors[16 * 4];
-	if (!borderFade) {
+	if (borderFade == 0) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			colors[i] = gbcToRgb32(systemTileColors[i]);
 	} else if (borderFade > 32) {
@@ -176,10 +176,17 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 			colors[i] = gbcToRgb32(systemTileColors[i], borderFade);
 	}
 
+	uint_least32_t *gbFrame = &frame[40 * 256 + 48];
+	for (unsigned j = 0; j < 144; j++) {
+		for (unsigned i = 0; i < 160; i++)
+			gbFrame[j * 256 + i] = videoBuf_[j * pitch_ + i];
+	}
+
 	for (unsigned tileY = 0; tileY < 28; tileY++) {
 		for (unsigned tileX = 0; tileX < 32; tileX++) {
+			bool border = true;
 			if (tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23) // gb area
-				continue;
+				border = false;
 
 			unsigned short tile = systemTilemap[tileX + tileY * 32];
 			unsigned char flipX = (tile & 0x4000) ? 0 : 7;
@@ -196,19 +203,16 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 					((systemTiles[base + 17] & bit) ? 8 : 0);
 
 					uint_least32_t *pixel = &frame[tileX * 8 + x + (tileY * 8 + y) * 256];
-					if (color == 0)
+					if (color == 0) {
+						if (!border)
+							continue;
+
 						*pixel = palette[0];
-					else
+					} else
 						*pixel = colors[color + pal * 16];
 				}
 			}
 		}
-	}
-
-	uint_least32_t *gbFrame = &frame[40 * 256 + 48];
-	for (unsigned j = 0; j < 144; j++) {
-		for (unsigned i = 0; i < 160; i++)
-			gbFrame[j * 256 + i] = videoBuf_[j * pitch_ + i];
 	}
 
 	for (unsigned j = 0; j < 224; j++) {
@@ -295,7 +299,7 @@ void Sgb::onCommand() {
 		pendingCount = 2;
 		break;
 	case MLT_REQ:
-		joypadMask = command[1];
+		joypadMask = command[1] & 3;
 		joypadIndex &= joypadMask;
 		break;
 	case ATTR_SET:
@@ -311,8 +315,8 @@ void Sgb::onTransfer(unsigned char *frame) {
 	unsigned char vram[4096];
 
 	for (unsigned i = 0; i < 256; i++) {
-		unsigned const y = i / 20;
-		unsigned const x = i % 20;
+		unsigned const y = (i / 20);
+		unsigned const x = (i % 20);
 		unsigned char *src = frame + y * 8 * 160 + x * 8;
 		unsigned char *dst = vram + 16 * i;
 
@@ -373,11 +377,14 @@ void Sgb::onTransfer(unsigned char *frame) {
 		break;
 	}
 	case PAL_TRN:
+	{
 		for (unsigned i = 0; i < 2048; i++)
 			systemColors[i] = vram[i * 2] | vram[i * 2 + 1] << 8;
 
 		break;
-	case CHR_TRN & ~HIGH:
+	}
+	case CHR_TRN | HIGH:
+	case CHR_TRN:
 	{
 		unsigned char *tileAddr = (pending & HIGH) ? &tiles[4096] : &tiles[0];
 		unsigned short *src = (unsigned short *)vram;
@@ -393,7 +400,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 		unsigned short *dst = tilemap;
 		for (unsigned i = 0; i < 32 * 32; i++)
 			dst[i] = src[i];
-		
+
 		src += sizeof tilemap / sizeof tilemap[0];
 		dst = tileColors;
 		for (unsigned i = 0; i < 16 * 4; i++)
@@ -404,15 +411,11 @@ void Sgb::onTransfer(unsigned char *frame) {
 	}
 	case ATTR_TRN:
 	{
-		unsigned char *src = vram;
-		unsigned char *dst = systemAttributes;
-		for (unsigned n = 0; n < 45 * 90; n++) {
-			unsigned char s = *src++;
-			*dst++ = s >> 6 & 3;
-			*dst++ = s >> 4 & 3;
-			*dst++ = s >> 2 & 3;
-			*dst++ = s >> 0 & 3;
-		}
+		unsigned short *src = (unsigned short *)vram;
+		unsigned short *dst = (unsigned short *)systemAttributes;
+		for (unsigned i = 0; i < (45 * 90) / 2; i++)
+			dst[i] = src[i];
+
 		break;
 	}
 	}
@@ -595,7 +598,13 @@ void Sgb::attrSet() {
 	if (attr >= 45)
 		return;
 
-	std::memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
+	for (unsigned i = 0; i < 90; i++) {
+		unsigned char b = systemAttributes[attr * 90 + i];
+		for (unsigned j = 0; j < 4; j++) {
+			attributes[j + i * 4] = b >> 6;
+			b <<= 2;
+		}
+	}
 	if (command[1] & 0x40)
 		mask = 0;
 }
@@ -604,7 +613,7 @@ void Sgb::palSet() {
 	unsigned p0 = command[1] | ((command[2] << 8) & 0x100);
 	for (unsigned i = 0; i < 4; i++) {
 		unsigned p = command[1 + i * 2] | ((command[1 + i * 2 + 1] << 8) & 0x100);
-		colors[0 * 4 + 0] = systemColors[p0 * 4 + 0];
+		colors[i * 4 + 0] = systemColors[p0 * 4 + 0];
 		colors[i * 4 + 1] = systemColors[p  * 4 + 1];
 		colors[i * 4 + 2] = systemColors[p  * 4 + 2];
 		colors[i * 4 + 3] = systemColors[p  * 4 + 3];
@@ -614,7 +623,13 @@ void Sgb::palSet() {
 		if (attr >= 45)
 			attr = 44;
 		
-		std::memcpy(attributes, &systemAttributes[attr * 20 * 18], sizeof attributes);
+		for (unsigned i = 0; i < 90; i++) {
+			unsigned char b = systemAttributes[attr * 90 + i];
+			for (unsigned j = 0; j < 4; j++) {
+				attributes[j + i * 4] = b >> 6;
+				b <<= 2;
+			}
+		}
 	}
 	if (command[9] & 0x40)
 		mask = 0;

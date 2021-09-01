@@ -76,7 +76,7 @@ private:
 	unsigned short systemColors[512 * 4];
 	unsigned short colors[4 * 4];
 	unsigned long palette[4 * 4];
-	unsigned char systemAttributes[45 * 20 * 18];
+	unsigned char systemAttributes[45 * 90];
 	unsigned char attributes[20 * 18];
 
 	unsigned char systemTiles[256 * 8 * 4];
