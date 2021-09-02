@@ -32,23 +32,27 @@ struct SaveState;
 class Sgb {
 public:
 	Sgb();
-	unsigned resetSpc(unsigned char *spcData, unsigned len);
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
 
-	unsigned getJoypadIndex() { return joypadIndex; }
+	unsigned saveSpcState(unsigned char *stateBuf) const;
+	unsigned loadSpcState(unsigned char *stateBuf);
+	unsigned resetSpc(unsigned char *spcData, unsigned len);
+
+	unsigned getJoypadIndex() const { return joypadIndex; }
 
 	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
 		videoBuf_ = videoBuf;
 		pitch_ = pitch;
 	}
 
-	unsigned generateSamples(int16_t *soundBuf, uint64_t &samples);
+	unsigned generateSamples(short *soundBuf, unsigned long long &samples);
 
 	void setCgbPalette(unsigned *lut) {
 		for (int i = 0; i < 32768; i++)
 			cgbColorsRgb32_[i] = lut[i];
+
 		refreshPalettes();
 	}
 
@@ -93,7 +97,7 @@ private:
 
 	SNES_SPC *spc;
 	unsigned char soundControl[4];
-	uint64_t lastUpdate_;
+	unsigned long long lastUpdate_;
 
 	enum Command {
 		PAL01    = 0x00,

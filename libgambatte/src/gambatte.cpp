@@ -91,8 +91,16 @@ unsigned GB::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) 
 	return p_->cpu.updateScreenBorder(videoBuf, pitch);
 }
 
-unsigned GB::generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
+unsigned GB::generateSgbSamples(short *soundBuf, unsigned long long &samples) {
 	return p_->cpu.generateSgbSamples(soundBuf, samples);
+}
+
+unsigned GB::saveSpcState(unsigned char *stateBuf) {
+	return p_->cpu.saveSpcState(stateBuf);
+}
+
+unsigned GB::loadSpcState(unsigned char *stateBuf) {
+	return p_->cpu.loadSpcState(stateBuf);
 }
 
 unsigned GB::resetSpc(unsigned char *spcData, unsigned len) {

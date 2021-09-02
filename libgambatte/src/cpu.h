@@ -48,8 +48,16 @@ public:
 		return mem_.updateScreenBorder(videoBuf, pitch);
 	}
 
-	unsigned generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
+	unsigned generateSgbSamples(short *soundBuf, unsigned long long &samples) {
 		return mem_.generateSgbSamples(soundBuf, samples);
+	}
+
+	unsigned saveSpcState(unsigned char *stateBuf) {
+		return mem_.saveSpcState(stateBuf);
+	}
+
+	unsigned loadSpcState(unsigned char *stateBuf) {
+		return mem_.loadSpcState(stateBuf);
 	}
 
 	unsigned resetSpc(unsigned char *spcData, unsigned len) {

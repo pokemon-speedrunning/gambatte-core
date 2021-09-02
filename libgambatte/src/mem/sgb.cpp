@@ -25,6 +25,16 @@
 
 namespace gambatte {
 
+void saveStateCallback(unsigned char **o, void *i, std::size_t len) {
+	std::memcpy(*o, i, len);
+	*o += len;
+}
+
+void loadStateCallback(unsigned char **i, void *o, std::size_t len) {
+	std::memcpy(o, *i, len);
+	*i += len;
+}
+
 Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
@@ -37,26 +47,6 @@ Sgb::Sgb()
 		for (unsigned g = 0; g < 32; g++)
 			for (unsigned r = 0; r < 32; r++)
 				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
-}
-
-unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
-	if (!spcData || !len) // huh?
-		return -1;
-
-	if (!spc)
-		spc = spc_new();
-
-	spc_init_rom(spc, iplRom);
-	spc_reset(spc);
-	if (spc_load_spc(spc, spcData, len))
-		return -1;
-
-	short buf[4096];
-	spc_set_output(spc, buf, 4096);
-	for (unsigned i = 0; i < 240; i++)
-		spc_end_frame(spc, 35104);
-
-	return 0;
 }
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
@@ -98,6 +88,44 @@ void Sgb::loadState(SaveState const &state) {
 	mask = state.mem.sgb.mask;
 
 	refreshPalettes();
+}
+
+unsigned Sgb::saveSpcState(unsigned char *stateBuf) const {
+	if (!spc)
+		return -1;
+
+	unsigned char *o = stateBuf;
+	spc_copy_state(spc, &o, saveStateCallback);
+	return 0;
+}
+
+unsigned Sgb::loadSpcState(unsigned char *stateBuf) {
+	if (!spc)
+		return -1;
+
+	unsigned char *i = stateBuf;
+	spc_copy_state(spc, &i, loadStateCallback);
+	return 0;
+}
+
+unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
+	if (!spcData || !len) // huh?
+		return -1;
+
+	if (!spc)
+		spc = spc_new();
+
+	spc_init_rom(spc, iplRom);
+	spc_reset(spc);
+	if (spc_load_spc(spc, spcData, len))
+		return -1;
+
+	short buf[4096];
+	spc_set_output(spc, buf, 4096);
+	for (unsigned i = 0; i < 240; i++)
+		spc_end_frame(spc, 35104);
+
+	return 0;
 }
 
 void Sgb::onJoypad(unsigned data) {
@@ -288,6 +316,9 @@ void Sgb::handleTransfer(unsigned data) {
 }
 
 void Sgb::onCommand() {
+	if ((command[0] & 7) == 0)
+		return;
+
 	switch (command[0] >> 3) {
 	case PAL01:
 		palnn(0, 1);
@@ -688,7 +719,7 @@ void Sgb::cmdSound() {
 	soundControl[0] = command[4];
 }
 
-unsigned Sgb::generateSamples(int16_t *soundBuf, uint64_t &samples) {
+unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
 	if (!soundBuf || !spc)
 		return -1;
 
@@ -696,6 +727,9 @@ unsigned Sgb::generateSamples(int16_t *soundBuf, uint64_t &samples) {
 	unsigned diff = samples - lastUpdate_;
 	samples = diff / 65;
 	lastUpdate_ += samples * 65;
+	if (samples > 572)
+		samples = 572;
+
 	spc_set_output(spc, buf, 2048);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
@@ -726,14 +760,28 @@ SYNCFUNC(Sgb) {
 	NSS(joypadIndex);
 	NSS(joypadMask);
 
+	NSS(frameBuf_);
+
 	NSS(systemColors);
 	NSS(colors);
 	NSS(palette);
+	NSS(systemAttributes);
 	NSS(attributes);
+
+	NSS(systemTiles);
+	NSS(tiles);
+	NSS(systemTilemap);
+	NSS(tilemap);
+	NSS(systemTileColors);
+	NSS(tileColors);
+	NSS(borderFade);
 
 	NSS(pending);
 	NSS(pendingCount);
 	NSS(mask);
+
+	NSS(soundControl);
+	NSS(lastUpdate_);
 }
 
 }

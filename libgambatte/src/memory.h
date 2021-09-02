@@ -331,9 +331,21 @@ public:
 			: -1;
 	}
 
-	unsigned generateSgbSamples(int16_t *soundBuf, uint64_t &samples) {
+	unsigned generateSgbSamples(short *soundBuf, unsigned long long &samples) {
 		return isSgb()
 			? sgb_.generateSamples(soundBuf, samples)
+			: -1;
+	}
+
+	unsigned saveSpcState(unsigned char *stateBuf) {
+		return isSgb()
+			? sgb_.saveSpcState(stateBuf)
+			: -1;
+	}
+
+	unsigned loadSpcState(unsigned char *stateBuf) {
+		return isSgb()
+			? sgb_.loadSpcState(stateBuf)
 			: -1;
 	}
 

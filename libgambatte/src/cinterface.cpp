@@ -79,8 +79,16 @@ GBEXPORT int gambatte_updatescreenborder(GB *g, unsigned *videoBuf, int pitch) {
 	return g->updateScreenBorder(videoBuf, pitch);
 }
 
-GBEXPORT int gambatte_generatesgbsamples(GB *g, int16_t *audioBuf, uint64_t *samples) {
+GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned long long *samples) {
 	return g->generateSgbSamples(audioBuf, *samples);
+}
+
+GBEXPORT int gambatte_savespcstate(GB *g, unsigned char *stateBuf) {
+	return g->saveSpcState(stateBuf);
+}
+
+GBEXPORT int gambatte_loadspcstate(GB *g, unsigned char *stateBuf) {
+	return g->loadSpcState(stateBuf);
 }
 
 GBEXPORT int gambatte_resetspc(GB *g, unsigned char *spcData, unsigned len) {
