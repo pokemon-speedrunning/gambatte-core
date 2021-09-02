@@ -727,9 +727,6 @@ unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
 	unsigned diff = samples - lastUpdate_;
 	samples = diff / 65;
 	lastUpdate_ += samples * 65;
-	if (samples > 572)
-		samples = 572;
-
 	spc_set_output(spc, buf, 2048);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {

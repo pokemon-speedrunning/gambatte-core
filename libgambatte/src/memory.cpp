@@ -1470,6 +1470,7 @@ int Memory::linkStatus(int which) {
 SYNCFUNC(Memory)
 {
 	SSS(cart_);
+	SSS(sgb_);
 	NSS(ioamhram_);
 	NSS(divLastUpdate_);
 	NSS(lastOamDmaUpdate_);
