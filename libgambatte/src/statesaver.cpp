@@ -319,6 +319,7 @@ SaverList::SaverList()
 	{ static char const label[] = { d,u,t,NO1,h,i,   NUL }; ADD(spu.ch1.duty.high); }
 	{ static char const label[] = { e,n,v,NO1,c,t,r, NUL }; ADD(spu.ch1.env.counter); }
 	{ static char const label[] = { e,n,v,NO1,v,o,l, NUL }; ADD(spu.ch1.env.volume); }
+	{ static char const label[] = { e,n,v,NO1,c,l,k, NUL }; ADD(spu.ch1.env.clock); }
 	{ static char const label[] = { l,e,n,NO1,c,t,r, NUL }; ADD(spu.ch1.lcounter.counter); }
 	{ static char const label[] = { l,e,n,NO1,v,a,l, NUL }; ADD(spu.ch1.lcounter.lengthCounter); }
 	{ static char const label[] = { n,r,NO1,NO0,       NUL }; ADD(spu.ch1.sweep.nr0); }
@@ -330,6 +331,7 @@ SaverList::SaverList()
 	{ static char const label[] = { d,u,t,NO2,h,i,   NUL }; ADD(spu.ch2.duty.high); }
 	{ static char const label[] = { e,n,v,NO2,c,t,r, NUL }; ADD(spu.ch2.env.counter); }
 	{ static char const label[] = { e,n,v,NO2,v,o,l, NUL }; ADD(spu.ch2.env.volume); }
+	{ static char const label[] = { e,n,v,NO2,c,l,k, NUL }; ADD(spu.ch2.env.clock); }
 	{ static char const label[] = { l,e,n,NO2,c,t,r, NUL }; ADD(spu.ch2.lcounter.counter); }
 	{ static char const label[] = { l,e,n,NO2,v,a,l, NUL }; ADD(spu.ch2.lcounter.lengthCounter); }
 	{ static char const label[] = { n,r,NO2,NO3,       NUL }; ADD(spu.ch2.duty.nr3); }
@@ -349,6 +351,7 @@ SaverList::SaverList()
 	{ static char const label[] = { l,f,s,r,r,e,g, NUL }; ADD(spu.ch4.lfsr.reg); }
 	{ static char const label[] = { e,n,v,NO4,c,t,r, NUL }; ADD(spu.ch4.env.counter); }
 	{ static char const label[] = { e,n,v,NO4,v,o,l, NUL }; ADD(spu.ch4.env.volume); }
+	{ static char const label[] = { e,n,v,NO4,c,l,k, NUL }; ADD(spu.ch4.env.clock); }
 	{ static char const label[] = { l,e,n,NO4,c,t,r, NUL }; ADD(spu.ch4.lcounter.counter); }
 	{ static char const label[] = { l,e,n,NO4,v,a,l, NUL }; ADD(spu.ch4.lcounter.lengthCounter); }
 	{ static char const label[] = { n,r,NO4,NO4,       NUL }; ADD(spu.ch4.nr4); }

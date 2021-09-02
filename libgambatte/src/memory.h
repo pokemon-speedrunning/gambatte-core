@@ -203,7 +203,7 @@ public:
 			lastCartBusUpdate_ = cc;
 			return cartBus_;
 		}
-		if (cart_.isPocketCamera() && cart_.cameraIsActive(cc) && (p >= mm_sram_begin && p < mm_wram_begin)) {
+		if (cart_.isPocketCamera() && (p >= mm_sram_begin && p < mm_wram_begin) && cart_.cameraIsActive(cc)) {
 			return cart_.rmem(p >> 12)
 				? 0x00
 				: nontrivial_read(p, cc);

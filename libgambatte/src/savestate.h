@@ -152,6 +152,7 @@ struct SaveState {
 		struct Env {
 			unsigned long counter;
 			unsigned char volume;
+			unsigned char /*bool*/ clock;
 		};
 
 		struct LCounter {

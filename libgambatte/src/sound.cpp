@@ -59,9 +59,11 @@ PSG::PSG()
 {
 }
 
-void PSG::init(bool cgb) {
-	ch1_.init(cgb);
+void PSG::init(bool cgb, bool agb) {
+	ch1_.init(cgb, agb);
+	ch2_.init(agb);
 	ch3_.init(cgb);
+	ch4_.init(cgb, agb);
 }
 
 void PSG::reset(bool ds) {
@@ -229,9 +231,21 @@ unsigned PSG::getStatus() const {
 	     | ch4_.isActive() << 3;
 }
 
-std::size_t PSG::callbackCycleOffset(unsigned long const cpuCc, bool const doubleSpeed) {
+unsigned long PSG::callbackCycleOffset(unsigned long const cpuCc, bool const doubleSpeed) const {
+	unsigned long const cyclesOff = (cpuCc - lastUpdate_) >> (1 + doubleSpeed);
+	return bufferPos_ + cyclesOff;
+}
+
+unsigned char PSG::pcm12Read(unsigned long const cpuCc, bool const doubleSpeed) {
 	generateSamples(cpuCc, doubleSpeed);
-	return bufferPos_;
+	return ((ch2_.isActive() ? ch2_.getVolume() : 0) << 4)
+	| (ch1_.isActive() ? ch1_.getVolume() : 0);
+}
+
+unsigned char PSG::pcm34Read(unsigned long const cpuCc, bool const doubleSpeed) {
+	generateSamples(cpuCc, doubleSpeed);
+	return ((ch4_.isActive() ? ch4_.getVolume() : 0) << 4)
+	| (ch3_.isActive() ? ch3_.getVolume() : 0);
 }
 
 // the buffer and position are not saved, as they're set and flushed on each runfor() call

@@ -31,6 +31,7 @@ struct SaveState;
 class Channel3 {
 public:
 	Channel3();
+	unsigned char getVolume() const { return vol_; }
 	bool isActive() const { return master_; }
 	bool isCgb() const { return cgb_; }
 	void reset();
@@ -98,10 +99,15 @@ private:
 	unsigned char wavePos_;
 	unsigned char rshift_;
 	unsigned char sampleBuf_;
+	unsigned char vol_;
 	bool master_;
 	bool cgb_;
 
 	void updateWaveCounter(unsigned long cc);
+
+	inline unsigned char waveSample(unsigned pos, unsigned char s, unsigned char rsh) const {
+		return (pos % 2 ? s & 0xF : s >> 4) >> rsh;
+	}
 };
 
 }

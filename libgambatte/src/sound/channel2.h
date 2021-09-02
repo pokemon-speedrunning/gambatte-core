@@ -39,9 +39,11 @@ public:
 	void setNr4(unsigned data, unsigned long cc, unsigned long ref);
 	void setSo(unsigned long soMask, unsigned long cc);
 	bool isActive() const { return master_; }
+	unsigned char getVolume() const { return vol_; }
 	void update(uint_least32_t *buf, unsigned long soBaseVol, unsigned long cc, unsigned long end);
 	void reset();
 	void resetCc(unsigned long cc, unsigned long ncc) { dutyUnit_.resetCc(cc, ncc); }
+	void init(bool agb);
 	void saveState(SaveState &state, unsigned long cc);
 	void loadState(SaveState const &state);
 	template<bool isReader>void SyncState(NewState *ns);
@@ -58,6 +60,7 @@ private:
 	unsigned long soMask_;
 	unsigned long prevOut_;
 	unsigned char nr4_;
+	unsigned char vol_;
 	bool master_;
 
 	void setEvent();
