@@ -121,13 +121,17 @@ void Sgb::updateScreen() {
 	if (!mask)
 		std::memcpy(frameBuf_, frame, sizeof frame);
 
+	// border affects the colors within the gb area for whatever reason, so we need to go through that data too
+	uint_least32_t frame_[256 * 224];
+	uint_least32_t *gbFrame = &frame_[40 * 256 + 48];
+
 	switch (mask) {
 	case 0:
 	case 1:
 		for (unsigned j = 0; j < 144; j++) {
 			for (unsigned i = 0; i < 160; i++) {
 				unsigned attribute = attributes[(j / 8) * 20 + (i / 8)] & 3;
-				videoBuf_[j * pitch_ + i] = palette[attribute * 4 + frameBuf_[j * 160 + i]];
+				gbFrame[j * 256 + i] = palette[attribute * 4 + frameBuf_[j * 160 + i]];
 			}
 		}
 		break;
@@ -136,7 +140,7 @@ void Sgb::updateScreen() {
 		unsigned long const black = gbcToRgb32(0);
 		for (unsigned j = 0; j < 144; j++) {
 			for (unsigned i = 0; i < 160; i++)
-				videoBuf_[j * pitch_ + i] = black;
+				gbFrame[j * 256 + i] = black;
 		}
 		break;
 	}
@@ -145,7 +149,7 @@ void Sgb::updateScreen() {
 		unsigned long const pal0 = palette[0];
 		for (unsigned j = 0; j < 144; j++) {
 			for (unsigned i = 0; i < 160; i++)
-				videoBuf_[j * pitch_ + i] = pal0;
+				gbFrame[j * 256 + i] = pal0;
 		}
 		break;
 	}
@@ -155,6 +159,50 @@ void Sgb::updateScreen() {
 		std::memcpy(systemTiles,      tiles,      sizeof tiles);
 		std::memcpy(systemTilemap,    tilemap,    sizeof tilemap);
 		std::memcpy(systemTileColors, tileColors, sizeof tileColors);
+	}
+
+	unsigned long colors[16 * 4];
+	if (borderFade == 0) {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i]);
+	} else if (borderFade > 32) {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i], 64 - borderFade);
+	} else {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i], borderFade);
+	}
+
+	for (unsigned tileY = 0; tileY < 28; tileY++) {
+		for (unsigned tileX = 0; tileX < 32; tileX++) {
+			if (!(tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23)) // border area
+				continue;
+
+			unsigned short tile = systemTilemap[tileX + tileY * 32];
+			unsigned char flipX = (tile & 0x4000) ? 0 : 7;
+			unsigned char flipY = (tile & 0x8000) ? 7 : 0;
+			unsigned char pal = (tile >> 10) & 3;
+			for (unsigned y = 0; y < 8; y++) {
+				unsigned base = (tile & 0xFF) * 32 + (y ^ flipY) * 2;
+				for (unsigned x = 0; x < 8; x++) {
+					unsigned char bit = 1 << (x ^ flipX);
+					unsigned char color =
+					((systemTiles[base + 00] & bit) ? 1 : 0) |
+					((systemTiles[base + 01] & bit) ? 2 : 0) |
+					((systemTiles[base + 16] & bit) ? 4 : 0) |
+					((systemTiles[base + 17] & bit) ? 8 : 0);
+
+					uint_least32_t *pixel = &frame_[tileX * 8 + x + (tileY * 8 + y) * 256];
+					if (color)
+						*pixel = colors[color + pal * 16];
+				}
+			}
+		}
+	}
+
+	for (unsigned j = 0; j < 144; j++) {
+		for (unsigned i = 0; i < 160; i++)
+			videoBuf_[j * pitch_ + i] = gbFrame[j * 256 + i];
 	}
 }
 
@@ -184,9 +232,8 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 
 	for (unsigned tileY = 0; tileY < 28; tileY++) {
 		for (unsigned tileX = 0; tileX < 32; tileX++) {
-			bool border = true;
 			if (tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23) // gb area
-				border = false;
+				continue;
 
 			unsigned short tile = systemTilemap[tileX + tileY * 32];
 			unsigned char flipX = (tile & 0x4000) ? 0 : 7;
@@ -203,12 +250,9 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 					((systemTiles[base + 17] & bit) ? 8 : 0);
 
 					uint_least32_t *pixel = &frame[tileX * 8 + x + (tileY * 8 + y) * 256];
-					if (color == 0) {
-						if (!border)
-							continue;
-
+					if (color == 0)
 						*pixel = palette[0];
-					} else
+					else
 						*pixel = colors[color + pal * 16];
 				}
 			}
