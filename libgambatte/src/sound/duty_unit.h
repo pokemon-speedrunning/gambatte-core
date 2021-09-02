@@ -32,6 +32,7 @@ public:
 	virtual void event();
 	virtual void resetCounters(unsigned long oldCc);
 	bool isHighState() const { return high_; }
+	bool isHighState(unsigned long cc) const;
 	void nr1Change(unsigned newNr1, unsigned long cc);
 	void nr3Change(unsigned newNr3, unsigned long cc);
 	void nr4Change(unsigned newNr4, unsigned long cc, unsigned long ref, bool master);

@@ -687,6 +687,16 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 			return lcd_.cgbSpColorRead(ioamhram_[0x16A] & 0x3F, cc);
 
 		break;
+	case 0x76:
+		if (isCgb())
+			return psg_.isEnabled() ? psg_.pcm12Read(cc, isDoubleSpeed()) : 0;
+
+		break;
+	case 0x77:
+		if (isCgb())
+			return psg_.isEnabled() ? psg_.pcm34Read(cc, isDoubleSpeed()) : 0;
+
+		break;
 	default:
 		break;
 	}
@@ -751,6 +761,9 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 
 		if (!lcd_.oamReadable(cc) || oamDmaPos_ < oam_size)
 			return 0xFF;
+
+		if (p >= (mm_oam_begin + oam_size) && isCgb() && !agbFlag_)
+			return ioamhram_[(p - mm_oam_begin) & 0xE7];
 	}
 
 	return ioamhram_[p - mm_oam_begin];
@@ -832,6 +845,9 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 
 		if (oamDmaPos_ < oam_size)
 			return 0xFF;
+
+		if (p >= (mm_oam_begin + oam_size) && isCgb() && !agbFlag_)
+			return ioamhram_[(p - mm_oam_begin) & 0xE7];
 	}
 
 	return ioamhram_[p - mm_oam_begin];
@@ -1343,11 +1359,11 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 	} else if (p - mm_hram_begin >= 0x7Fu) {
 		long const ffp = static_cast<long>(p) - mm_io_begin;
 		if (ffp < 0) {
+			bool const validOam = p < (mm_oam_begin + oam_size);
 			if (lcd_.oamWritable(cc) && oamDmaPos_ >= oam_size
-					&& (p < mm_oam_begin + oam_size || isCgb())) {
+					&& (validOam || (isCgb() && !agbFlag_))) {
 				lcd_.oamChange(cc);
-				if (!agbFlag_ || (p < (mm_oam_begin + oam_size)))
-					ioamhram_[p - mm_oam_begin] = data;
+				ioamhram_[(p - mm_oam_begin) & (validOam ? 0xFF : 0xE7)] = data;
 			}
 		} else
 			nontrivial_ff_write(ffp, data, cc);
@@ -1365,7 +1381,7 @@ LoadRes Memory::loadROM(std::string const &romfile, unsigned const flags) {
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
 	gbIsSgb_ = flags & GB::LoadFlag::SGB_MODE;
 
-	psg_.init(cart_.isCgb());
+	psg_.init(cart_.isCgb(), agbFlag_);
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 	interrupter_.setGameShark(std::string());
 
@@ -1390,7 +1406,7 @@ LoadRes Memory::loadROM(char const *romfiledata, unsigned romfilelength, unsigne
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
 	gbIsSgb_ = flags & GB::LoadFlag::SGB_MODE;
 
-	psg_.init(cart_.isCgb());
+	psg_.init(cart_.isCgb(), agbFlag_);
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 
 	return LOADRES_OK;

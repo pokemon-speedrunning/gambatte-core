@@ -30,7 +30,7 @@ namespace gambatte {
 class PSG {
 public:
 	PSG();
-	void init(bool cgb);
+	void init(bool cgb, bool agb);
 	void reset(bool ds);
 	void divReset(bool ds);
 	void setStatePtrs(SaveState &state);
@@ -74,7 +74,9 @@ public:
 	void mapSo(unsigned nr51);
 	unsigned getStatus() const;
 
-	std::size_t callbackCycleOffset(unsigned long cycleCounter, bool doubleSpeed);
+	unsigned long callbackCycleOffset(unsigned long cycleCounter, bool doubleSpeed) const;
+	unsigned char pcm12Read(unsigned long cycleCounter, bool doubleSpeed);
+	unsigned char pcm34Read(unsigned long cycleCounter, bool doubleSpeed);
 
 	void setSpeedupFlags(unsigned flags) { speedupFlags_ = flags; }
 

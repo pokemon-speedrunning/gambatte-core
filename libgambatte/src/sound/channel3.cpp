@@ -46,6 +46,7 @@ Channel3::Channel3()
 , wavePos_(0)
 , rshift_(4)
 , sampleBuf_(0)
+, vol_(0)
 , master_(false)
 , cgb_(false)
 {
@@ -153,7 +154,7 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 				std::min(lengthCounter_.counter(), end);
 			unsigned long cnt = waveCounter_, prevOut = prevOut_;
 			unsigned long out = master_
-				? ((pos % 2 ? sampleBuf_ & 0xF : sampleBuf_ >> 4) >> rsh) * 2l - 15
+				? waveSample(pos, sampleBuf_, rsh) * 2l - 15
 				: -15;
 			out *= outBase;
 			while (cnt <= nextMajorEvent) {
@@ -164,7 +165,7 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 				cnt += period;
 				++pos;
 				unsigned const s = waveRam_[pos / 2 % sizeof waveRam_];
-				out = ((pos % 2 ? s & 0xF : s >> 4) >> rsh) * 2l - 15;
+				out = waveSample(pos, s, rsh) * 2l - 15;
 				out *= outBase;
 			}
 			if (cnt != waveCounter_) {
@@ -185,7 +186,7 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 		}
 		if (cc < end) {
 			unsigned long out = master_
-				? ((wavePos_ % 2 ? sampleBuf_ & 0xF : sampleBuf_ >> 4) >> rshift_) * 2l - 15
+				? waveSample(wavePos_, sampleBuf_, rshift_) * 2l - 15
 				: -15;
 			out *= outBase;
 			*buf += out - prevOut_;
@@ -204,6 +205,8 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 
 		updateWaveCounter(cc);
 	}
+
+	vol_ = waveSample(wavePos_, sampleBuf_, rshift_);
 
 	if (cc >= SoundUnit::counter_max) {
 		lengthCounter_.resetCounters(cc);

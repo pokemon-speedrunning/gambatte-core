@@ -38,10 +38,12 @@ public:
 	void setNr3(unsigned data, unsigned long cc) { lfsr_.nr3Change(data, cc); }
 	void setNr4(unsigned data, unsigned long cc);
 	void setSo(unsigned long soMask, unsigned long cc);
+	unsigned char getVolume() const { return vol_; }
 	bool isActive() const { return master_; }
 	void update(uint_least32_t *buf, unsigned long soBaseVol, unsigned long cc, unsigned long end);
 	void reset(unsigned long cc);
 	void resetCc(unsigned long cc, unsigned long newCc) { lfsr_.resetCc(cc, newCc); }
+	void init(bool cgb, bool agb);
 	void saveState(SaveState &state, unsigned long cc);
 	void loadState(SaveState const &state);
 	template<bool isReader>void SyncState(NewState *ns);
@@ -53,10 +55,12 @@ private:
 		virtual void event();
 		virtual void resetCounters(unsigned long oldCc);
 		bool isHighState() const { return ~reg_ & 1; }
+		bool isHighState(unsigned long cc);
 		void nr3Change(unsigned newNr3, unsigned long cc);
 		void nr4Init(unsigned long cc);
 		void reset(unsigned long cc);
 		void resetCc(unsigned long cc, unsigned long newCc);
+		void init(bool cgb) { cgb_ = cgb; }
 		void saveState(SaveState &state, unsigned long cc);
 		void loadState(SaveState const &state);
 		void disableMaster() { killCounter(); master_ = false; reg_ = 0x7FFF; }
@@ -69,6 +73,7 @@ private:
 		unsigned short reg_;
 		unsigned char nr3_;
 		bool master_;
+		bool cgb_;
 
 		void updateBackupCounter(unsigned long cc);
 	};
@@ -93,6 +98,7 @@ private:
 	unsigned long soMask_;
 	unsigned long prevOut_;
 	unsigned char nr4_;
+	unsigned char vol_;
 	bool master_;
 
 	void setEvent();

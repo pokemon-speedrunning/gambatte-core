@@ -123,6 +123,7 @@ Channel1::Channel1()
 , soMask_(0)
 , prevOut_(0)
 , nr4_(0)
+, vol_(0)
 , master_(false)
 {
 	setEvent();
@@ -148,7 +149,8 @@ void Channel1::setNr1(unsigned data, unsigned long cc) {
 }
 
 void Channel1::setNr2(unsigned data, unsigned long cc) {
-	if (envelopeUnit_.nr2Change(data))
+	envelopeUnit_.nr2Change(data, cc, master_);
+	if (!(data & (psg_nr2_initvol | psg_nr2_inc)))
 		disableMaster_();
 	else
 		staticOutputTest_(cc);
@@ -189,8 +191,9 @@ void Channel1::reset() {
 	setEvent();
 }
 
-void Channel1::init(bool cgb) {
+void Channel1::init(bool cgb, bool agb) {
 	sweepUnit_.init(cgb);
+	envelopeUnit_.init(agb);
 }
 
 void Channel1::saveState(SaveState &state, unsigned long cc) {
@@ -245,6 +248,8 @@ void Channel1::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 			setEvent();
 		}
 	}
+
+	vol_ = dutyUnit_.isHighState(cc) ? envelopeUnit_.getVolume() : 0;
 
 	if (cc >= SoundUnit::counter_max) {
 		dutyUnit_.resetCounters(cc);
