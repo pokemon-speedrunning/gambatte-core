@@ -68,6 +68,10 @@ public:
 		mem_.setInputGetter(getInput, p);
 	}
 
+	unsigned getJoypadIndex() {
+		return mem_.getJoypadIndex();
+	}
+
 	void setReadCallback(MemoryCallback callback) {
 		mem_.setReadCallback(callback);
 	}

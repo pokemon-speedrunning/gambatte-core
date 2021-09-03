@@ -123,6 +123,10 @@ GBEXPORT void gambatte_setinputgetter(GB *g, InputGetter *getInput, void *p) {
 	g->setInputGetter(getInput, p);
 }
 
+GBEXPORT int gambatte_getjoypadindex(GB *g) {
+	return g->getJoypadIndex();
+}
+
 GBEXPORT void gambatte_setreadcallback(GB *g, MemoryCallback callback) {
 	g->setReadCallback(callback);
 }

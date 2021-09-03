@@ -549,7 +549,7 @@ void Memory::updateInput() {
 				intreq_.flagIrq(0x10);
 		}
 	} else if (isSgb())
-		state -= sgb_.getJoypadIndex();
+		state -= getJoypadIndex();
 
 	ioamhram_[0x100] = (ioamhram_[0x100] & -0x10u) | state;
 }

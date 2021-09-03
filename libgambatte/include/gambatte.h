@@ -218,6 +218,9 @@ public:
 	/** Sets the callback used for getting input state. */
 	void setInputGetter(InputGetter *getInput, void *p);
 
+	/** Gets which SGB controller is in use, 0 indexed. */
+	unsigned getJoypadIndex();
+
 	/** Sets a callback to occur immediately before every CPU read, except for opcode first byte fetches. */
 	void setReadCallback(MemoryCallback);
 

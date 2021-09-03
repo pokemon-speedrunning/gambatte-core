@@ -137,6 +137,10 @@ void GB::setInputGetter(InputGetter *getInput, void *p) {
 	p_->cpu.setInputGetter(getInput, p);
 }
 
+unsigned GB::getJoypadIndex() {
+	return p_->cpu.getJoypadIndex();
+}
+
 void GB::setReadCallback(MemoryCallback callback) {
 	p_->cpu.setReadCallback(callback);
 }

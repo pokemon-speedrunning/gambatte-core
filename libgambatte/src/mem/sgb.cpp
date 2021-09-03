@@ -524,11 +524,7 @@ void Sgb::palnn(unsigned a, unsigned b) {
 
 void Sgb::attrBlk() {
 	unsigned nset = command[1];
-	if (!nset || nset >= 19)
-		return;
-
-	unsigned npacket = (nset * 6 + 16) / 16;
-	if ((command[0] & 7) != npacket)
+	if (nset >= 19)
 		return;
 	
 	for (unsigned i = 0; i < nset; i++) {
@@ -573,11 +569,7 @@ void Sgb::attrBlk() {
 
 void Sgb::attrLin() {
 	unsigned nset = command[1];
-	if (!nset || nset >= 111)
-		return;
-
-	unsigned npacket = (nset + 17) / 16;
-	if ((command[0] & 7) != npacket)
+	if (nset >= 111)
 		return;
 
 	for (unsigned i = 0; i < nset; i++) {
@@ -635,10 +627,6 @@ void Sgb::attrChr() {
 	unsigned x = command[1];
 	unsigned y = command[2];
 	unsigned n = command[3] | command[4] << 8;
-
-	unsigned npacket = (n + 87) / 64;
-	if ((command[0] & 7) < npacket)
-		return;
 
 	if (x > 19 || y > 17)
 		return;

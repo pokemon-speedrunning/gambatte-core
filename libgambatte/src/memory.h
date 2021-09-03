@@ -284,6 +284,10 @@ public:
 		getInputP_ = p;
 	}
 
+	unsigned getJoypadIndex() {
+		return sgb_.getJoypadIndex();
+	}
+
 	void setReadCallback(MemoryCallback callback) {
 		this->readCallback_ = callback;
 	}
