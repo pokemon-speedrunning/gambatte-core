@@ -89,7 +89,7 @@ private:
 	unsigned short tilemap[32 * 32];
 	unsigned short systemTileColors[16 * 4];
 	unsigned short tileColors[16 * 4];
-	unsigned borderFade;
+	unsigned char borderFade;
 
 	unsigned char pending;
 	unsigned char pendingCount;

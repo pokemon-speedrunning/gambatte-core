@@ -3335,11 +3335,20 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.mem.stopped = false;
 
 
+	std::memset(state.mem.sgb.systemTilemap.ptr, 0, state.mem.sgb.systemTilemap.size() * 2);
+	std::memset(state.mem.sgb.tilemap.ptr, 0, state.mem.sgb.tilemap.size() * 2);
+	std::memset(state.mem.sgb.systemTileColors.ptr, 0, state.mem.sgb.systemTileColors.size() * 2);
+	std::memset(state.mem.sgb.tileColors.ptr, 0, state.mem.sgb.tileColors.size() * 2);
 	std::memset(state.mem.sgb.systemColors.ptr, 0, state.mem.sgb.systemColors.size() * 2);
 	std::memset(state.mem.sgb.colors.ptr, 0, state.mem.sgb.colors.size() * 2);
+	std::memset(state.mem.sgb.systemAttributes.ptr, 0, state.mem.sgb.systemAttributes.size());	
 	std::memset(state.mem.sgb.attributes.ptr, 0, state.mem.sgb.attributes.size());
+	std::memset(state.mem.sgb.systemTiles.ptr, 0, state.mem.sgb.systemTiles.size());
+	std::memset(state.mem.sgb.tiles.ptr, 0, state.mem.sgb.tiles.size());
 	std::memset(state.mem.sgb.packet.ptr, 0, state.mem.sgb.packet.size());
 	std::memset(state.mem.sgb.command.ptr, 0, state.mem.sgb.command.size());
+	std::memset(state.mem.sgb.frameBuf.ptr, 0, state.mem.sgb.frameBuf.size());
+	std::memset(state.mem.sgb.soundControl.ptr, 0, state.mem.sgb.soundControl.size());
 
 	if (sgb) {
 		state.mem.sgb.colors.ptr[0] = 0x67BF;
@@ -3355,6 +3364,7 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.mem.sgb.commandIndex = 0;
 	state.mem.sgb.joypadIndex = 0;
 	state.mem.sgb.joypadMask = 0;
+	state.mem.sgb.borderFade = 0;
 	state.mem.sgb.pending = 0xFF;
 	state.mem.sgb.pendingCount = 0;
 	state.mem.sgb.mask = 0;

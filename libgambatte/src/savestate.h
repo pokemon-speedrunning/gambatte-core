@@ -89,15 +89,27 @@ struct SaveState {
 		unsigned char /*bool*/ stopped;
 
 		struct SGB {
+			Ptr<unsigned short> systemTilemap;
+			Ptr<unsigned short> tilemap;
+			Ptr<unsigned short> systemTileColors;
+			Ptr<unsigned short> tileColors;
 			Ptr<unsigned short> systemColors;
 			Ptr<unsigned short> colors;
+			Ptr<unsigned char> systemAttributes;
 			Ptr<unsigned char> attributes;
+			Ptr<unsigned char> systemTiles;
+			Ptr<unsigned char> tiles;
 			Ptr<unsigned char> packet;
 			Ptr<unsigned char> command;
+			Ptr<unsigned char> frameBuf;
+			Ptr<unsigned char> soundControl;
+			unsigned long lastUpdateLow;
+			unsigned long lastUpdateHigh;
 			unsigned char transfer;
 			unsigned char commandIndex;
 			unsigned char joypadIndex;
 			unsigned char joypadMask;
+			unsigned char borderFade;
 			unsigned char pending;
 			unsigned char pendingCount;
 			unsigned char mask;

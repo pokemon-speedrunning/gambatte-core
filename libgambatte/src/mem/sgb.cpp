@@ -63,9 +63,18 @@ unsigned long Sgb::gbcToRgb32(unsigned const bgr15, unsigned const fade) {
 void Sgb::setStatePtrs(SaveState &state) {
 	state.mem.sgb.packet.set(packet, sizeof packet);
 	state.mem.sgb.command.set(command, sizeof command);
+	state.mem.sgb.frameBuf.set(frameBuf_, sizeof frameBuf_);
 	state.mem.sgb.systemColors.set(systemColors, sizeof systemColors / sizeof systemColors[0]);
 	state.mem.sgb.colors.set(colors, sizeof colors / sizeof colors[0]);
+	state.mem.sgb.systemAttributes.set(systemAttributes, sizeof systemAttributes);
 	state.mem.sgb.attributes.set(attributes, sizeof attributes);
+	state.mem.sgb.systemTiles.set(systemTiles, sizeof systemTiles);
+	state.mem.sgb.tiles.set(tiles, sizeof tiles);
+	state.mem.sgb.systemTilemap.set(systemTilemap, sizeof systemTilemap / sizeof systemTilemap[0]);
+	state.mem.sgb.tilemap.set(tilemap, sizeof tilemap / sizeof tilemap[0]);
+	state.mem.sgb.systemTileColors.set(systemTileColors, sizeof systemTileColors / sizeof systemTileColors[0]);
+	state.mem.sgb.tileColors.set(tileColors, sizeof tileColors / sizeof tileColors[0]);
+	state.mem.sgb.soundControl.set(soundControl, sizeof soundControl);
 }
 
 void Sgb::saveState(SaveState &state) const {
@@ -73,9 +82,12 @@ void Sgb::saveState(SaveState &state) const {
 	state.mem.sgb.commandIndex = commandIndex;
 	state.mem.sgb.joypadIndex = joypadIndex;
 	state.mem.sgb.joypadMask = joypadMask;
+	state.mem.sgb.borderFade = borderFade;
 	state.mem.sgb.pending = pending;
 	state.mem.sgb.pendingCount = pendingCount;
 	state.mem.sgb.mask = mask;
+	state.mem.sgb.lastUpdateLow = lastUpdate_ & 0xFFFFFFFF;
+	state.mem.sgb.lastUpdateHigh = lastUpdate_ >> 32;
 }
 
 void Sgb::loadState(SaveState const &state) {
@@ -83,9 +95,12 @@ void Sgb::loadState(SaveState const &state) {
 	commandIndex = state.mem.sgb.commandIndex;
 	joypadIndex = state.mem.sgb.joypadIndex;
 	joypadMask = state.mem.sgb.joypadMask;
+	borderFade = state.mem.sgb.borderFade;
 	pending = state.mem.sgb.pending;
 	pendingCount = state.mem.sgb.pendingCount;
 	mask = state.mem.sgb.mask;
+	lastUpdate_ = state.mem.sgb.lastUpdateLow;
+	lastUpdate_ |= (unsigned long long)state.mem.sgb.lastUpdateHigh << 32;
 
 	refreshPalettes();
 }
