@@ -22,7 +22,6 @@
 
 #include <cstring>
 #include <algorithm>
-#include <stdio.h>
 
 namespace gambatte {
 
@@ -392,7 +391,7 @@ void Sgb::onCommand() {
 		pendingCount = 2;
 		break;
 	case MLT_REQ:
-		joypadMask = command[1] & 3;
+		joypadMask = (command[1] & 2) | ((command[1] & 2) || (command[1] & 1));
 		joypadIndex &= joypadMask;
 		break;
 	case ATTR_SET:
