@@ -95,14 +95,6 @@ unsigned GB::generateSgbSamples(short *soundBuf, unsigned long long &samples) {
 	return p_->cpu.generateSgbSamples(soundBuf, samples);
 }
 
-unsigned GB::saveSpcState(unsigned char *stateBuf) {
-	return p_->cpu.saveSpcState(stateBuf);
-}
-
-unsigned GB::loadSpcState(unsigned char *stateBuf) {
-	return p_->cpu.loadSpcState(stateBuf);
-}
-
 unsigned GB::resetSpc(unsigned char *spcData, unsigned len) {
 	return p_->cpu.resetSpc(spcData, len);
 }
@@ -194,6 +186,7 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 	if (loadres == LOADRES_OK) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
+		p_->cpu.saveState(state);
 		p_->loadflags = flags;
 		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, 0);
 		if (flags & NO_BIOS)
@@ -216,6 +209,7 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 	if (loadres == LOADRES_OK) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
+		p_->cpu.saveState(state);
 		p_->loadflags = flags;
 		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, (flags & GBA_FLAG) ? 971616 : 0);
 		if (flags & NO_BIOS)

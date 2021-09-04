@@ -83,14 +83,6 @@ GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned long l
 	return g->generateSgbSamples(audioBuf, *samples);
 }
 
-GBEXPORT int gambatte_savespcstate(GB *g, unsigned char *stateBuf) {
-	return g->saveSpcState(stateBuf);
-}
-
-GBEXPORT int gambatte_loadspcstate(GB *g, unsigned char *stateBuf) {
-	return g->loadSpcState(stateBuf);
-}
-
 GBEXPORT int gambatte_resetspc(GB *g, unsigned char *spcData, unsigned len) {
 	return g->resetSpc(spcData, len);
 }

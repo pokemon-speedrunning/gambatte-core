@@ -36,8 +36,6 @@ public:
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
 
-	unsigned saveSpcState(unsigned char *stateBuf) const;
-	unsigned loadSpcState(unsigned char *stateBuf);
 	unsigned resetSpc(unsigned char *spcData, unsigned len);
 
 	unsigned getJoypadIndex() const { return joypadIndex; }
@@ -96,6 +94,7 @@ private:
 	unsigned char mask;
 
 	SNES_SPC *spc;
+	unsigned char spcState[spc_state_size];
 	unsigned char soundControl[4];
 	unsigned long long lastUpdate_;
 
@@ -120,6 +119,9 @@ private:
 		MASK_EN  = 0x17,
 		HIGH     = 0x80 // for CHR_TRN 
 	};
+
+	void saveSpcState();
+	void loadSpcState();
 
 	void handleTransfer(unsigned data);
 	void onCommand();

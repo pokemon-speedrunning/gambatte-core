@@ -730,7 +730,7 @@ public:
 		NSS(rombank_);
 		NSS(rambank_);
 		NSS(enableRam_);
-		if (!isReader && rambanks(memptrs_)) // hack to get around cameraRam_ not being able to be stated correctly with the newstate system
+		if (rambanks(memptrs_)) // hack to get around cameraRam_ not being able to be stated correctly with the newstate system
 			camera_->set(memptrs_.rambankdata()[0x100]);
 	}
 

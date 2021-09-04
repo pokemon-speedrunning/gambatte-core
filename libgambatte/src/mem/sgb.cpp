@@ -22,6 +22,7 @@
 
 #include <cstring>
 #include <algorithm>
+#include <stdio.h>
 
 namespace gambatte {
 
@@ -74,7 +75,10 @@ void Sgb::setStatePtrs(SaveState &state) {
 	state.mem.sgb.tilemap.set(tilemap, sizeof tilemap / sizeof tilemap[0]);
 	state.mem.sgb.systemTileColors.set(systemTileColors, sizeof systemTileColors / sizeof systemTileColors[0]);
 	state.mem.sgb.tileColors.set(tileColors, sizeof tileColors / sizeof tileColors[0]);
+	state.mem.sgb.spcState.set(spcState, sizeof spcState);
 	state.mem.sgb.soundControl.set(soundControl, sizeof soundControl);
+
+	saveSpcState();
 }
 
 void Sgb::saveState(SaveState &state) const {
@@ -103,24 +107,23 @@ void Sgb::loadState(SaveState const &state) {
 	lastUpdate_ |= (unsigned long long)state.mem.sgb.lastUpdateHigh << 32;
 
 	refreshPalettes();
+	loadSpcState();
 }
 
-unsigned Sgb::saveSpcState(unsigned char *stateBuf) const {
+void Sgb::saveSpcState() {
 	if (!spc)
-		return -1;
+		return;
 
-	unsigned char *o = stateBuf;
+	unsigned char *o = spcState;
 	spc_copy_state(spc, &o, saveStateCallback);
-	return 0;
 }
 
-unsigned Sgb::loadSpcState(unsigned char *stateBuf) {
+void Sgb::loadSpcState() {
 	if (!spc)
-		return -1;
+		return;
 
-	unsigned char *i = stateBuf;
+	unsigned char *i = spcState;
 	spc_copy_state(spc, &i, loadStateCallback);
-	return 0;
 }
 
 unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
@@ -779,6 +782,14 @@ SYNCFUNC(Sgb) {
 	NSS(pending);
 	NSS(pendingCount);
 	NSS(mask);
+
+	if (!isReader)
+		saveSpcState();
+
+	NSS(spcState);
+
+	if (isReader)
+		loadSpcState();
 
 	NSS(soundControl);
 	NSS(lastUpdate_);

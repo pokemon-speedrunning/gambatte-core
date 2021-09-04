@@ -102,6 +102,7 @@ struct SaveState {
 			Ptr<unsigned char> packet;
 			Ptr<unsigned char> command;
 			Ptr<unsigned char> frameBuf;
+			Ptr<unsigned char> spcState;
 			Ptr<unsigned char> soundControl;
 			unsigned long lastUpdateLow;
 			unsigned long lastUpdateHigh;

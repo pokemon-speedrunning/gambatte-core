@@ -341,18 +341,6 @@ public:
 			: -1;
 	}
 
-	unsigned saveSpcState(unsigned char *stateBuf) {
-		return isSgb()
-			? sgb_.saveSpcState(stateBuf)
-			: -1;
-	}
-
-	unsigned loadSpcState(unsigned char *stateBuf) {
-		return isSgb()
-			? sgb_.loadSpcState(stateBuf)
-			: -1;
-	}
-
 	unsigned resetSpc(unsigned char *spcData, unsigned len) {
 		return isSgb()
 			? sgb_.resetSpc(spcData, len)

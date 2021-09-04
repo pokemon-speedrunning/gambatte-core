@@ -52,14 +52,6 @@ public:
 		return mem_.generateSgbSamples(soundBuf, samples);
 	}
 
-	unsigned saveSpcState(unsigned char *stateBuf) {
-		return mem_.saveSpcState(stateBuf);
-	}
-
-	unsigned loadSpcState(unsigned char *stateBuf) {
-		return mem_.loadSpcState(stateBuf);
-	}
-
 	unsigned resetSpc(unsigned char *spcData, unsigned len) {
 		return mem_.resetSpc(spcData, len);
 	}
