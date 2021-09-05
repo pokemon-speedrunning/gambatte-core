@@ -54,7 +54,7 @@ public:
 		refreshPalettes();
 	}
 
-	void onJoypad(unsigned data);
+	void onJoypad(unsigned data, unsigned write);
 	void updateScreen();
 	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch);
 

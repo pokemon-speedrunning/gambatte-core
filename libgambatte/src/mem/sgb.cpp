@@ -145,10 +145,10 @@ unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
 	return 0;
 }
 
-void Sgb::onJoypad(unsigned data) {
+void Sgb::onJoypad(unsigned data, unsigned write) {
 	handleTransfer(data);
 
-	if ((data & 0x20) == 0)
+	if ((data & 0x20) == 0 && (write & 0x20) != 0)
 		joypadIndex = (joypadIndex + 1) & joypadMask;
 }
 

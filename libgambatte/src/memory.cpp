@@ -862,7 +862,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		if ((data ^ ioamhram_[0x100]) & 0x30) {
 			if (isSgb()) {
 				if ((((data ^ ioamhram_[0x100]) & 0x30) & data) && !biosMode_)
-					sgb_.onJoypad(ioamhram_[0x100]);
+					sgb_.onJoypad(ioamhram_[0x100], data);
 			}
 
 			ioamhram_[0x100] = (ioamhram_[0x100] & ~0x30u) | (data & 0x30);
