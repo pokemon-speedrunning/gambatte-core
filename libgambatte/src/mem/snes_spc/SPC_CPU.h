@@ -279,7 +279,7 @@ loop:
 		READ_DP_TIMER( -2, data, temp );
 		data = temp + no_read_before_write ;
 	}
-	// fall through
+	/* fallthrough */
 	case 0x8F:{// MOV dp,#imm
 		int temp = READ_PC( pc + 1 );
 		pc += 2;
@@ -295,7 +295,7 @@ loop:
 				
 				// Registers other than $F2 and $F4-$F7
 				//if ( i != 2 && i != 4 && i != 5 && i != 6 && i != 7 )
-				if ( ((~0x2F00 << (bits_in_int - 16)) << i) < 0 ) // 12%
+				if ( (int)(((~0x2F00u << (bits_in_int - 16)) << i)) < 0 ) // 12%
 					cpu_write_smp_reg( data, rel_time, i );
 			}
 		}
@@ -328,7 +328,7 @@ loop:
 		#endif
 		goto loop;
 	
-#define CASE( n )   case n:
+#define CASE( n ) /* fallthrough */ case n:
 
 // Define common address modes based on opcode for immediate mode. Execution
 // ends with data set to the address of the operand.
@@ -347,7 +347,7 @@ loop:
 		data += y;\
 		goto abs_##op;\
 	CASE( op + 0x0D ) /* abs+X */\
-		data += x;\
+		data += x; \
 	CASE( op - 0x03 ) /* abs */\
 	abs_##op:\
 		data += 0x100 * READ_PC( ++pc );\
@@ -357,13 +357,13 @@ loop:
 
 #define ADDR_MODES_NO_DP( op )\
 	ADDR_MODES_( op )\
-		data += dp;\
+		data += dp; \
 	end_##op:
 
 #define ADDR_MODES( op )\
 	ADDR_MODES_( op )\
 	CASE( op - 0x04 ) /* dp */\
-		data += dp;\
+		data += dp; \
 	end_##op:
 
 // 1. 8-bit Data Transmission Commands. Group I
@@ -386,6 +386,7 @@ loop:
 	
 	case 0xF9: // MOV X,dp+Y
 		data = (uint8_t) (data + y);
+		/* fallthrough */
 	case 0xF8: // MOV X,dp
 		READ_DP_TIMER( 0, data, x = nz );
 		goto inc_pc_loop;
@@ -394,6 +395,7 @@ loop:
 		data = READ_PC16( pc );
 		++pc;
 		data = READ( 0, data );
+		/* fallthrough */
 	case 0xCD: // MOV X,imm
 		x  = data;
 		nz = data;
@@ -401,6 +403,7 @@ loop:
 	
 	case 0xFB: // MOV Y,dp+X
 		data = (uint8_t) (data + x);
+		/* fallthrough */
 	case 0xEB: // MOV Y,dp
 		// 70% from timer
 		pc++;
@@ -433,6 +436,7 @@ loop:
 		goto mov_abs_temp;
 	case 0xC9: // MOV abs,X
 		temp = x;
+		/* fallthrough */
 	mov_abs_temp:
 		WRITE( 0, READ_PC16( pc ), temp );
 		pc += 2;
@@ -441,12 +445,14 @@ loop:
 	
 	case 0xD9: // MOV dp+Y,X
 		data = (uint8_t) (data + y);
+		/* fallthrough */
 	case 0xD8: // MOV dp,X
 		WRITE( 0, data + dp, x );
 		goto inc_pc_loop;
 	
 	case 0xDB: // MOV dp+X,Y
 		data = (uint8_t) (data + x);
+		/* fallthrough */
 	case 0xCB: // MOV dp,Y
 		WRITE( 0, data + dp, y );
 		goto inc_pc_loop;
@@ -493,6 +499,7 @@ loop:
 #define LOGICAL_OP( op, func )\
 	ADDR_MODES( op ) /* addr */\
 		data = READ( 0, data );\
+		/* fallthrough */\
 	case op: /* imm */\
 		nz = a func##= data;\
 		goto inc_pc_loop;\
@@ -503,11 +510,13 @@ loop:
 		goto addr_##op;\
 	case op + 0x01: /* dp,dp */\
 		data = READ_DP( -3, data );\
+		/* fallthrough */\
 	case op + 0x10:{/*dp,imm*/\
 		uint8_t const* addr2 = pc + 1;\
 		pc += 2;\
 		addr = READ_PC( addr2 ) + dp;\
 	}\
+	/* fallthrough */\
 	addr_##op:\
 		nz = data func READ( -1, addr );\
 		WRITE( 0, addr, nz );\
@@ -524,6 +533,7 @@ loop:
 
 	ADDR_MODES( 0x68 ) // CMP addr
 		data = READ( 0, data );
+		/* fallthrough */
 	case 0x68: // CMP imm
 		nz = a - data;
 		c = ~nz;
@@ -539,6 +549,7 @@ loop:
 	
 	case 0x69: // CMP dp,dp
 		data = READ_DP( -3, data );
+		/* fallthrough */
 	case 0x78: // CMP dp,imm
 		nz = READ_DP( -1, READ_PC( ++pc ) ) - data;
 		c = ~nz;
@@ -551,8 +562,10 @@ loop:
 	case 0x1E: // CMP X,abs
 		data = READ_PC16( pc );
 		pc++;
+		/* fallthrough */
 	cmp_x_addr:
 		data = READ( 0, data );
+		/* fallthrough */
 	case 0xC8: // CMP X,imm
 		nz = x - data;
 		c = ~nz;
@@ -565,8 +578,10 @@ loop:
 	case 0x5E: // CMP Y,abs
 		data = READ_PC16( pc );
 		pc++;
+		/* fallthrough */
 	cmp_y_addr:
 		data = READ( 0, data );
+		/* fallthrough */
 	case 0xAD: // CMP Y,imm
 		nz = y - data;
 		c = ~nz;
@@ -584,9 +599,11 @@ loop:
 	case 0xA9: // SBC dp,dp
 	case 0x89: // ADC dp,dp
 		data = READ_DP( -3, data );
+		/* fallthrough */
 	case 0xB8: // SBC dp,imm
 	case 0x98: // ADC dp,imm
 		addr = READ_PC( ++pc ) + dp;
+		/* fallthrough */
 	adc_addr:
 		nz = READ( -1, addr );
 		goto adc_data;
@@ -596,10 +613,12 @@ loop:
 #define CASE( n ) case n: case (n) + 0x20:
 	ADDR_MODES( 0x88 ) // ADC/SBC addr
 		data = READ( 0, data );
+		/* fallthrough */
 	case 0xA8: // SBC imm
 	case 0x88: // ADC imm
 		addr = -1; // A
 		nz = a;
+		/* fallthrough */
 	adc_data: {
 		int flags;
 		if ( opcode >= 0xA0 ) // SBC
@@ -632,16 +651,23 @@ loop:
 		goto loop;
 
 	case 0xBC: INC_DEC_REG( a, + 1 ) // INC A
+	/* fallthrough */
 	case 0x3D: INC_DEC_REG( x, + 1 ) // INC X
+	/* fallthrough */
 	case 0xFC: INC_DEC_REG( y, + 1 ) // INC Y
+	/* fallthrough */
 	
 	case 0x9C: INC_DEC_REG( a, - 1 ) // DEC A
+	/* fallthrough */
 	case 0x1D: INC_DEC_REG( x, - 1 ) // DEC X
+	/* fallthrough */
 	case 0xDC: INC_DEC_REG( y, - 1 ) // DEC Y
+	/* fallthrough */
 
 	case 0x9B: // DEC dp+X
 	case 0xBB: // INC dp+X
 		data = (uint8_t) (data + x);
+		/* fallthrough */
 	case 0x8B: // DEC dp
 	case 0xAB: // INC dp
 		data += dp;
@@ -650,6 +676,7 @@ loop:
 	case 0xAC: // INC abs
 		data = READ_PC16( pc );
 		pc++;
+		/* fallthrough */
 	inc_abs:
 		nz = (opcode >> 4 & 2) - 1;
 		nz += READ( -1, data );
@@ -660,6 +687,7 @@ loop:
 
 	case 0x5C: // LSR A
 		c = 0;
+		/* fallthrough */
 	case 0x7C:{// ROR A
 		nz = (c >> 1 & 0x80) | (a >> 1);
 		c = a << 8;
@@ -669,6 +697,7 @@ loop:
 	
 	case 0x1C: // ASL A
 		c = 0;
+		/* fallthrough */
 	case 0x3C:{// ROL A
 		int temp = c >> 8 & 1;
 		c = a << 1;
@@ -683,16 +712,20 @@ loop:
 		goto rol_mem;
 	case 0x1B: // ASL dp+X
 		c = 0;
+		/* fallthrough */
 	case 0x3B: // ROL dp+X
 		data = (uint8_t) (data + x);
+		/* fallthrough */
 	case 0x2B: // ROL dp
 		data += dp;
 		goto rol_mem;
 	case 0x0C: // ASL abs
 		c = 0;
+		/* fallthrough */
 	case 0x2C: // ROL abs
 		data = READ_PC16( pc );
 		pc++;
+		/* fallthrough */
 	rol_mem:
 		nz = c >> 8 & 1;
 		nz |= (c = READ( -1, data ) << 1);
@@ -705,16 +738,20 @@ loop:
 		goto ror_mem;
 	case 0x5B: // LSR dp+X
 		c = 0;
+		/* fallthrough */
 	case 0x7B: // ROR dp+X
 		data = (uint8_t) (data + x);
+		/* fallthrough */
 	case 0x6B: // ROR dp
 		data += dp;
 		goto ror_mem;
 	case 0x4C: // LSR abs
 		c = 0;
+		/* fallthrough */
 	case 0x6C: // ROR abs
 		data = READ_PC16( pc );
 		pc++;
+		/* fallthrough */
 	ror_mem: {
 		int temp = READ( -1, data );
 		nz = (c >> 1 & 0x80) | (temp >> 1);
@@ -929,7 +966,7 @@ loop:
 	
 	case 0xDE: // CBNE dp+X,rel
 		data = (uint8_t) (data + x);
-		// fall through
+		/* fallthrough */
 	case 0x2E:{// CBNE dp,rel
 		int temp;
 		// 61% from timer
@@ -949,7 +986,7 @@ loop:
 	
 	case 0x1F: // JMP [abs+X]
 		SET_PC( READ_PC16( pc ) + x );
-		// fall through
+		/* fallthrough */
 	case 0x5F: // JMP abs
 		SET_PC( READ_PC16( pc ) );
 		goto loop;
@@ -1188,7 +1225,7 @@ loop:
 			goto loop;
 		}
 	}
-	// fall through
+	/* fallthrough */
 	case 0xEF: // SLEEP
 		SUSPICIOUS_OPCODE( "STOP/SLEEP" );
 		--pc;
