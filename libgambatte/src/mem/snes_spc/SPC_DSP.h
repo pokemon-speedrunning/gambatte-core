@@ -90,7 +90,7 @@ public:
 	};
 
 public:
-	enum { extra_size = 16 };
+	enum { extra_size = 32 };
 	sample_t* extra()               { return m.extra; }
 	sample_t const* out_pos() const { return m.out; }
 	void disable_surround( bool ) { } // not supported
