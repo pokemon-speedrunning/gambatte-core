@@ -137,11 +137,12 @@ unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
 	if (spc_load_spc(spc, spcData, len))
 		return -1;
 
-	short buf[4096];
+	short *buf = new short[4096 * 2];
 	spc_set_output(spc, buf, 4096);
 	for (unsigned i = 0; i < 240; i++)
 		spc_end_frame(spc, 35104);
 
+	delete []buf;
 	return 0;
 }
 
@@ -391,7 +392,7 @@ void Sgb::onCommand() {
 		pendingCount = 2;
 		break;
 	case MLT_REQ:
-		joypadMask = (command[1] & 2) | ((command[1] & 2) || (command[1] & 1));
+		joypadMask = (command[1] & 2) | !!(command[1] & 3);
 		joypadIndex &= joypadMask;
 		break;
 	case ATTR_SET:
@@ -728,11 +729,11 @@ unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
 	if (!soundBuf || !spc)
 		return -1;
 
-	short buf[4096];
+	short *buf = new short[4096 * 2];
 	unsigned diff = samples - lastUpdate_;
 	samples = diff / 65;
 	lastUpdate_ += samples * 65;
-	spc_set_output(spc, buf, 2048);
+	spc_set_output(spc, buf, 4096);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
 		if (spc_read_port(spc, 0, p) != soundControl[p])
@@ -747,7 +748,8 @@ unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
 		spc_write_port(spc, 0, p, soundControl[p]);
 
 	spc_end_frame(spc, samples * 32);
-	std::memcpy(soundBuf, buf, sizeof buf);
+	std::memcpy(soundBuf, buf, 4096 * 2 * 2);
+	delete []buf;
 	return diff % 65;
 }
 
