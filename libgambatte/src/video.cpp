@@ -477,7 +477,8 @@ void LCD::mode3CyclesChange() {
 		eventTimes_.setm<memevent_m0irq>(t);
 	}
 
-	if (eventTimes_(memevent_hdma) != disabled_time
+	if ((ppu_.lcdc() & lcdc_en)
+	    		&& eventTimes_(memevent_hdma) != disabled_time
 			&& eventTimes_(memevent_hdma) > ppu_.lastM0Time()) {
 		nextM0Time_.predictNextM0Time(ppu_);
 		eventTimes_.setm<memevent_hdma>(nextM0Time_.predictedNextM0Time());
