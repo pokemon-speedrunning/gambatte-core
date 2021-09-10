@@ -121,6 +121,7 @@ void Sgb::loadSpcState() {
 	if (!spc)
 		return;
 
+	spc_set_output(spc, NULL, 0);
 	unsigned char *i = spcState;
 	spc_copy_state(spc, &i, loadStateCallback);
 }
