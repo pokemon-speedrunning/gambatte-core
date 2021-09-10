@@ -1660,6 +1660,10 @@ long cyclesUntilM0Upperbound(PPUPriv const &p) {
 }
 
 void saveSpriteList(PPUPriv const &p, SaveState &ss) {
+	ss.ppu.spAttribList[0] = 0;
+	ss.ppu.spByte0List[0] = 0;
+	ss.ppu.spByte1List[0] = 0;
+
 	for (int i = 0; i < lcd_max_num_sprites_per_line; ++i) {
 		ss.ppu.spAttribList[i] = p.spriteList[i].attrib;
 		ss.ppu.spByte0List[i] = p.spwordList[i] & 0xFF;
@@ -1686,6 +1690,14 @@ void loadSpriteList(PPUPriv &p, SaveState const &ss) {
 			p.spriteList[i].oampos = pos * 2;
 			p.spriteList[i].attrib = ss.ppu.spAttribList[i] & 0xFF;
 			p.spwordList[i] = (ss.ppu.spByte1List[i] * 0x100l + ss.ppu.spByte0List[i]) & 0xFFFF;
+		}
+
+		for (int i = numSprites; i < lcd_max_num_sprites_per_line; ++i) {
+			p.spriteList[i].spx = 0;
+			p.spriteList[i].line = 0;
+			p.spriteList[i].oampos = 0;
+			p.spriteList[i].attrib = 0;
+			p.spwordList[i] = 0;
 		}
 
 		p.spriteList[numSprites].spx = 0xFF;

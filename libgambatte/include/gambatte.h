@@ -159,26 +159,6 @@ public:
 	unsigned generateSgbSamples(short *audioBuf, unsigned long long &samples);
 
 	/**
-	  * Saves SPC state to the buffer given by 'stateBuf'.
-	  * The buffer should provide 67 * 1024 bytes of space.
-	  *
-	  * @param stateBuf pointer to save state buffer
-	  *
-	  * @return 0 on success, -1 on failure
-	  */
-	unsigned saveSpcState(unsigned char *stateBuf);
-
-	/**
-	  * Loads SPC state from the buffer given by 'stateBuf'.
-	  * The buffer should have 67 * 1024 bytes of space.
-	  *
-	  * @param stateBuf pointer to save state buffer
-	  *
-	  * @return 0 on success, -1 on failure
-	  */
-	unsigned loadSpcState(unsigned char *stateBuf);
-
-	/**
 	  * Resets SPC state. An SPC file must be provided.
 	  *
 	  * @param spcData buffer with spc data

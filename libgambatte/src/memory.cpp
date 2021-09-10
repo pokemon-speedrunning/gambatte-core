@@ -106,6 +106,7 @@ unsigned long Memory::saveState(SaveState &state, unsigned long cc) {
 	state.mem.haltHdmaState = haltHdmaState_;
 	state.mem.biosMode = biosMode_;
 	state.mem.stopped = stopped_;
+	state.mem.lastCartBusUpdate = lastCartBusUpdate_;
 
 	intreq_.saveState(state);
 	cart_.saveState(state, cc);

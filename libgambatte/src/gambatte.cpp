@@ -384,7 +384,6 @@ bool GB::loadState(char const *stateBuf, std::size_t size) {
 	if (p_->cpu.loaded()) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
-
 		if (StateSaver::loadState(state, stateBuf, size, true, p_->criticalLoadflags())) {
 			p_->cpu.loadState(state);
 			return true;

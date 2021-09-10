@@ -38,7 +38,7 @@ public:
 
 	Time();
 	void saveState(SaveState &state, unsigned long cycleCounter, bool isHuC3);
-	void loadState(SaveState const &state);
+	void loadState(SaveState const &state, bool isHuC3);
 
 	std::time_t get(unsigned long cycleCounter);
 	void set(std::time_t seconds, unsigned long cycleCounter);
