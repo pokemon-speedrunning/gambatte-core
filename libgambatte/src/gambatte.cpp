@@ -225,21 +225,21 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 
 int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 	scoped_ptr<File> const bios(newFileInstance(biosfile));
-	
+
 	if (bios->fail())
 		return -1;
-	
+
 	std::size_t sz = bios->size();
-	
+
 	if (size != 0 && sz != size)
 		return -2;
-	
+
 	unsigned char newBiosBuffer[sz];
 	bios->read((char *)newBiosBuffer, sz);
-	
+
 	if (bios->fail())
 		return -1;
-	
+
 	if (crc != 0) {
 		unsigned char maskedBiosBuffer[sz];
 		std::memcpy(maskedBiosBuffer, newBiosBuffer, sz);
