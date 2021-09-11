@@ -107,7 +107,7 @@ void GB::reset(std::size_t samplesToStall, std::string const &build) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
 		p_->cpu.saveState(state);
-		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, samplesToStall > 0 ? samplesToStall << 1 : 0);
+		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, samplesToStall > 0 ? samplesToStall << 1 : 0, p_->cpu.romTitle());
 		if (p_->loadflags & NO_BIOS)
 			setPostBiosState(state, p_->loadflags & CGB_MODE, p_->loadflags & GBA_FLAG, externalRead(0x143) & 0x80);
 
@@ -184,7 +184,7 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 		p_->cpu.setStatePtrs(state);
 		p_->cpu.saveState(state);
 		p_->loadflags = flags;
-		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, 0);
+		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, 0, p_->cpu.romTitle());
 		if (flags & NO_BIOS)
 			setPostBiosState(state, flags & CGB_MODE, flags & GBA_FLAG, externalRead(0x143) & 0x80);
 
@@ -207,7 +207,7 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 		p_->cpu.setStatePtrs(state);
 		p_->cpu.saveState(state);
 		p_->loadflags = flags;
-		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, (flags & GBA_FLAG) ? 971616 : 0);
+		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, (flags & GBA_FLAG) ? 971616 : 0, p_->cpu.romTitle());
 		if (flags & NO_BIOS)
 			setPostBiosState(state, flags & CGB_MODE, flags & GBA_FLAG, externalRead(0x143) & 0x80);
 

@@ -1660,10 +1660,6 @@ long cyclesUntilM0Upperbound(PPUPriv const &p) {
 }
 
 void saveSpriteList(PPUPriv const &p, SaveState &ss) {
-	ss.ppu.spAttribList[0] = 0;
-	ss.ppu.spByte0List[0] = 0;
-	ss.ppu.spByte1List[0] = 0;
-
 	for (int i = 0; i < lcd_max_num_sprites_per_line; ++i) {
 		ss.ppu.spAttribList[i] = p.spriteList[i].attrib;
 		ss.ppu.spByte0List[i] = p.spwordList[i] & 0xFF;

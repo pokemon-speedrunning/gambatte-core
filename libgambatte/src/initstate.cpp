@@ -28,7 +28,7 @@
 #include <ctime>
 #include <iostream>
 
-void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bool const agb, std::size_t const stalledCycles) {
+void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bool const agb, std::size_t const stalledCycles, char const *romTitlePtr) {
 	static unsigned char const cgbObjpDump[0x40] = {
 		0x00, 0x00, 0xF2, 0xAB,
 		0x61, 0xC2, 0xD9, 0xBA,
@@ -117,12 +117,137 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	std::memset(state.mem.sgb.soundControl.ptr, 0, state.mem.sgb.soundControl.size());
 
 	if (sgb) {
-		state.mem.sgb.colors.ptr[0] = 0x67BF;
+		unsigned short palettes[4];
+		char romTitle[0x10];
+		std::memcpy(romTitle, romTitlePtr, sizeof romTitle);
+		if (!std::strcmp(romTitle, "SUPERMARIOLAND3")) {
+			palettes[0] = 0x637B;
+			palettes[1] = 0x3AD9;
+			palettes[2] = 0x0956;
+			palettes[3] = 0x0000;
+		} else if (!std::strcmp(romTitle, "KIRBY'S PINBALL")) {
+			palettes[0] = 0x7F1F;
+			palettes[1] = 0x2A7D;
+			palettes[2] = 0x30F3;
+			palettes[3] = 0x4CE7;
+		} else if (!std::strcmp(romTitle, "YOSSY NO COOKIE") || !std::strcmp(romTitle, "YOSHI'S COOKIE")) {
+			palettes[0] = 0x57FF;
+			palettes[1] = 0x2618;
+			palettes[2] = 0x001F;
+			palettes[3] = 0x006A;
+		} else if (!std::strcmp(romTitle, "ZELDA")) {
+			palettes[0] = 0x5B7F;
+			palettes[1] = 0x3F0F;
+			palettes[2] = 0x222D;
+			palettes[3] = 0x10EB;
+		} else if (!std::strcmp(romTitle, "SUPER MARIOLAND")) {
+			palettes[0] = 0x7FBB;
+			palettes[1] = 0x2A3C;
+			palettes[2] = 0x0015;
+			palettes[3] = 0x0900;
+		} else if (!std::strcmp(romTitle, "SOLARSTRIKER")) {
+			palettes[0] = 0x2800;
+			palettes[1] = 0x7680;
+			palettes[2] = 0x01EF;
+			palettes[3] = 0x2FFF;
+		} else if (!std::strcmp(romTitle, "KAERUNOTAMENI")) {
+			palettes[0] = 0x533E;
+			palettes[1] = 0x2638;
+			palettes[2] = 0x01E5;
+			palettes[3] = 0x0000;
+		} else if (!std::strcmp(romTitle, "HOSHINOKA-BI") || !std::strcmp(romTitle, "KIRBY DREAM LAND")) {
+			palettes[0] = 0x7F1F;
+			palettes[1] = 0x463D;
+			palettes[2] = 0x74CF;
+			palettes[3] = 0x4CA5;
+		} else if (!std::strcmp(romTitle, "YOSSY NO TAMAGO") || !std::strcmp(romTitle, "MARIO & YOSHI")) {
+			palettes[0] = 0x53FF;
+			palettes[1] = 0x03E0;
+			palettes[2] = 0x00DF;
+			palettes[3] = 0x2800;
+		} else if (!std::strcmp(romTitle, "KID ICARUS")) {
+			palettes[0] = 0x7FFA;
+			palettes[1] = 0x2A5F;
+			palettes[2] = 0x0014;
+			palettes[3] = 0x0003;
+		} else if (!std::strcmp(romTitle, "BASEBALL")) {
+			palettes[0] = 0x1EED;
+			palettes[1] = 0x215C;
+			palettes[2] = 0x42FC;
+			palettes[3] = 0x0060;
+		} else if (!std::strcmp(romTitle, "TETRIS")) {
+			palettes[0] = 0x4F5F;
+			palettes[1] = 0x630E;
+			palettes[2] = 0x159F;
+			palettes[3] = 0x3126;
+		} else if (!std::strcmp(romTitle, "DR.MARIO")) {
+			palettes[0] = 0x637B;
+			palettes[1] = 0x121C;
+			palettes[2] = 0x0140;
+			palettes[3] = 0x0840;
+		} else if (!std::strcmp(romTitle, "YAKUMAN")) {
+			palettes[0] = 0x66BC;
+			palettes[1] = 0x3FFF;
+			palettes[2] = 0x7EE0;
+			palettes[3] = 0x2C84;
+		} else if (!std::strcmp(romTitle, "MARIOLAND2")) {
+			palettes[0] = 0x5FFE;
+			palettes[1] = 0x3EBC;
+			palettes[2] = 0x0321;
+			palettes[3] = 0x0000;
+		} else if (!std::strcmp(romTitle, "GBWARS")) {
+			palettes[0] = 0x63FF;
+			palettes[1] = 0x36DC;
+			palettes[2] = 0x11F6;
+			palettes[3] = 0x392A;
+		} else if (!std::strcmp(romTitle, "ALLEY WAY")) {
+			palettes[0] = 0x65EF;
+			palettes[1] = 0x7DBF;
+			palettes[2] = 0x035F;
+			palettes[3] = 0x2108;
+		} else if (!std::strcmp(romTitle, "TENNIS")) {
+			palettes[0] = 0x2B6C;
+			palettes[1] = 0x7FFF;
+			palettes[2] = 0x1CD9;
+			palettes[3] = 0x0007;
+		} else if (!std::strcmp(romTitle, "GOLF")) {
+			palettes[0] = 0x53FC;
+			palettes[1] = 0x1F2F;
+			palettes[2] = 0x0E29;
+			palettes[3] = 0x0061;
+		} else if (!std::strcmp(romTitle, "QIX")) {
+			palettes[0] = 0x36BE;
+			palettes[1] = 0x7EAF;
+			palettes[2] = 0x681A;
+			palettes[3] = 0x3C00;
+		} else if (!std::strcmp(romTitle, "X")) {
+			palettes[0] = 0x5FFF;
+			palettes[1] = 0x6732;
+			palettes[2] = 0x3DA9;
+			palettes[3] = 0x2481;
+		} else if (!std::strcmp(romTitle, "F1RACE")) {
+			palettes[0] = 0x6B57;
+			palettes[1] = 0x6E1B;
+			palettes[2] = 0x5010;
+			palettes[3] = 0x0007;
+		} else if (!std::strcmp(romTitle, "METROID2")) {
+			palettes[0] = 0x0F96;
+			palettes[1] = 0x2C97;
+			palettes[2] = 0x0045;
+			palettes[3] = 0x3200;
+		} else {
+			palettes[0] = 0x67BF;
+			palettes[1] = 0x265B;
+			palettes[2] = 0x10B5;
+			palettes[3] = 0x2866;
+		}
+
+		state.mem.sgb.colors.ptr[0] = palettes[0];
 
 		for (int i = 0; i < 16; i += 4) {
-			state.mem.sgb.colors.ptr[i + 1] = 0x265B;
-			state.mem.sgb.colors.ptr[i + 2] = 0x10B5;
-			state.mem.sgb.colors.ptr[i + 3] = 0x2866;
+			state.mem.sgb.colors.ptr[i + 1] = palettes[1];
+			state.mem.sgb.colors.ptr[i + 2] = palettes[2];
+			state.mem.sgb.colors.ptr[i + 3] = palettes[3];
 		}
 
 		setInitialSpcState(state.mem.sgb.spcState.ptr);

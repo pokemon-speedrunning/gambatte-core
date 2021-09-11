@@ -109,17 +109,11 @@ void Sgb::loadState(SaveState const &state) {
 }
 
 void Sgb::saveSpcState() {
-	if (!spc)
-		return;
-
 	unsigned char *o = spcState;
 	spc_copy_state(spc, &o, saveStateCallback);
 }
 
 void Sgb::loadSpcState() {
-	if (!spc)
-		return;
-
 	spc_set_output(spc, NULL, 0);
 	unsigned char *i = spcState;
 	spc_copy_state(spc, &i, loadStateCallback);
@@ -423,9 +417,6 @@ void Sgb::onTransfer(unsigned char *frame) {
 	switch (pending) {
 	case SOU_TRN:
 	{
-		if (!spc)
-			break;
-
 		/*unsigned char *end = vram + 0x10000;*/
 		unsigned char *src = vram;
 		unsigned char *dst = spc_get_ram(spc);
@@ -705,7 +696,7 @@ void Sgb::cmdSound() {
 }
 
 unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
-	if (!soundBuf || !spc)
+	if (!soundBuf)
 		return -1;
 
 	unsigned diff = samples - lastUpdate_;

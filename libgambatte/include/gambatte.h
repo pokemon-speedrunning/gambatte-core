@@ -159,16 +159,6 @@ public:
 	unsigned generateSgbSamples(short *audioBuf, unsigned long long &samples);
 
 	/**
-	  * Resets SPC state. An SPC file must be provided.
-	  *
-	  * @param spcData buffer with spc data
-	  * @param len     length of buffer
-	  *
-	  * @return 0 on success, -1 on failure
-	  */
-	unsigned resetSpc(unsigned char *spcData, unsigned len);
-
-	/**
 	  * Sets layers to be rendered.
 	  * @param layermask, 1=BG, 2=OBJ, 4=WINDOW
 	  */
