@@ -18,7 +18,6 @@
 
 #include "sgb.h"
 #include "../savestate.h"
-#include "ipl.h"
 
 #include <cstring>
 #include <algorithm>
@@ -38,7 +37,7 @@ void loadStateCallback(unsigned char **i, void *o, std::size_t len) {
 Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
-, spc(NULL)
+, spc(spc_new())
 , lastUpdate_(0)
 {
 	// FIXME: this code is ugly
@@ -124,27 +123,6 @@ void Sgb::loadSpcState() {
 	spc_set_output(spc, NULL, 0);
 	unsigned char *i = spcState;
 	spc_copy_state(spc, &i, loadStateCallback);
-}
-
-unsigned Sgb::resetSpc(unsigned char *spcData, unsigned len) {
-	if (!spcData || !len) // huh?
-		return -1;
-
-	if (!spc)
-		spc = spc_new();
-
-	spc_init_rom(spc, iplRom);
-	spc_reset(spc);
-	if (spc_load_spc(spc, spcData, len))
-		return -1;
-
-	short *buf = new short[4096 * 2];
-	spc_set_output(spc, buf, 4096);
-	for (unsigned i = 0; i < 240; i++)
-		spc_end_frame(spc, 35104);
-
-	delete []buf;
-	return 0;
 }
 
 void Sgb::onJoypad(unsigned data, unsigned write) {

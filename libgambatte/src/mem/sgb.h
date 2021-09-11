@@ -36,8 +36,6 @@ public:
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
 
-	unsigned resetSpc(unsigned char *spcData, unsigned len);
-
 	unsigned getJoypadIndex() const { return joypadIndex; }
 
 	void setVideoBuffer(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
