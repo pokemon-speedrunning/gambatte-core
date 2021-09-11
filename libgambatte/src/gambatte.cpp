@@ -216,6 +216,8 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 
 		if (flags & GBA_FLAG && !(flags & NO_BIOS))
 			p_->cpu.stall(971616); // GBA takes 971616 cycles to switch to CGB mode; CGB CPU is inactive during this time.
+		else if (flags & SGB_MODE)
+			p_->cpu.stall(128 * (2 << 14));
 	}
 
 	return loadres;
