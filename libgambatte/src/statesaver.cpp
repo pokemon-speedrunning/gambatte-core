@@ -280,8 +280,7 @@ SaverList::SaverList()
 	{ static char const label[] = { s,g,b,f,b,u,f, NUL }; ADDPTR(mem.sgb.frameBuf); }
 	{ static char const label[] = { s,g,b,s,p,c,   NUL }; ADDPTR(mem.sgb.spcState); }
 	{ static char const label[] = { s,g,b,s,o,c,o, NUL }; ADDPTR(mem.sgb.soundControl); }
-	{ static char const label[] = { s,g,b,l,u,l,o, NUL }; ADD(mem.sgb.lastUpdateLow); }
-	{ static char const label[] = { s,g,b,l,u,h,i, NUL }; ADD(mem.sgb.lastUpdateHigh); }
+	{ static char const label[] = { s,g,b,s,a,m,p, NUL }; ADD(mem.sgb.samplesAccumulated); }
 	{ static char const label[] = { s,g,b,x,f,e,r, NUL }; ADD(mem.sgb.transfer); }
 	{ static char const label[] = { s,g,b,c,m,d,i, NUL }; ADD(mem.sgb.commandIndex); }
 	{ static char const label[] = { s,g,b,j,o,y,i, NUL }; ADD(mem.sgb.joypadIndex); }

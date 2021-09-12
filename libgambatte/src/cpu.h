@@ -48,7 +48,7 @@ public:
 		return mem_.updateScreenBorder(videoBuf, pitch);
 	}
 
-	unsigned generateSgbSamples(short *soundBuf, unsigned long long &samples) {
+	unsigned generateSgbSamples(short *soundBuf, std::size_t &samples) {
 		return mem_.generateSgbSamples(soundBuf, samples);
 	}
 

@@ -79,8 +79,8 @@ GBEXPORT int gambatte_updatescreenborder(GB *g, unsigned *videoBuf, int pitch) {
 	return g->updateScreenBorder(videoBuf, pitch);
 }
 
-GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned long long *samples) {
-	return g->generateSgbSamples(audioBuf, *samples);
+GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned *samples) {
+	return g->generateSgbSamples(audioBuf, *(std::size_t *)samples);
 }
 
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {

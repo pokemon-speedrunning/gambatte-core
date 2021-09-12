@@ -38,7 +38,7 @@ Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
 , spc(spc_new())
-, lastUpdate_(0)
+, samplesAccumulated_(0)
 {
 	// FIXME: this code is ugly
 	unsigned i = 0;
@@ -88,8 +88,7 @@ void Sgb::saveState(SaveState &state) const {
 	state.mem.sgb.pending = pending;
 	state.mem.sgb.pendingCount = pendingCount;
 	state.mem.sgb.mask = mask;
-	state.mem.sgb.lastUpdateLow = lastUpdate_ & 0xFFFFFFFF;
-	state.mem.sgb.lastUpdateHigh = lastUpdate_ >> 32;
+	state.mem.sgb.samplesAccumulated = samplesAccumulated_;
 }
 
 void Sgb::loadState(SaveState const &state) {
@@ -101,8 +100,7 @@ void Sgb::loadState(SaveState const &state) {
 	pending = state.mem.sgb.pending;
 	pendingCount = state.mem.sgb.pendingCount;
 	mask = state.mem.sgb.mask;
-	lastUpdate_ = state.mem.sgb.lastUpdateLow;
-	lastUpdate_ |= (unsigned long long)state.mem.sgb.lastUpdateHigh << 32;
+	samplesAccumulated_ = state.mem.sgb.samplesAccumulated;
 
 	refreshPalettes();
 	loadSpcState();
@@ -695,13 +693,12 @@ void Sgb::cmdSound() {
 	soundControl[0] = command[4];
 }
 
-unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
+unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
 	if (!soundBuf)
 		return -1;
 
-	unsigned diff = samples - lastUpdate_;
-	samples = diff / 65;
-	lastUpdate_ += samples * 65;
+	samples = samplesAccumulated_ / 65;
+	samplesAccumulated_ -= samples * 65;
 	spc_set_output(spc, soundBuf, 2048);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
@@ -717,7 +714,7 @@ unsigned Sgb::generateSamples(short *soundBuf, unsigned long long &samples) {
 		spc_write_port(spc, 0, p, soundControl[p]);
 
 	spc_end_frame(spc, samples * 32);
-	return diff % 65;
+	return samplesAccumulated_;
 }
 
 SYNCFUNC(Sgb) {
@@ -760,7 +757,7 @@ SYNCFUNC(Sgb) {
 		loadSpcState();
 
 	NSS(soundControl);
-	NSS(lastUpdate_);
+	NSS(samplesAccumulated_);
 }
 
 }

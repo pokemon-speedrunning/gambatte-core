@@ -43,7 +43,8 @@ public:
 		pitch_ = pitch;
 	}
 
-	unsigned generateSamples(short *soundBuf, unsigned long long &samples);
+	void accumulateSamples(unsigned long samples) { samplesAccumulated_ += samples; }
+	unsigned generateSamples(short *soundBuf, std::size_t &samples);
 
 	void setCgbPalette(unsigned *lut) {
 		for (int i = 0; i < 32768; i++)
@@ -94,7 +95,7 @@ private:
 	SNES_SPC *spc;
 	unsigned char spcState[spc_state_size];
 	unsigned char soundControl[4];
-	unsigned long long lastUpdate_;
+	unsigned long samplesAccumulated_;
 
 	enum Command {
 		PAL01    = 0x00,

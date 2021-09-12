@@ -335,7 +335,7 @@ public:
 			: -1;
 	}
 
-	unsigned generateSgbSamples(short *soundBuf, unsigned long long &samples) {
+	unsigned generateSgbSamples(short *soundBuf, std::size_t &samples) {
 		return isSgb()
 			? sgb_.generateSamples(soundBuf, samples)
 			: -1;

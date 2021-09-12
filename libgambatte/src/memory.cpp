@@ -1415,7 +1415,11 @@ LoadRes Memory::loadROM(char const *romfiledata, unsigned romfilelength, unsigne
 
 std::size_t Memory::fillSoundBuffer(unsigned long cc) {
 	psg_.generateSamples(cc, isDoubleSpeed());
-	return psg_.fillBuffer();
+	std::size_t samples = psg_.fillBuffer();
+	if (isSgb())
+		sgb_.accumulateSamples(samples);
+
+	return samples;
 }
 
 bool Memory::getMemoryArea(int which, unsigned char **data, int *length) {

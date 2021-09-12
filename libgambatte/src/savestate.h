@@ -104,8 +104,7 @@ struct SaveState {
 			Ptr<unsigned char> frameBuf;
 			Ptr<unsigned char> spcState;
 			Ptr<unsigned char> soundControl;
-			unsigned long lastUpdateLow;
-			unsigned long lastUpdateHigh;
+			unsigned long samplesAccumulated;
 			unsigned char transfer;
 			unsigned char commandIndex;
 			unsigned char joypadIndex;

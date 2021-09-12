@@ -152,11 +152,10 @@ public:
 	  * Must be called after every runFor call if SGB audio is used.
 	  *
 	  * @param audioBuf buffer with space >= 4096
-	  * @param samples  in: gb samples produced since gambatte_create
-	  *                out: number of samples produced
+	  * @param samples  out: number of samples produced
 	  * @return gb sample remainder, or -1 on failure
 	  */
-	unsigned generateSgbSamples(short *audioBuf, unsigned long long &samples);
+	unsigned generateSgbSamples(short *audioBuf, std::size_t &samples);
 
 	/**
 	  * Sets layers to be rendered.

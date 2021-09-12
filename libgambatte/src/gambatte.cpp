@@ -91,7 +91,7 @@ unsigned GB::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) 
 	return p_->cpu.updateScreenBorder(videoBuf, pitch);
 }
 
-unsigned GB::generateSgbSamples(short *soundBuf, unsigned long long &samples) {
+unsigned GB::generateSgbSamples(short *soundBuf, std::size_t &samples) {
 	return p_->cpu.generateSgbSamples(soundBuf, samples);
 }
 
