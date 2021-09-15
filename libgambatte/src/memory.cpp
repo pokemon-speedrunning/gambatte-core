@@ -106,6 +106,7 @@ unsigned long Memory::saveState(SaveState &state, unsigned long cc) {
 	state.mem.haltHdmaState = haltHdmaState_;
 	state.mem.biosMode = biosMode_;
 	state.mem.stopped = stopped_;
+	state.mem.lastCartBusUpdate = lastCartBusUpdate_;
 
 	intreq_.saveState(state);
 	cart_.saveState(state, cc);
@@ -549,7 +550,7 @@ void Memory::updateInput() {
 				intreq_.flagIrq(0x10);
 		}
 	} else if (isSgb())
-		state -= sgb_.getJoypadIndex();
+		state -= getJoypadIndex();
 
 	ioamhram_[0x100] = (ioamhram_[0x100] & -0x10u) | state;
 }
@@ -862,7 +863,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		if ((data ^ ioamhram_[0x100]) & 0x30) {
 			if (isSgb()) {
 				if ((((data ^ ioamhram_[0x100]) & 0x30) & data) && !biosMode_)
-					sgb_.onJoypad(ioamhram_[0x100]);
+					sgb_.onJoypad(ioamhram_[0x100], data);
 			}
 
 			ioamhram_[0x100] = (ioamhram_[0x100] & ~0x30u) | (data & 0x30);
@@ -1414,7 +1415,11 @@ LoadRes Memory::loadROM(char const *romfiledata, unsigned romfilelength, unsigne
 
 std::size_t Memory::fillSoundBuffer(unsigned long cc) {
 	psg_.generateSamples(cc, isDoubleSpeed());
-	return psg_.fillBuffer();
+	std::size_t samples = psg_.fillBuffer();
+	if (isSgb())
+		sgb_.accumulateSamples(samples);
+
+	return samples;
 }
 
 bool Memory::getMemoryArea(int which, unsigned char **data, int *length) {
@@ -1470,6 +1475,7 @@ int Memory::linkStatus(int which) {
 SYNCFUNC(Memory)
 {
 	SSS(cart_);
+	SSS(sgb_);
 	NSS(ioamhram_);
 	NSS(divLastUpdate_);
 	NSS(lastOamDmaUpdate_);

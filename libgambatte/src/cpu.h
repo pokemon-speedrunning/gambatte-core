@@ -44,8 +44,20 @@ public:
 		mem_.setVideoBuffer(videoBuf, pitch);
 	}
 
+	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+		return mem_.updateScreenBorder(videoBuf, pitch);
+	}
+
+	unsigned generateSgbSamples(short *soundBuf, std::size_t &samples) {
+		return mem_.generateSgbSamples(soundBuf, samples);
+	}
+
 	void setInputGetter(InputGetter *getInput, void *p) {
 		mem_.setInputGetter(getInput, p);
+	}
+
+	unsigned getJoypadIndex() {
+		return mem_.getJoypadIndex();
 	}
 
 	void setReadCallback(MemoryCallback callback) {

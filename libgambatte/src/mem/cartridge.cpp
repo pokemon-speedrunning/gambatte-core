@@ -730,7 +730,7 @@ public:
 		NSS(rombank_);
 		NSS(rambank_);
 		NSS(enableRam_);
-		if (!isReader && rambanks(memptrs_)) // hack to get around cameraRam_ not being able to be stated correctly with the newstate system
+		if (rambanks(memptrs_)) // hack to get around cameraRam_ not being able to be stated correctly with the newstate system
 			camera_->set(memptrs_.rambankdata()[0x100]);
 	}
 
@@ -899,8 +899,10 @@ void Cartridge::setStatePtrs(SaveState &state) {
 
 void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 	mbc_->saveState(state.mem);
-	if (!isHuC3())
+	if (!isHuC3()) {
 		rtc_.update(cc);
+		state.mem.HuC3RAMflag = 0; // let's not leave random data here
+	}
 
 	time_.saveState(state, cc, isHuC3());
 	rtc_.saveState(state);
@@ -912,7 +914,7 @@ void Cartridge::loadState(SaveState const &state) {
 	camera_.loadState(state);
 	huc3_.loadState(state);
 	rtc_.loadState(state);
-	time_.loadState(state);
+	time_.loadState(state, isHuC3());
 	mbc_->loadState(state.mem);
 }
 

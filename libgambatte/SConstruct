@@ -35,6 +35,13 @@ sourceFiles = Split('''
 			src/mem/rtc.cpp
 			src/mem/sgb.cpp
 			src/mem/time.cpp
+			src/mem/snes_spc/dsp.cpp
+			src/mem/snes_spc/SNES_SPC.cpp
+			src/mem/snes_spc/SNES_SPC_misc.cpp
+			src/mem/snes_spc/SNES_SPC_state.cpp
+			src/mem/snes_spc/spc.cpp
+			src/mem/snes_spc/SPC_DSP.cpp
+			src/mem/snes_spc/SPC_Filter.cpp
 			src/sound/channel1.cpp
 			src/sound/channel2.cpp
 			src/sound/channel3.cpp

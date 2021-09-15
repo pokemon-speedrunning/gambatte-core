@@ -23,7 +23,7 @@
 
 namespace gambatte {
 
-void setInitState(struct SaveState &state, bool cgb, bool sgb, bool agb, std::size_t stalledCycles);
+void setInitState(struct SaveState &state, bool cgb, bool sgb, bool agb, std::size_t stalledCycles, const char *romTitlePtr);
 void setInitStateCart(struct SaveState &state, bool cgb, bool agb);
 void setPostBiosState(struct SaveState &state, bool cgb, bool agb, bool notCgbDmg);
 

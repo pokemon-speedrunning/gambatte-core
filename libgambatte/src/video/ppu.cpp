@@ -1688,6 +1688,14 @@ void loadSpriteList(PPUPriv &p, SaveState const &ss) {
 			p.spwordList[i] = (ss.ppu.spByte1List[i] * 0x100l + ss.ppu.spByte0List[i]) & 0xFFFF;
 		}
 
+		for (int i = numSprites; i < lcd_max_num_sprites_per_line; ++i) {
+			p.spriteList[i].spx = 0;
+			p.spriteList[i].line = 0;
+			p.spriteList[i].oampos = 0;
+			p.spriteList[i].attrib = 0;
+			p.spwordList[i] = 0;
+		}
+
 		p.spriteList[numSprites].spx = 0xFF;
 		p.nextSprite = std::min(1u * ss.ppu.nextSprite, 1u * numSprites);
 

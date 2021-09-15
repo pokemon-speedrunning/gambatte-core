@@ -87,6 +87,14 @@ std::ptrdiff_t GB::runFor(gambatte::uint_least32_t *const videoBuf, std::ptrdiff
 	     : cyclesSinceBlit;
 }
 
+unsigned GB::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch) {
+	return p_->cpu.updateScreenBorder(videoBuf, pitch);
+}
+
+unsigned GB::generateSgbSamples(short *soundBuf, std::size_t &samples) {
+	return p_->cpu.generateSgbSamples(soundBuf, samples);
+}
+
 void GB::setLayers(unsigned mask) {
 	p_->cpu.setLayers(mask);
 }
@@ -99,7 +107,7 @@ void GB::reset(std::size_t samplesToStall, std::string const &build) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
 		p_->cpu.saveState(state);
-		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, samplesToStall > 0 ? samplesToStall << 1 : 0);
+		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, samplesToStall > 0 ? samplesToStall << 1 : 0, p_->cpu.romTitle());
 		if (p_->loadflags & NO_BIOS)
 			setPostBiosState(state, p_->loadflags & CGB_MODE, p_->loadflags & GBA_FLAG, externalRead(0x143) & 0x80);
 
@@ -115,6 +123,10 @@ void GB::reset(std::size_t samplesToStall, std::string const &build) {
 
 void GB::setInputGetter(InputGetter *getInput, void *p) {
 	p_->cpu.setInputGetter(getInput, p);
+}
+
+unsigned GB::getJoypadIndex() {
+	return p_->cpu.getJoypadIndex();
 }
 
 void GB::setReadCallback(MemoryCallback callback) {
@@ -170,8 +182,9 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 	if (loadres == LOADRES_OK) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
+		p_->cpu.saveState(state);
 		p_->loadflags = flags;
-		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, 0);
+		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, 0, p_->cpu.romTitle());
 		if (flags & NO_BIOS)
 			setPostBiosState(state, flags & CGB_MODE, flags & GBA_FLAG, externalRead(0x143) & 0x80);
 
@@ -192,8 +205,9 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 	if (loadres == LOADRES_OK) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
+		p_->cpu.saveState(state);
 		p_->loadflags = flags;
-		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, (flags & GBA_FLAG) ? 971616 : 0);
+		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, (flags & GBA_FLAG) ? 971616 : 0, p_->cpu.romTitle());
 		if (flags & NO_BIOS)
 			setPostBiosState(state, flags & CGB_MODE, flags & GBA_FLAG, externalRead(0x143) & 0x80);
 
@@ -202,6 +216,8 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 
 		if (flags & GBA_FLAG && !(flags & NO_BIOS))
 			p_->cpu.stall(971616); // GBA takes 971616 cycles to switch to CGB mode; CGB CPU is inactive during this time.
+		else if (flags & SGB_MODE)
+			p_->cpu.stall(128 * (2 << 15));
 	}
 
 	return loadres;
@@ -209,21 +225,21 @@ LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const
 
 int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 	scoped_ptr<File> const bios(newFileInstance(biosfile));
-	
+
 	if (bios->fail())
 		return -1;
-	
+
 	std::size_t sz = bios->size();
-	
+
 	if (size != 0 && sz != size)
 		return -2;
-	
+
 	unsigned char newBiosBuffer[sz];
 	bios->read((char *)newBiosBuffer, sz);
-	
+
 	if (bios->fail())
 		return -1;
-	
+
 	if (crc != 0) {
 		unsigned char maskedBiosBuffer[sz];
 		std::memcpy(maskedBiosBuffer, newBiosBuffer, sz);
@@ -366,7 +382,6 @@ bool GB::loadState(char const *stateBuf, std::size_t size) {
 	if (p_->cpu.loaded()) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
-
 		if (StateSaver::loadState(state, stateBuf, size, true, p_->criticalLoadflags())) {
 			p_->cpu.loadState(state);
 			return true;

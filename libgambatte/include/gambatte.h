@@ -136,6 +136,28 @@ public:
 	                      gambatte::uint_least32_t *audioBuf, std::size_t &samples);
 
 	/**
+	  * Adds an SGB border onto the current frame.
+	  * The video buffer from the previous runFor will be used for the GB frame,
+	  * with the provided buffer outputting a new frame with the SGB border.
+	  *
+	  * @param videoBuf 256x224 RGB32 (native endian) video frame buffer
+	  * @param pitch distance in number of pixels (not bytes) from the start of one line
+	  *              to the next in videoBuf.
+	  * @return 0 on success, -1 on failure
+	  */
+	unsigned updateScreenBorder(gambatte::uint_least32_t *videoBuf, std::ptrdiff_t pitch);
+
+	/**
+	  * Outputs SGB audio to the provided buffer.
+	  * Must be called after every runFor call if SGB audio is used.
+	  *
+	  * @param audioBuf buffer with space >= 4096
+	  * @param samples  out: number of samples produced
+	  * @return gb sample remainder, or -1 on failure
+	  */
+	unsigned generateSgbSamples(short *audioBuf, std::size_t &samples);
+
+	/**
 	  * Sets layers to be rendered.
 	  * @param layermask, 1=BG, 2=OBJ, 4=WINDOW
 	  */
@@ -164,6 +186,9 @@ public:
 
 	/** Sets the callback used for getting input state. */
 	void setInputGetter(InputGetter *getInput, void *p);
+
+	/** Gets which SGB controller is in use, 0 indexed. */
+	unsigned getJoypadIndex();
 
 	/** Sets a callback to occur immediately before every CPU read, except for opcode first byte fetches. */
 	void setReadCallback(MemoryCallback);

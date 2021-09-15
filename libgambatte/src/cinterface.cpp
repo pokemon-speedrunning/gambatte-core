@@ -75,6 +75,14 @@ GBEXPORT int gambatte_runfor(GB *g, unsigned *videoBuf, int pitch, unsigned *aud
 	return g->runFor(videoBuf, pitch, audioBuf, *(std::size_t *)samples);
 }
 
+GBEXPORT int gambatte_updatescreenborder(GB *g, unsigned *videoBuf, int pitch) {
+	return g->updateScreenBorder(videoBuf, pitch);
+}
+
+GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned *samples) {
+	return g->generateSgbSamples(audioBuf, *(std::size_t *)samples);
+}
+
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {
 	g->setLayers(mask);
 }
@@ -101,6 +109,10 @@ GBEXPORT void gambatte_setcgbpalette(GB *g, unsigned *lut) {
 
 GBEXPORT void gambatte_setinputgetter(GB *g, InputGetter *getInput, void *p) {
 	g->setInputGetter(getInput, p);
+}
+
+GBEXPORT int gambatte_getjoypadindex(GB *g) {
+	return g->getJoypadIndex();
 }
 
 GBEXPORT void gambatte_setreadcallback(GB *g, MemoryCallback callback) {

@@ -35,7 +35,7 @@ struct SaveState {
 		void set(T *p, std::size_t size) { ptr = p; size_ = size; }
 
 		friend class SaverList;
-		friend void setInitState(SaveState &, bool, bool, bool, std::size_t);
+		friend void setInitState(SaveState &, bool, bool, bool, std::size_t, const char *);
 		friend void setInitStateCart(SaveState &, bool, bool);
 		friend void setPostBiosState(SaveState &, bool, bool, bool);
 	private:
@@ -89,15 +89,27 @@ struct SaveState {
 		unsigned char /*bool*/ stopped;
 
 		struct SGB {
+			Ptr<unsigned short> systemTilemap;
+			Ptr<unsigned short> tilemap;
+			Ptr<unsigned short> systemTileColors;
+			Ptr<unsigned short> tileColors;
 			Ptr<unsigned short> systemColors;
 			Ptr<unsigned short> colors;
+			Ptr<unsigned char> systemAttributes;
 			Ptr<unsigned char> attributes;
+			Ptr<unsigned char> systemTiles;
+			Ptr<unsigned char> tiles;
 			Ptr<unsigned char> packet;
 			Ptr<unsigned char> command;
+			Ptr<unsigned char> frameBuf;
+			Ptr<unsigned char> spcState;
+			Ptr<unsigned char> soundControl;
+			unsigned long samplesAccumulated;
 			unsigned char transfer;
 			unsigned char commandIndex;
 			unsigned char joypadIndex;
 			unsigned char joypadMask;
+			unsigned char borderFade;
 			unsigned char pending;
 			unsigned char pendingCount;
 			unsigned char mask;

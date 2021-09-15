@@ -46,15 +46,17 @@ void Time::saveState(SaveState &state, unsigned long const cc, bool isHuC3) {
 			cyclesFromTime(cc);
 	}
 	state.time.seconds = seconds_;
-	state.time.lastTimeSec = lastTime_.tv_sec;
-	state.time.lastTimeUsec = lastTime_.tv_usec;
+	state.time.lastTimeSec = (isHuC3 || !useCycles_) ? lastTime_.tv_sec : 0;
+	state.time.lastTimeUsec = (isHuC3 || !useCycles_) ? lastTime_.tv_usec : 0;
 	state.time.lastCycles = lastCycles_;
 }
 
-void Time::loadState(SaveState const &state) {
+void Time::loadState(SaveState const &state, bool isHuC3) {
 	seconds_ = state.time.seconds;
-	lastTime_.tv_sec = state.time.lastTimeSec;
-	lastTime_.tv_usec = state.time.lastTimeUsec;
+	if (isHuC3 || !useCycles_) {
+		lastTime_.tv_sec = state.time.lastTimeSec;
+		lastTime_.tv_usec = state.time.lastTimeUsec;
+	}
 	lastCycles_ = state.time.lastCycles;
 	ds_ = (!state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
 }
