@@ -694,12 +694,10 @@ void Sgb::cmdSound() {
 }
 
 unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
-	if (!soundBuf)
-		return -1;
-
 	samples = samplesAccumulated_ / 65;
 	samplesAccumulated_ -= samples * 65;
-	spc_set_output(spc, soundBuf, 2048);
+	short buf[2048 * 2];
+	spc_set_output(spc, buf, 2048);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
 		if (spc_read_port(spc, 0, p) != soundControl[p])
@@ -714,6 +712,9 @@ unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
 		spc_write_port(spc, 0, p, soundControl[p]);
 
 	spc_end_frame(spc, samples * 32);
+	if (soundBuf)
+		std::memcpy(soundBuf, buf, sizeof buf);
+
 	return samplesAccumulated_;
 }
 

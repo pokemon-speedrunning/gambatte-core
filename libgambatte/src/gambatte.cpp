@@ -274,6 +274,10 @@ bool GB::isCgbDmg() const {
 	return p_->cpu.isCgbDmg();
 }
 
+bool GB::isSgb() const {
+	return p_->cpu.isSgb();
+}
+
 bool GB::isLoaded() const {
 	return p_->cpu.loaded();
 }
