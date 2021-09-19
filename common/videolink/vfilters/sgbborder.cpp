@@ -27,11 +27,11 @@ enum { in_height = SgbBorder::out_height };
 enum { in_pitch  = in_width + 3 };
 
 static void blit(gambatte::uint_least32_t *d,
-                std::ptrdiff_t const dstPitch,
-                gambatte::uint_least32_t const *s,
-                std::ptrdiff_t const srcPitch,
-                unsigned const w,
-                unsigned h)
+                 std::ptrdiff_t const dstPitch,
+                 gambatte::uint_least32_t const *s,
+                 std::ptrdiff_t const srcPitch,
+                 unsigned const w,
+                 unsigned h)
 {
 	do {
 		std::ptrdiff_t i = -static_cast<std::ptrdiff_t>(w);
