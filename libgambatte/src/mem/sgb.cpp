@@ -417,7 +417,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 	switch (pending) {
 	case SOU_TRN:
 	{
-		unsigned char *end = &vram[sizeof vram];
+		unsigned char *end = &vram[(sizeof vram) - 1];
 		unsigned char *src = vram;
 		unsigned char *dst = spc->get_ram();
 		
