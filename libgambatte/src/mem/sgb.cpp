@@ -417,21 +417,21 @@ void Sgb::onTransfer(unsigned char *frame) {
 	switch (pending) {
 	case SOU_TRN:
 	{
-		/*unsigned char *end = vram + 0x10000;*/
+		unsigned char *end = &vram[sizeof vram];
 		unsigned char *src = vram;
 		unsigned char *dst = spc->get_ram();
 		
 		while (true) {
-			/*if (src + 4 > end)
-				break;*/
-			
+			if (src + 4 > end)
+				break;
+
 			unsigned len = src[0] | src[1] << 8;
 			unsigned addr = src[2] | src[3] << 8;
 			if (!len)
 				break;
 
 			src += 4;
-			if (/*(src + len) > end || */(addr + len) >= 0x10000)
+			if ((src + len) > end || (addr + len) >= 0x10000)
 				break;
 
 			std::memcpy(dst + addr, src, len);
