@@ -19,13 +19,33 @@
 #include "sgbborder.h"
 
 #include <algorithm>
-#include <cstring>
 
 namespace {
 
 enum { in_width  = SgbBorder::out_width };
 enum { in_height = SgbBorder::out_height };
 enum { in_pitch  = in_width + 3 };
+
+static void blit(gambatte::uint_least32_t *d,
+                std::ptrdiff_t const dstPitch,
+                gambatte::uint_least32_t const *s,
+                std::ptrdiff_t const srcPitch,
+                unsigned const w,
+                unsigned h)
+{
+	do {
+		std::ptrdiff_t i = -static_cast<std::ptrdiff_t>(w);
+		s += w;
+		d += w;
+
+		do {
+			d[i] = s[i];
+		} while (++i);
+
+		s += srcPitch - static_cast<std::ptrdiff_t>(w);
+		d += dstPitch - static_cast<std::ptrdiff_t>(w);
+	} while (--h);
+}
 
 } // anon namespace
 
@@ -44,10 +64,6 @@ std::ptrdiff_t SgbBorder::inPitch() const {
 }
 
 void SgbBorder::draw(void *dbuffer, std::ptrdiff_t pitch) {
-	gambatte::uint_least32_t *outBuf_ = (gambatte::uint_least32_t *)dbuffer;
-	gambatte::uint_least32_t *inBuf_ = (gambatte::uint_least32_t *)inBuf();
-	for (unsigned j = 0; j < in_width; j++) {
-		for (unsigned i = 0; i < in_height; i++)
-			outBuf_[j * pitch + i] = inBuf_[j * in_pitch + i];
-	}
+	::blit(static_cast<gambatte::uint_least32_t *>(dbuffer), pitch,
+	       static_cast<gambatte::uint_least32_t *>(inBuf()), in_pitch, in_width, in_height);
 }
