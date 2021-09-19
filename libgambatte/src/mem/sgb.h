@@ -21,7 +21,7 @@
 
 #include "gbint.h"
 #include "newstate.h"
-#include "snes_spc/spc.h"
+#include "snes_spc/SNES_SPC.h"
 
 #include <cstddef>
 
@@ -93,7 +93,7 @@ private:
 	unsigned char mask;
 
 	SNES_SPC *spc;
-	unsigned char spcState[spc_state_size];
+	unsigned char spcState[SNES_SPC::state_size];
 	unsigned char soundControl[4];
 	unsigned long samplesAccumulated_;
 
