@@ -63,7 +63,7 @@ void PSG::init(bool cgb, bool agb) {
 	ch1_.init(cgb, agb);
 	ch2_.init(agb);
 	ch3_.init(cgb);
-	ch4_.init(cgb, agb);
+	ch4_.init(agb);
 }
 
 void PSG::reset(bool ds) {

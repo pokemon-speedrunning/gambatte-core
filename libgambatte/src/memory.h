@@ -351,8 +351,10 @@ public:
 	}
 
 	void setCgbPalette(unsigned *lut) {
-		lcd_.setCgbPalette(lut);
-		sgb_.setCgbPalette(lut);
+		if (isSgb())
+			sgb_.setCgbPalette(lut);
+		else
+			lcd_.setCgbPalette(lut);
 	}
 
 	void setTimeMode(bool useCycles, unsigned long const cc) {

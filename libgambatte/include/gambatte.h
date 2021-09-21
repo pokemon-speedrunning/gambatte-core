@@ -240,6 +240,9 @@ public:
 	/** Returns true if the currently loaded ROM image is treated as having CGB-DMG support. */
 	bool isCgbDmg() const;
 
+	/** Returns true if the currently loaded ROM image is treated as having SGB support. */
+	bool isSgb() const;
+
 	/** Returns true if a ROM image is loaded. */
 	bool isLoaded() const;
 

@@ -106,6 +106,7 @@ void LCD::setDmgPalette(unsigned long palette[], unsigned short const dmgColors[
 void LCD::setCgbPalette(unsigned *lut) {
 	for (int i = 0; i < 32768; i++)
 		cgbColorsRgb32_[i] = lut[i];
+
 	refreshPalettes();
 }
 
@@ -127,7 +128,7 @@ LCD::LCD(unsigned char const *oamram, unsigned char const *vram,
 	for (int b = 0; b < 32; b++)
 		for (int g = 0; g < 32; g++)
 			for (int r = 0; r < 32; r++)
-				cgbColorsRgb32_[i++] = ((r * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((b * 255 + 15) / 31) << 16) | 255 << 24;
+				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
 
 	std::memset( bgpData_, 0, sizeof  bgpData_);
 	std::memset(objpData_, 0, sizeof objpData_);
@@ -944,7 +945,6 @@ void LCD::setDmgPaletteColor(unsigned palNum, unsigned colorNum, unsigned long r
 SYNCFUNC(LCD) {
 	SSS(ppu_);
 	NSS(dmgColorsBgr15_);
-	NSS(cgbColorsRgb32_);
 	NSS(bgpData_);
 	NSS(objpData_);
 	SSS(eventTimes_);

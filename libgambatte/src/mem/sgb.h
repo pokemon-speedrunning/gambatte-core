@@ -21,7 +21,7 @@
 
 #include "gbint.h"
 #include "newstate.h"
-#include "snes_spc/spc.h"
+#include "snes_spc/SNES_SPC.h"
 
 #include <cstddef>
 
@@ -43,7 +43,7 @@ public:
 		pitch_ = pitch;
 	}
 
-	void accumulateSamples(unsigned long samples) { samplesAccumulated_ += samples; }
+	void accumulateSamples(std::size_t samples) { samplesAccumulated_ += samples; }
 	unsigned generateSamples(short *soundBuf, std::size_t &samples);
 
 	void setCgbPalette(unsigned *lut) {
@@ -93,7 +93,7 @@ private:
 	unsigned char mask;
 
 	SNES_SPC *spc;
-	unsigned char spcState[spc_state_size];
+	unsigned char spcState[SNES_SPC::state_size];
 	unsigned char soundControl[4];
 	unsigned long samplesAccumulated_;
 

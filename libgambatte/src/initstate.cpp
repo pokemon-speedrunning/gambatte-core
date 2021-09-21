@@ -261,6 +261,7 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.mem.sgb.pending = 0xFF;
 	state.mem.sgb.pendingCount = 0;
 	state.mem.sgb.mask = 0;
+	state.mem.sgb.samplesAccumulated = 0;
 
 	for (int i = 0x00; i < 0x40; i += 0x02) {
 		state.ppu.bgpData.ptr[i    ] = 0xFF;

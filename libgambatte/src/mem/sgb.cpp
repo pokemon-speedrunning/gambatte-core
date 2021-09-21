@@ -37,7 +37,7 @@ void loadStateCallback(unsigned char **i, void *o, std::size_t len) {
 Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
-, spc(spc_new())
+, spc(new SNES_SPC)
 , samplesAccumulated_(0)
 {
 	// FIXME: this code is ugly
@@ -46,6 +46,9 @@ Sgb::Sgb()
 		for (unsigned g = 0; g < 32; g++)
 			for (unsigned r = 0; r < 32; r++)
 				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
+
+	refreshPalettes();
+	spc->init();
 }
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
@@ -53,9 +56,9 @@ unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
 }
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15, unsigned const fade) {
-    int const r = (bgr15 & 0x1F) - fade;
-    int const g = ((bgr15 >> 5) & 0x1F) - fade;
-    int const b = ((bgr15 >> 10) & 0x1F) - fade;
+	int const r = (bgr15 & 0x1F) - fade;
+	int const g = ((bgr15 >> 5) & 0x1F) - fade;
+	int const b = ((bgr15 >> 10) & 0x1F) - fade;
 	return cgbColorsRgb32_[(std::max(r, 0) | (std::max(g, 0) << 5) | (std::max(b, 0) << 10)) & 0x7FFF];
 }
 
@@ -108,13 +111,13 @@ void Sgb::loadState(SaveState const &state) {
 
 void Sgb::saveSpcState() {
 	unsigned char *o = spcState;
-	spc_copy_state(spc, &o, saveStateCallback);
+	spc->copy_state(&o, saveStateCallback);
 }
 
 void Sgb::loadSpcState() {
-	spc_set_output(spc, NULL, 0);
+	spc->set_output(NULL, 0);
 	unsigned char *i = spcState;
-	spc_copy_state(spc, &i, loadStateCallback);
+	spc->copy_state(&i, loadStateCallback);
 }
 
 void Sgb::onJoypad(unsigned data, unsigned write) {
@@ -415,21 +418,21 @@ void Sgb::onTransfer(unsigned char *frame) {
 	switch (pending) {
 	case SOU_TRN:
 	{
-		/*unsigned char *end = vram + 0x10000;*/
+		unsigned char *end = &vram[sizeof vram];
 		unsigned char *src = vram;
-		unsigned char *dst = spc_get_ram(spc);
+		unsigned char *dst = spc->get_ram();
 		
 		while (true) {
-			/*if (src + 4 > end)
-				break;*/
-			
+			if (src + 4 >= end)
+				break;
+
 			unsigned len = src[0] | src[1] << 8;
 			unsigned addr = src[2] | src[3] << 8;
 			if (!len)
 				break;
 
 			src += 4;
-			if (/*(src + len) > end || */(addr + len) >= 0x10000)
+			if ((src + len) >= end || (addr + len) >= 0x10000)
 				break;
 
 			std::memcpy(dst + addr, src, len);
@@ -694,15 +697,13 @@ void Sgb::cmdSound() {
 }
 
 unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
-	if (!soundBuf)
-		return -1;
-
 	samples = samplesAccumulated_ / 65;
 	samplesAccumulated_ -= samples * 65;
-	spc_set_output(spc, soundBuf, 2048);
+	short buf[2048 * 2];
+	spc->set_output(buf, 2048);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
-		if (spc_read_port(spc, 0, p) != soundControl[p])
+		if (spc->read_port(0, p) != soundControl[p])
 			matched = false;
 	}
 	if (matched) {
@@ -711,15 +712,16 @@ unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
 		soundControl[2] = 0;
 	}
 	for (unsigned p = 0; p < 4; p++)
-		spc_write_port(spc, 0, p, soundControl[p]);
+		spc->write_port(0, p, soundControl[p]);
 
-	spc_end_frame(spc, samples * 32);
+	spc->end_frame(samples * 32);
+	if (soundBuf)
+		std::memcpy(soundBuf, buf, sizeof buf);
+
 	return samplesAccumulated_;
 }
 
 SYNCFUNC(Sgb) {
-	NSS(cgbColorsRgb32_);
-
 	NSS(transfer);
 	NSS(packet);
 	NSS(command);
@@ -732,7 +734,6 @@ SYNCFUNC(Sgb) {
 
 	NSS(systemColors);
 	NSS(colors);
-	NSS(palette);
 	NSS(systemAttributes);
 	NSS(attributes);
 

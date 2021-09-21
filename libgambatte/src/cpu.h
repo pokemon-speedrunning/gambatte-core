@@ -120,6 +120,7 @@ public:
 	void stall(unsigned long cycles) { mem_.stall(cycleCounter_, cycles); }
 	bool isCgb() const { return mem_.isCgb(); }
 	bool isCgbDmg() const { return mem_.isCgbDmg(); }
+	bool isSgb() const { return mem_.isSgb(); }
 
 	void setDmgPaletteColor(int palNum, int colorNum, unsigned long rgb32) {
 		mem_.setDmgPaletteColor(palNum, colorNum, rgb32);

@@ -1,5 +1,5 @@
 /***************************************************************************
- *   Copyright (C) 2009 by Sindre Aamås                                    *
+ *   Copyright (C) 2007 by Sindre Aamås                                    *
  *   sinamas@users.sourceforge.net                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
@@ -16,37 +16,53 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.             *
  ***************************************************************************/
-#include "vfilterinfo.h"
-#include "vfilters/sgbborder.h"
-#include "vfilters/catrom2x.h"
-#include "vfilters/catrom3x.h"
-#include "vfilters/kreed2xsai.h"
-#include "vfilters/maxsthq2x.h"
-#include "vfilters/maxsthq3x.h"
+#include "sgbborder.h"
+#include <algorithm>
 
-static VideoLink * createNone() { return 0; }
+namespace {
 
-template<class T>
-static VideoLink * createT() { return new T; }
+enum { in_width  = SgbBorder::out_width };
+enum { in_height = SgbBorder::out_height };
+enum { in_pitch  = in_width + 3 };
 
-#define VFINFO(handle, Type) { handle, Type::out_width, Type::out_height, createT<Type> }
+static void blit(gambatte::uint_least32_t *d,
+                 std::ptrdiff_t const dstPitch,
+                 gambatte::uint_least32_t const *s,
+                 std::ptrdiff_t const srcPitch,
+                 unsigned const w,
+                 unsigned h)
+{
+	do {
+		std::ptrdiff_t i = -static_cast<std::ptrdiff_t>(w);
+		s += w;
+		d += w;
 
-static VfilterInfo const vfinfos[] = {
-	{ "None", VfilterInfo::in_width, VfilterInfo::in_height, createNone },
-#ifdef SHOW_PLATFORM_SGB
-	VFINFO("SGB Border", SgbBorder),
-#endif
-	VFINFO("Bicubic Catmull-Rom spline 2x", Catrom2x),
-	VFINFO("Bicubic Catmull-Rom spline 3x", Catrom3x),
-	VFINFO("Kreed's 2xSaI", Kreed2xSaI),
-	VFINFO("MaxSt's hq2x", MaxStHq2x),
-	VFINFO("MaxSt's hq3x", MaxStHq3x),
-};
+		do {
+			d[i] = s[i];
+		} while (++i);
 
-std::size_t VfilterInfo::numVfilters() {
-	return sizeof vfinfos / sizeof vfinfos[0];
+		s += srcPitch - static_cast<std::ptrdiff_t>(w);
+		d += dstPitch - static_cast<std::ptrdiff_t>(w);
+	} while (--h);
 }
 
-VfilterInfo const & VfilterInfo::get(std::size_t n) {
-	return vfinfos[n];
+} // anon namespace
+
+SgbBorder::SgbBorder()
+: buffer_((in_height + 3UL) * in_pitch)
+{
+	std::fill_n(buffer_.get(), buffer_.size(), 0);
+}
+
+void * SgbBorder::inBuf() const {
+	return buffer_ + in_pitch + 1;
+}
+
+std::ptrdiff_t SgbBorder::inPitch() const {
+	return in_pitch;
+}
+
+void SgbBorder::draw(void *dbuffer, std::ptrdiff_t pitch) {
+	::blit(static_cast<gambatte::uint_least32_t *>(dbuffer), pitch,
+	       static_cast<gambatte::uint_least32_t *>(inBuf()), in_pitch, in_width, in_height);
 }

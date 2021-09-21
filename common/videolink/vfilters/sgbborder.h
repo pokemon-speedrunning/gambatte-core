@@ -16,37 +16,26 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.             *
  ***************************************************************************/
-#include "vfilterinfo.h"
-#include "vfilters/sgbborder.h"
-#include "vfilters/catrom2x.h"
-#include "vfilters/catrom3x.h"
-#include "vfilters/kreed2xsai.h"
-#include "vfilters/maxsthq2x.h"
-#include "vfilters/maxsthq3x.h"
+#ifndef SGBBORDER_H
+#define SGBBORDER_H
 
-static VideoLink * createNone() { return 0; }
+#include "../videolink.h"
+#include "../vfilterinfo.h"
+#include "array.h"
+#include "gbint.h"
 
-template<class T>
-static VideoLink * createT() { return new T; }
+class SgbBorder : public VideoLink {
+public:
+	enum { out_width  = VfilterInfo::in_width  + 96 };
+	enum { out_height = VfilterInfo::in_height + 80 };
 
-#define VFINFO(handle, Type) { handle, Type::out_width, Type::out_height, createT<Type> }
+	SgbBorder();
+	virtual void * inBuf() const;
+	virtual std::ptrdiff_t inPitch() const;
+	virtual void draw(void *dst, std::ptrdiff_t dstpitch);
 
-static VfilterInfo const vfinfos[] = {
-	{ "None", VfilterInfo::in_width, VfilterInfo::in_height, createNone },
-#ifdef SHOW_PLATFORM_SGB
-	VFINFO("SGB Border", SgbBorder),
-#endif
-	VFINFO("Bicubic Catmull-Rom spline 2x", Catrom2x),
-	VFINFO("Bicubic Catmull-Rom spline 3x", Catrom3x),
-	VFINFO("Kreed's 2xSaI", Kreed2xSaI),
-	VFINFO("MaxSt's hq2x", MaxStHq2x),
-	VFINFO("MaxSt's hq3x", MaxStHq3x),
+private:
+	Array<gambatte::uint_least32_t> const buffer_;
 };
 
-std::size_t VfilterInfo::numVfilters() {
-	return sizeof vfinfos / sizeof vfinfos[0];
-}
-
-VfilterInfo const & VfilterInfo::get(std::size_t n) {
-	return vfinfos[n];
-}
+#endif
