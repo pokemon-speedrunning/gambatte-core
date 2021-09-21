@@ -33,7 +33,9 @@ static VideoLink * createT() { return new T; }
 
 static VfilterInfo const vfinfos[] = {
 	{ "None", VfilterInfo::in_width, VfilterInfo::in_height, createNone },
+#ifdef SHOW_PLATFORM_SGB
 	VFINFO("SGB Border", SgbBorder),
+#endif
 	VFINFO("Bicubic Catmull-Rom spline 2x", Catrom2x),
 	VFINFO("Bicubic Catmull-Rom spline 3x", Catrom3x),
 	VFINFO("Kreed's 2xSaI", Kreed2xSaI),

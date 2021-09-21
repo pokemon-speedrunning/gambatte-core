@@ -43,7 +43,7 @@ public:
 		pitch_ = pitch;
 	}
 
-	void accumulateSamples(unsigned long samples) { samplesAccumulated_ += samples; }
+	void accumulateSamples(std::size_t samples) { samplesAccumulated_ += samples; }
 	unsigned generateSamples(short *soundBuf, std::size_t &samples);
 
 	void setCgbPalette(unsigned *lut) {
