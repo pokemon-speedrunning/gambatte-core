@@ -47,6 +47,7 @@ Sgb::Sgb()
 			for (unsigned r = 0; r < 32; r++)
 				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
 
+	refreshPalettes();
 	spc->init();
 }
 
