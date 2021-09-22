@@ -734,6 +734,7 @@ SYNCFUNC(Sgb) {
 
 	NSS(systemColors);
 	NSS(colors);
+	refreshPalettes();
 	NSS(systemAttributes);
 	NSS(attributes);
 
