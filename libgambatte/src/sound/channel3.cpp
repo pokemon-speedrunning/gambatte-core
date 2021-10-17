@@ -249,4 +249,5 @@ SYNCFUNC(Channel3) {
 
 	NSS(master_);
 	NSS(cgb_);
+	NSS(agb_);
 }
