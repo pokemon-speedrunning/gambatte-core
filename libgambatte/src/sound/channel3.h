@@ -36,11 +36,11 @@ public:
 	bool isCgb() const { return cgb_; }
 	void reset();
 	void resetCc(unsigned long cc, unsigned long newCc);
-	void init(bool cgb);
+	void init(bool cgb, bool agb);
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
-	void setNr0(unsigned data);
+	void setNr0(unsigned data, unsigned long cc);
 	void setNr1(unsigned data, unsigned long cc) { lengthCounter_.nr1Change(data, nr4_, cc); }
 	void setNr2(unsigned data);
 	void setNr3(unsigned data) { nr3_ = data; }
@@ -50,7 +50,7 @@ public:
 
 	unsigned waveRamRead(unsigned index, unsigned long cc) const {
 		if (master_) {
-			if (!cgb_ && cc != lastReadTime_)
+			if (agb_ || (!cgb_ && cc != lastReadTime_))
 				return 0xFF;
 
 			index = wavePos_ / 2;
@@ -61,7 +61,7 @@ public:
 
 	void waveRamWrite(unsigned index, unsigned data, unsigned long cc) {
 		if (master_) {
-			if (!cgb_ && cc != lastReadTime_)
+			if (agb_ || (!cgb_ && cc != lastReadTime_))
 				return;
 
 			index = wavePos_ / 2;
@@ -102,6 +102,7 @@ private:
 	unsigned char vol_;
 	bool master_;
 	bool cgb_;
+	bool agb_;
 
 	void updateWaveCounter(unsigned long cc);
 

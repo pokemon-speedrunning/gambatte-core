@@ -57,7 +57,7 @@ public:
 	void setNr23(unsigned data) { ch2_.setNr3(data, cycleCounter_); }
 	void setNr24(unsigned data, bool ds) { ch2_.setNr4(data, cycleCounter_, !(lastUpdate_ & ds)); }
 
-	void setNr30(unsigned data) { ch3_.setNr0(data); }
+	void setNr30(unsigned data) { ch3_.setNr0(data, cycleCounter_); }
 	void setNr31(unsigned data) { ch3_.setNr1(data, cycleCounter_); }
 	void setNr32(unsigned data) { ch3_.setNr2(data); }
 	void setNr33(unsigned data) { ch3_.setNr3(data); }
