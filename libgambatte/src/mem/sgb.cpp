@@ -22,7 +22,7 @@
 #include <cstring>
 #include <algorithm>
 
-namespace gambatte {
+namespace {
 
 void saveStateCallback(unsigned char **o, void *i, std::size_t len) {
 	std::memcpy(*o, i, len);
@@ -34,10 +34,13 @@ void loadStateCallback(unsigned char **i, void *o, std::size_t len) {
 	*i += len;
 }
 
+}
+
+namespace gambatte {
+
 Sgb::Sgb()
 : transfer(0xFF)
 , pending(0xFF)
-, spc(new SNES_SPC)
 , samplesAccumulated_(0)
 {
 	// FIXME: this code is ugly
@@ -48,7 +51,7 @@ Sgb::Sgb()
 				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
 
 	refreshPalettes();
-	spc->init();
+	spc.init();
 }
 
 unsigned long Sgb::gbcToRgb32(unsigned const bgr15) {
@@ -111,13 +114,13 @@ void Sgb::loadState(SaveState const &state) {
 
 void Sgb::saveSpcState() {
 	unsigned char *o = spcState;
-	spc->copy_state(&o, saveStateCallback);
+	spc.copy_state(&o, saveStateCallback);
 }
 
 void Sgb::loadSpcState() {
-	spc->set_output(NULL, 0);
+	spc.set_output(NULL, 0);
 	unsigned char *i = spcState;
-	spc->copy_state(&i, loadStateCallback);
+	spc.copy_state(&i, loadStateCallback);
 }
 
 void Sgb::onJoypad(unsigned data, unsigned write) {
@@ -127,7 +130,7 @@ void Sgb::onJoypad(unsigned data, unsigned write) {
 		joypadIndex = (joypadIndex + 1) & joypadMask;
 }
 
-void Sgb::updateScreen() {
+void Sgb::updateScreen(bool blanklcd) {
 	unsigned char frame[160 * 144];
 	
 	for (unsigned j = 0; j < 144; j++) {
@@ -138,7 +141,7 @@ void Sgb::updateScreen() {
 	if (pending != 0xFF && --pendingCount == 0)
 		onTransfer(frame);
 
-	if (!mask)
+	if (!mask && !blanklcd)
 		std::memcpy(frameBuf_, frame, sizeof frame);
 
 	// border affects the colors within the gb area for whatever reason, so we need to go through that data too
@@ -182,7 +185,7 @@ void Sgb::updateScreen() {
 	}
 
 	unsigned long colors[16 * 4];
-	if (borderFade == 0) {
+	if (borderFade == 0 || borderFade > 64) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			colors[i] = gbcToRgb32(systemTileColors[i]);
 	} else if (borderFade > 32) {
@@ -199,6 +202,9 @@ void Sgb::updateScreen() {
 				continue;
 
 			unsigned short tile = systemTilemap[tileX + tileY * 32];
+			if (tile & 0x300)
+				continue;
+
 			unsigned char flipX = (tile & 0x4000) ? 0 : 7;
 			unsigned char flipY = (tile & 0x8000) ? 7 : 0;
 			unsigned char pal = (tile >> 10) & 3;
@@ -233,7 +239,7 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	uint_least32_t frame[256 * 224];
 
 	unsigned long colors[16 * 4];
-	if (borderFade == 0) {
+	if (borderFade == 0 || borderFade > 64) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			colors[i] = gbcToRgb32(systemTileColors[i]);
 	} else if (borderFade > 32) {
@@ -256,6 +262,9 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 				continue;
 
 			unsigned short tile = systemTilemap[tileX + tileY * 32];
+			if (tile & 0x300)
+				continue;
+
 			unsigned char flipX = (tile & 0x4000) ? 0 : 7;
 			unsigned char flipY = (tile & 0x8000) ? 7 : 0;
 			unsigned char pal = (tile >> 10) & 3;
@@ -344,26 +353,26 @@ void Sgb::onCommand() {
 		break;
 	case SOU_TRN:
 		pending = SOU_TRN;
-		pendingCount = 2;
+		pendingCount = 3;
 		break;
 	case PAL_TRN:
 		pending = PAL_TRN;
-		pendingCount = 2;
+		pendingCount = 3;
 		break;
 	case CHR_TRN:
 		pending = CHR_TRN;
 		if (command[1] & 1)
 			pending |= HIGH;
 
-		pendingCount = 2;
+		pendingCount = 3;
 		break;
 	case PCT_TRN:
 		pending = PCT_TRN;
-		pendingCount = 2;
+		pendingCount = 3;
 		break;
 	case ATTR_TRN:
 		pending = ATTR_TRN;
-		pendingCount = 2;
+		pendingCount = 3;
 		break;
 	case MLT_REQ:
 		joypadMask = (command[1] & 2) | !!(command[1] & 3);
@@ -420,7 +429,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 	{
 		unsigned char *end = &vram[sizeof vram];
 		unsigned char *src = vram;
-		unsigned char *dst = spc->get_ram();
+		unsigned char *dst = spc.get_ram();
 		
 		while (true) {
 			if (src + 4 >= end)
@@ -470,7 +479,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			dst[i] = src[i];
 
-		borderFade = 64;
+		borderFade = 105;
 		break;
 	}
 	case ATTR_TRN:
@@ -700,10 +709,10 @@ unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
 	samples = samplesAccumulated_ / 65;
 	samplesAccumulated_ -= samples * 65;
 	short buf[2048 * 2];
-	spc->set_output(buf, 2048);
+	spc.set_output(buf, 2048);
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
-		if (spc->read_port(0, p) != soundControl[p])
+		if (spc.read_port(0, p) != soundControl[p])
 			matched = false;
 	}
 	if (matched) {
@@ -712,9 +721,9 @@ unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
 		soundControl[2] = 0;
 	}
 	for (unsigned p = 0; p < 4; p++)
-		spc->write_port(0, p, soundControl[p]);
+		spc.write_port(0, p, soundControl[p]);
 
-	spc->end_frame(samples * 32);
+	spc.end_frame(samples * 32);
 	if (soundBuf)
 		std::memcpy(soundBuf, buf, sizeof buf);
 

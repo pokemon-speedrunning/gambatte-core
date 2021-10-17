@@ -54,7 +54,7 @@ public:
 	}
 
 	void onJoypad(unsigned data, unsigned write);
-	void updateScreen();
+	void updateScreen(bool blanklcd);
 	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch);
 
 	template<bool isReader>void SyncState(NewState *ns);
@@ -92,7 +92,7 @@ private:
 	unsigned char pendingCount;
 	unsigned char mask;
 
-	SNES_SPC *spc;
+	SNES_SPC spc;
 	unsigned char spcState[SNES_SPC::state_size];
 	unsigned char soundControl[4];
 	unsigned long samplesAccumulated_;

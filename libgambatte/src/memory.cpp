@@ -249,7 +249,7 @@ unsigned long Memory::event(unsigned long cc) {
 			if (lcden | blanklcd_) {
 				lcd_.updateScreen(blanklcd_, cc, 0);
 				if (isSgb())
-					sgb_.updateScreen();
+					sgb_.updateScreen(blanklcd_);
 				lcd_.updateScreen(blanklcd_, cc, 1);
 
 				intreq_.setEventTime<intevent_blit>(disabled_time);
@@ -1456,7 +1456,7 @@ int Memory::linkStatus(int which) {
 		linkClockTrigger_ = false;
 		return 0;
 	case 258: // GetOut
-		return ioamhram_[0x101] & 0xff;
+		return ioamhram_[0x101] & 0xFF;
 	case 259: // connect link cable
 		linkCable_ = true;
 		return 0;
@@ -1472,8 +1472,7 @@ int Memory::linkStatus(int which) {
 	return -1;
 }
 
-SYNCFUNC(Memory)
-{
+SYNCFUNC(Memory) {
 	SSS(cart_);
 	SSS(sgb_);
 	NSS(ioamhram_);
