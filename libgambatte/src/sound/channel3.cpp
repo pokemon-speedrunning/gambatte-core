@@ -48,21 +48,19 @@ Channel3::Channel3()
 , sampleBuf_(0)
 , vol_(0)
 , master_(false)
-, canGlitch_(false)
 , cgb_(false)
 , agb_(false)
 {
 }
 
-void Channel3::setNr0(unsigned data, unsigned long cc) {
+void Channel3::setNr0(unsigned data, unsigned long cc, unsigned short pc) {
 	nr0_ = data & psg_nr4_init;
 	if (!nr0_) {
-		if (!agb_) {
+		if (!agb_ && master_) {
 			if (waveCounter_ == cc + 1)
-				canGlitch_ = true;
-
-			if (!cgb_ && waveCounter_ == cc + toPeriod(nr3_, nr4_))
-				sampleBuf_ = waveRam_[10];
+				sampleBuf_ = waveRam_[pc & 0xF];
+			else if (!cgb_ && lastReadTime_ == cc)
+				sampleBuf_ = waveRam_[0xA];
 		}
 
 		disableMaster_();

@@ -1855,7 +1855,6 @@ void CPU::process(unsigned long const cycles) {
 					unsigned imm;
 					PC_READ_OPERAND(imm, operandHigh);
 					FF_WRITE(imm, a);
-					mem_.waveRamGlitch(pc);
 				}
 
 				break;
@@ -1944,7 +1943,6 @@ void CPU::process(unsigned long const cycles) {
 					unsigned imm;
 					PC_READ_OPERAND(imm, operandHigh);
 					FF_READ(a, imm);
-					mem_.waveRamGlitch(pc);
 				}
 
 				break;

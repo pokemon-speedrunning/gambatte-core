@@ -40,7 +40,7 @@ public:
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
-	void setNr0(unsigned data, unsigned long cc);
+	void setNr0(unsigned data, unsigned long cc, unsigned short pc);
 	void setNr1(unsigned data, unsigned long cc) { lengthCounter_.nr1Change(data, nr4_, cc); }
 	void setNr2(unsigned data);
 	void setNr3(unsigned data) { nr3_ = data; }
@@ -68,13 +68,6 @@ public:
 		}
 
 		waveRam_[index] = data;
-	}
-
-	void waveRamGlitch(unsigned pc) {
-		if (canGlitch_) {
-			sampleBuf_ = waveRam_[pc & 0xF];
-			canGlitch_ = false;
-		}
 	}
 
 	template<bool isReader>void SyncState(NewState *ns);
@@ -108,7 +101,6 @@ private:
 	unsigned char sampleBuf_;
 	unsigned char vol_;
 	bool master_;
-	bool canGlitch_;
 	bool cgb_;
 	bool agb_;
 

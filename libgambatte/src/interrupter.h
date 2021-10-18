@@ -38,6 +38,7 @@ public:
 	void prefetch(unsigned long cc, Memory &mem);
 	unsigned long interrupt(unsigned long cycleCounter, Memory &memory);
 	void setGameShark(std::string const &codes);
+	unsigned short getPc() const { return pc_; }
 
 private:
 	unsigned short &sp_;
