@@ -48,7 +48,9 @@ Channel3::Channel3()
 , sampleBuf_(0)
 , vol_(0)
 , master_(false)
+, canGlitch_(false)
 , cgb_(false)
+, agb_(false)
 {
 }
 
@@ -57,7 +59,7 @@ void Channel3::setNr0(unsigned data, unsigned long cc) {
 	if (!nr0_) {
 		if (!agb_) {
 			if (waveCounter_ == cc + 1)
-				sampleBuf_ = waveRam_[5];
+				canGlitch_ = true;
 
 			if (!cgb_ && waveCounter_ == cc + toPeriod(nr3_, nr4_))
 				sampleBuf_ = waveRam_[10];

@@ -64,6 +64,7 @@ public:
 	void setNr34(unsigned data) { ch3_.setNr4(data, cycleCounter_); }
 	unsigned waveRamRead(unsigned index) const { return ch3_.waveRamRead(index, cycleCounter_); }
 	void waveRamWrite(unsigned index, unsigned data) { ch3_.waveRamWrite(index, data, cycleCounter_); }
+	void waveRamGlitch(unsigned pc) { ch3_.waveRamGlitch(pc); }
 
 	void setNr41(unsigned data) { ch4_.setNr1(data, cycleCounter_); }
 	void setNr42(unsigned data) { ch4_.setNr2(data, cycleCounter_); }

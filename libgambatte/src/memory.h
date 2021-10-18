@@ -273,6 +273,10 @@ public:
 		}
 	}
 
+	void waveRamGlitch(unsigned pc) {
+		psg_.waveRamGlitch(pc);
+	}
+
 	unsigned long event(unsigned long cycleCounter);
 	unsigned long resetCounters(unsigned long cycleCounter);
 	LoadRes loadROM(std::string const &romfile, unsigned flags);

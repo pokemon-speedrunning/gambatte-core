@@ -70,6 +70,13 @@ public:
 		waveRam_[index] = data;
 	}
 
+	void waveRamGlitch(unsigned pc) {
+		if (canGlitch_) {
+			sampleBuf_ = waveRam_[pc & 0xF];
+			canGlitch_ = false;
+		}
+	}
+
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
@@ -101,6 +108,7 @@ private:
 	unsigned char sampleBuf_;
 	unsigned char vol_;
 	bool master_;
+	bool canGlitch_;
 	bool cgb_;
 	bool agb_;
 
