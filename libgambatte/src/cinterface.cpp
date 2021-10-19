@@ -231,6 +231,14 @@ GBEXPORT int gambatte_linkstatus(GB *g, int which) {
 	return g->linkStatus(which);
 }
 
+GBEXPORT int gambatte_getrombank(GB *g) {
+	return g->getRomBank();
+}
+
+GBEXPORT int gambatte_getsrambank(GB *g) {
+	return g->getSramBank();
+}
+
 GBEXPORT void gambatte_getregs(GB *g, int *dest) {
 	g->getRegs(dest);
 }

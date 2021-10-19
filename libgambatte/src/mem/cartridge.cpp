@@ -57,6 +57,10 @@ public:
 		return 1;
 	}
 
+	virtual unsigned char curRamBank() const {
+		return 0;
+	}
+
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -108,6 +112,10 @@ public:
 
 	virtual unsigned char curRomBank() const {
 		return rombank_;
+	}
+
+	virtual unsigned char curRamBank() const {
+		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -195,6 +203,10 @@ public:
 		return rombank_;
 	}
 
+	virtual unsigned char curRamBank() const {
+		return 0;
+	}
+
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -280,6 +292,10 @@ public:
 		return rombank_;
 	}
 
+	virtual unsigned char curRamBank() const {
+		return 0;
+	}
+
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -335,6 +351,10 @@ public:
 
 	virtual unsigned char curRomBank() const {
 		return rombank_;
+	}
+
+	virtual unsigned char curRamBank() const {
+		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -439,6 +459,10 @@ public:
 		return rombank_;
 	}
 
+	virtual unsigned char curRamBank() const {
+		return rambank_;
+	}
+
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -511,6 +535,10 @@ public:
 
 	virtual unsigned char curRomBank() const {
 		return rombank_;
+	}
+
+	virtual unsigned char curRamBank() const {
+		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -593,6 +621,10 @@ public:
 
 	virtual unsigned char curRomBank() const {
 		return rombank_;
+	}
+
+	virtual unsigned char curRamBank() const {
+		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -691,6 +723,10 @@ public:
 		return rombank_;
 	}
 
+	virtual unsigned char curRamBank() const {
+		return rambank_;
+	}
+
 	virtual bool disabledRam() const {
 		return false;
 	}
@@ -767,6 +803,10 @@ public:
 
 	virtual unsigned char curRomBank() const {
 		return rombank_;
+	}
+
+	virtual unsigned char curRamBank() const {
+		return 0;
 	}
 
 	virtual bool disabledRam() const {

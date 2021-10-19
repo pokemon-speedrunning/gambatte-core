@@ -146,6 +146,9 @@ public:
 
 	int linkStatus(int which) { return mem_.linkStatus(which); }
 
+	unsigned getRomBank() { return mem_.curRomBank(); }
+	unsigned getSramBank() { return mem_.curSramBank(); }
+
 	void getRegs(int *dest);
 	void setRegs(int *src);
 	void getRtcRegs(unsigned long *dest) { mem_.getRtcRegs(dest, cycleCounter_); }

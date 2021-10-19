@@ -96,8 +96,6 @@ private:
 	unsigned char *wramdataend_;
 	OamDmaSrc oamDmaSrc_;
 
-	unsigned curRomBank_;
-
 	int memchunk_len;
 	int memchunk_saveoffs;
 	int memchunk_savelen;

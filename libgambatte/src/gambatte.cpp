@@ -444,6 +444,14 @@ int GB::linkStatus(int which) {
 	return p_->cpu.linkStatus(which);
 }
 
+int GB::getRomBank() {
+	return p_->cpu.getRomBank();
+}
+
+int GB::getSramBank() {
+	return p_->cpu.getSramBank();
+}
+
 void GB::getRegs(int *dest) {
 	p_->cpu.getRegs(dest);
 }
