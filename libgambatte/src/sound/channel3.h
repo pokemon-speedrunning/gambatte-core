@@ -70,6 +70,10 @@ public:
 		waveRam_[index] = data;
 	}
 
+	void setAddrBus(unsigned bus) {
+		addrBus_ = bus;
+	}
+
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
@@ -93,6 +97,7 @@ private:
 	unsigned long prevOut_;
 	unsigned long waveCounter_;
 	unsigned long lastReadTime_;
+	unsigned addrBus_;
 	unsigned char nr0_;
 	unsigned char nr3_;
 	unsigned char nr4_;
@@ -101,12 +106,19 @@ private:
 	unsigned char sampleBuf_;
 	unsigned char vol_;
 	bool master_;
+	bool pulsed_;
 	bool cgb_;
 	bool agb_;
 
 	void updateWaveCounter(unsigned long cc);
 
-	inline unsigned char waveSample(unsigned pos, unsigned char s, unsigned char rsh) const {
+	inline unsigned char waveSample(unsigned pos, unsigned char s, unsigned char rsh) {
+		if (!master_) {
+			s = 0;
+			if (!agb_ && nr0_ && pulsed_)
+				sampleBuf_ = s = waveRam_[addrBus_ % sizeof waveRam_];
+		}
+
 		return (pos % 2 ? s & 0xF : s >> 4) >> rsh;
 	}
 };

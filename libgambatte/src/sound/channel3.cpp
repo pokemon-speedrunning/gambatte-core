@@ -40,6 +40,7 @@ Channel3::Channel3()
 , prevOut_(0)
 , waveCounter_(SoundUnit::counter_disabled)
 , lastReadTime_(0)
+, addrBus_(0)
 , nr0_(0)
 , nr3_(0)
 , nr4_(0)
@@ -48,6 +49,7 @@ Channel3::Channel3()
 , sampleBuf_(0)
 , vol_(0)
 , master_(false)
+, pulsed_(false)
 , cgb_(false)
 , agb_(false)
 {
@@ -56,9 +58,10 @@ Channel3::Channel3()
 void Channel3::setNr0(unsigned data, unsigned long cc, unsigned short pc) {
 	nr0_ = data & psg_nr4_init;
 	if (!nr0_) {
+		pulsed_ = false;
 		if (!agb_ && master_) {
 			if (waveCounter_ == cc + 1)
-				sampleBuf_ = waveRam_[pc & 0xF];
+				sampleBuf_ = waveRam_[pc % sizeof waveRam_];
 			else if (!cgb_ && lastReadTime_ == cc)
 				sampleBuf_ = waveRam_[0xA];
 		}
@@ -75,10 +78,10 @@ void Channel3::setNr4(unsigned const data, unsigned long const cc) {
 	lengthCounter_.nr4Change(nr4_, data, cc);
 	nr4_ = data & ~(1u * psg_nr4_init);
 
-	if (data & nr0_) {
-		if (waveCounter_ == cc + 1) {
-			sampleBuf_ = waveRam_[0];
+	if (data & psg_nr4_init) {
+		pulsed_ = true;
 
+		if (master_ && waveCounter_ == cc + 1) {
 			if (!cgb_) {
 				int const pos = (wavePos_ + 1) / 2 % sizeof waveRam_;
 
@@ -87,11 +90,14 @@ void Channel3::setNr4(unsigned const data, unsigned long const cc) {
 				else
 					std::memcpy(waveRam_, waveRam_ + (pos & ~3), 4);
 			}
+
+			sampleBuf_ = waveRam_[0];
 		}
 
-		master_ = true;
 		wavePos_ = 0;
 		lastReadTime_ = waveCounter_ = cc + toPeriod(nr3_, data) + 3;
+		if (data & nr0_)
+			master_ = true;
 	}
 }
 
@@ -167,9 +173,7 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 			unsigned long const nextMajorEvent =
 				std::min(lengthCounter_.counter(), end);
 			unsigned long cnt = waveCounter_, prevOut = prevOut_;
-			unsigned long out = master_
-				? waveSample(pos, sampleBuf_, rsh) * 2l - 15
-				: -15;
+			unsigned long out = waveSample(pos, sampleBuf_, rsh) * 2l - 15;
 			out *= outBase;
 			while (cnt <= nextMajorEvent) {
 				*buf += out - prevOut;
@@ -195,13 +199,19 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 				buf += nextMajorEvent - cc;
 				cc = nextMajorEvent;
 			}
-			if (lengthCounter_.counter() == nextMajorEvent)
+			if (lengthCounter_.counter() == nextMajorEvent) {
+				if (agb_ && master_) {
+					if (cc == waveCounter_ + 1) {
+						int const pos = (wavePos_ + 1) / 2 % sizeof waveRam_;
+						sampleBuf_ = waveRam_[pos];
+					} else if (cc == waveCounter_ + 10)
+						sampleBuf_ = waveRam_[0];
+				}
 				lengthCounter_.event();
+			}
 		}
 		if (cc < end) {
-			unsigned long out = master_
-				? waveSample(wavePos_, sampleBuf_, rshift_) * 2l - 15
-				: -15;
+			unsigned long out = waveSample(wavePos_, sampleBuf_, rshift_) * 2l - 15;
 			out *= outBase;
 			*buf += out - prevOut_;
 			prevOut_ = out;

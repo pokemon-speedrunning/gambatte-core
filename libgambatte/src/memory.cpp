@@ -622,6 +622,10 @@ void Memory::endOamDma(unsigned long cc) {
 	lcd_.oamChange(ioamhram_, cc);
 }
 
+void Memory::oamBug(unsigned const r16, unsigned long const /*cc*/) {
+	psg_.setAddrBus(r16); // todo: actually implement oam bug
+}
+
 unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 	if (lastOamDmaUpdate_ != disabled_time)
 		updateOamDma(cc);

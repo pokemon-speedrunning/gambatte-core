@@ -245,7 +245,7 @@ unsigned char PSG::pcm12Read(unsigned long const cpuCc, bool const doubleSpeed) 
 unsigned char PSG::pcm34Read(unsigned long const cpuCc, bool const doubleSpeed) {
 	generateSamples(cpuCc, doubleSpeed);
 	return ((ch4_.isActive() ? ch4_.getVolume() : 0) << 4)
-	| (ch3_.isActive() ? ch3_.getVolume() : 0);
+	| ch3_.getVolume();
 }
 
 // the buffer and position are not saved, as they're set and flushed on each runfor() call

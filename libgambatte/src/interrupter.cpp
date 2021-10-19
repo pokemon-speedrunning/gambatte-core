@@ -33,6 +33,7 @@ void Interrupter::prefetch(unsigned long cc, Memory &mem) {
 	if (!prefetched_) {
 		opcode_ = mem.read(pc_, cc);
 		pc_ = (pc_ + 1) & 0xFFFF;
+		mem.oamBug(pc_, cc);
 		prefetched_ = true;
 	}
 }

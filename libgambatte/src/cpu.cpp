@@ -151,6 +151,7 @@ void CPU::loadState(SaveState const &state) {
 #define PC_MOD(data) do { pc = data; cycleCounter += 4; } while (0)
 
 #define PUSH(r1, r2) do { \
+	mem_.oamBug(sp, cycleCounter); \
 	sp = (sp - 1) & 0xFFFF; \
 	WRITE(sp, (r1)); \
 	sp = (sp - 1) & 0xFFFF; \
@@ -426,6 +427,7 @@ void CPU::loadState(SaveState const &state) {
 // inc rr (8 cycles):
 // Increment 16-bit register:
 #define inc_rr(rh, rl) do { \
+	mem_.oamBug((rh) << 8 | (rl), cycleCounter); \
 	unsigned const lowinc = (rl) + 1; \
 	(rl) = lowinc & 0xFF; \
 	(rh) = ((rh) + (lowinc >> 8)) & 0xFF; \
@@ -435,6 +437,7 @@ void CPU::loadState(SaveState const &state) {
 // dec rr (8 cycles):
 // Decrement 16-bit register:
 #define dec_rr(rh, rl) do { \
+	mem_.oamBug((rh) << 8 | (rl), cycleCounter); \
 	unsigned const lowdec = (rl) - 1; \
 	(rl) = lowdec & 0xFF; \
 	(rh) = ((rh) - (lowdec >> 8 & 1)) & 0xFF; \
@@ -2012,6 +2015,7 @@ void CPU::process(unsigned long const cycles) {
 				// Put value in HL into SP
 			case 0xF9:
 				sp = hl();
+				mem_.oamBug(hl(), cycleCounter);
 				cycleCounter += 4;
 				break;
 

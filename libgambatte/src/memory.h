@@ -88,6 +88,8 @@ public:
 	unsigned pendingIrqs(unsigned long cc);
 	void ackIrq(unsigned bit, unsigned long cc);
 
+	void oamBug(unsigned r16, unsigned long cc);
+
 	unsigned readBios(unsigned p) {
 		return bios_[p];
 	}
@@ -96,6 +98,7 @@ public:
 		if (readCallback_)
 			readCallback_(p, callbackCycleOffset(cc));
 
+		psg_.setAddrBus(p - 1);
 		return p < 0x80 ? nontrivial_ff_read(p, cc) : ioamhram_[p + 0x100];
 	}
 
@@ -145,6 +148,7 @@ public:
 		if (readCallback_)
 			readCallback_(p, callbackCycleOffset(cc));
 
+		psg_.setAddrBus(p - 1);
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
 		else if (cdCallback_) {
@@ -180,6 +184,7 @@ public:
 		if (opcode && execCallback_)
 			execCallback_(p, callbackCycleOffset(cc));
 
+		psg_.setAddrBus(p - 1);
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
 		else if (cdCallback_) {
@@ -237,6 +242,8 @@ public:
 			cart_.wmem(p >> 12)[p] = data;
 		else
 			nontrivial_write(p, data, cc);
+
+		psg_.setAddrBus(p - 1);
 	}
 
 	void write(unsigned p, unsigned data, unsigned long cc) {
@@ -247,6 +254,8 @@ public:
 			cart_.wmem(p >> 12)[p] = data;
 		else
 			nontrivial_write(p, data, cc);
+
+		psg_.setAddrBus(p - 1);
 
 		if (writeCallback_)
 			writeCallback_(p, callbackCycleOffset(cc));
@@ -263,6 +272,8 @@ public:
 			ioamhram_[p + 0x100] = data;
 		else
 			nontrivial_ff_write(p, data, cc);
+
+		psg_.setAddrBus(p - 1);
 
 		if (writeCallback_)
 			writeCallback_(mm_io_begin + p, callbackCycleOffset(cc));
