@@ -57,7 +57,7 @@ public:
 		return 1;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return 0;
 	}
 
@@ -114,7 +114,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return rambank_;
 	}
 
@@ -203,7 +203,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return 0;
 	}
 
@@ -292,7 +292,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return 0;
 	}
 
@@ -353,7 +353,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return rambank_;
 	}
 
@@ -459,7 +459,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return rambank_;
 	}
 
@@ -537,7 +537,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return rambank_;
 	}
 
@@ -623,7 +623,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return rambank_;
 	}
 
@@ -723,7 +723,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return rambank_;
 	}
 
@@ -805,7 +805,7 @@ public:
 		return rombank_;
 	}
 
-	virtual unsigned char curRamBank() const {
+	virtual unsigned char curSramBank() const {
 		return 0;
 	}
 
