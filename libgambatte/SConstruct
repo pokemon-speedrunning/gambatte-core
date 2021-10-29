@@ -13,6 +13,7 @@ env = Environment(ENV = os.environ,
                   variables = vars)
 
 sourceFiles = Split('''
+			src/bess.cpp
 			src/bitmap_font.cpp
 			src/cpu.cpp
 			src/gambatte.cpp

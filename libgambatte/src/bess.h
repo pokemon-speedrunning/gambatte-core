@@ -19,17 +19,20 @@
 #ifndef BESS_H
 #define BESS_H
 
+#include <fstream>
+
 namespace gambatte {
 
 struct SaveState;
 
 class Bess {
 public:
-	bool loadState(SaveState &state, char const *stateBuf, std::size_t size, int mode);
-	bool loadState(SaveState &state, std::string const &filename, int mode);
+	static bool loadState(SaveState &state, char const *stateBuf, std::size_t size, int mode);
+	static bool loadState(SaveState &state, std::string const &filename, int mode);
 
 private:
-	int loadBlock(SaveState &state, std::istringstream &file, std::size_t size, int mode);
+	static int loadBlock(SaveState &state, std::istringstream &file, int mode);
+	Bess();
 };
 
 }

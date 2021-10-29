@@ -323,6 +323,18 @@ public:
 	bool loadState(char const *stateBuf, std::size_t size);
 
 	/**
+	  * Loads emulator state from the file given by 'filepath', using BESS compliant state file.
+	  * @return success
+	  */
+	bool loadBessState(std::string const &filepath);
+
+	/**
+	  * Loads emulator state from the buffer given by 'stateBuf' of size 'size', using BESS compliant state file.
+	  * @return success
+	  */
+	bool loadBessState(char const *stateBuf, std::size_t size);
+
+	/**
 	  * Selects which state slot to save state to or load state from.
 	  * There are 10 such slots, numbered from 0 to 9 (periodically extended for all n).
 	  */

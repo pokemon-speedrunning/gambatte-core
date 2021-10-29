@@ -219,6 +219,10 @@ GBEXPORT bool gambatte_loadstate(GB *g, char const *stateBuf, unsigned size) {
 	return g->loadState(stateBuf, size);
 }
 
+GBEXPORT bool gambatte_loadbessstate(GB *g, char const *stateBuf, unsigned size) {
+	return g->loadBessState(stateBuf, size);
+}
+
 GBEXPORT unsigned char gambatte_cpuread(GB *g, unsigned short addr) {
 	return g->externalRead(addr);
 }
