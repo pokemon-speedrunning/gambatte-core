@@ -401,10 +401,9 @@ bool GB::loadBessState(std::string const &filepath) {
 		if (p_->implicitSave())
 			p_->cpu.saveSavedata();
 
-		SaveState state = SaveState();
+		SaveState state;
 		p_->cpu.setStatePtrs(state);
-		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, 0, p_->cpu.romTitle());
-		setPostBiosState(state, p_->loadflags & CGB_MODE, p_->loadflags & GBA_FLAG, externalRead(0x143) & 0x80);
+		p_->cpu.saveState(state);
 
 		if (Bess::loadState(state, filepath, p_->criticalLoadflags())) {
 			p_->cpu.loadState(state);
@@ -419,8 +418,8 @@ bool GB::loadBessState(char const *stateBuf, std::size_t size) {
 	if (p_->cpu.loaded()) {
 		SaveState state;
 		p_->cpu.setStatePtrs(state);
-		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, 0, p_->cpu.romTitle());
-		setPostBiosState(state, p_->loadflags & CGB_MODE, p_->loadflags & GBA_FLAG, externalRead(0x143) & 0x80);
+		p_->cpu.saveState(state);
+
 		if (Bess::loadState(state, stateBuf, size, p_->criticalLoadflags())) {
 			p_->cpu.loadState(state);
 			return true;

@@ -30,14 +30,16 @@ namespace {
 
 inline unsigned long get32(std::istringstream &file) {
 	unsigned long tmp = file.get() & 0xFF;
-	tmp =   tmp << 8 | (file.get() & 0xFF);
-	tmp =   tmp << 8 | (file.get() & 0xFF);
-	return  tmp << 8 | (file.get() & 0xFF);
+	tmp |= (file.get() & 0xFF) << 8;
+	tmp |= (file.get() & 0xFF) << 16;
+	tmp |= (file.get() & 0xFF) << 24;
+	return tmp;
 }
 
 inline unsigned short get16(std::istringstream &file) {
 	unsigned short tmp = file.get() & 0xFF;
-	return  tmp << 8 | (file.get() & 0xFF);
+	tmp |= (file.get() & 0xFF) << 8;
+	return tmp;
 }
 
 inline unsigned char get8(std::istringstream &file) {
@@ -52,6 +54,10 @@ static const char *rtcStr  = "RTC ";
 static const char *huc3Str = "HUC3";
 static const char *sgbStr  = "SGB ";
 static const char *endStr  = "END ";
+
+static const char *dmgModelStr = "G";
+static const char *cgbModelStr = "C";
+static const char *sgbModelStr = "S";
 
 }
 
@@ -73,17 +79,17 @@ int Bess::loadBlock(SaveState &state, std::istringstream &file, int mode) {
 		char model = get8(file);
 		switch (mode) {
 			case GB::LoadFlag::NONE: // DMG_MODE
-				if (model != *"G")
+				if (model != *dmgModelStr)
 					return -1;
 
 				break;
 			case GB::LoadFlag::CGB_MODE:
-				if (model != *"C")
+				if (model != *cgbModelStr)
 					return -1;
 
 				break;
 			case GB::LoadFlag::SGB_MODE:
-				if (model != *"S")
+				if (model != *sgbModelStr)
 					return -1;
 
 				break;
@@ -266,7 +272,7 @@ bool Bess::loadState(SaveState &state, char const *stateBuf, std::size_t size, i
 		return false;
 
 	file.seekg(-8, std::ios_base::end);
-	unsigned blockOffset = get32(file); 
+	unsigned long blockOffset = get32(file);
 	file.seekg(blockOffset, std::ios_base::beg);
 
 	int status;
