@@ -16,9 +16,10 @@
 //   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#include "bess.h"
-#include "savestate.h"
 #include "gambatte.h"
+#include "bess.h"
+#include "counterdef.h"
+#include "savestate.h"
 #include "array.h"
 
 #include <sstream>
@@ -148,7 +149,8 @@ int Bess::loadBlock(SaveState &state, std::istringstream &file, int mode) {
 			state.ppu.bgpData.size(),
 			state.ppu.objpData.size()
 		};
-		for (unsigned i = 0; i < 7; i++) {
+		unsigned toLoop = (mode == GB::LoadFlag::CGB_MODE && !state.ppu.notCgbDmg) ? 5 : 7;
+		for (unsigned i = 0; i < toLoop; i++) {
 			unsigned long len = std::min(get32(file), (unsigned long)lens[i]);
 			unsigned long bufOffset = get32(file);
 			unsigned long temptell = file.tellg();
@@ -251,6 +253,26 @@ int Bess::loadBlock(SaveState &state, std::istringstream &file, int mode) {
 		state.mem.sgb.joypadMask = ((multistatus >> 4) % 5) - 1;
 		state.mem.sgb.joypadIndex = multistatus & state.mem.sgb.joypadMask;
 	} else if (!std::memcmp(labelbuf, endStr, BESS_LABEL_SIZE)) {
+		unsigned long const cc = state.mem.ioamhram.get()[0x144] << 8;
+		state.cpu.cycleCounter = cc;
+		state.mem.lastOamDmaUpdate = disabled_time;
+		state.mem.lastCartBusUpdate = cc;
+		state.mem.nextSerialtime = disabled_time;
+		state.mem.unhaltTime = cc;
+		state.mem.minIntTime = cc;
+		state.mem.divLastUpdate = 0;
+		state.mem.timaLastUpdate = cc;
+		state.mem.tmatime = cc;
+		state.mem.hdmaTransfer = 0;
+		state.time.lastCycles = cc;
+		state.camera.lastCycles = cc;
+		state.ppu.lastM0Time = cc;
+		state.ppu.enableDisplayM0Time = cc;
+		state.ppu.lyc = state.mem.ioamhram.get()[0x145];
+		state.ppu.pendingLcdstatIrq = 0;
+		state.ppu.oldWy = state.mem.ioamhram.get()[0x14A];
+		state.ppu.nextM0Irq = 0;
+		state.spu.cycleCounter = cc >> 1;
 		return 1;
 	}
 
@@ -281,9 +303,7 @@ bool Bess::loadState(SaveState &state, char const *stateBuf, std::size_t size, i
 		if (status)
 			break;
 	}
-
-	state.cpu.cycleCounter &= 0x7FFFFFFF;
-	state.spu.cycleCounter &= 0x7FFFFFFF;
+	
 
 	return file.good() && status > 0;
 }
