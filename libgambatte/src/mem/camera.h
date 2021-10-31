@@ -32,7 +32,7 @@ class Camera {
 public:
 	Camera();
 
-	void set(unsigned char &cameraRam) { cameraRam_ = &cameraRam; }
+	void set(unsigned char *cameraRam) { cameraRam_ = cameraRam; }
 
 	void setStatePtrs(SaveState &);
 	void saveState(SaveState &state) const;

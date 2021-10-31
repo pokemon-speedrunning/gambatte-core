@@ -683,8 +683,7 @@ public:
 	, rambank_(0)
 	, enableRam_(false)
 	{
-		if (rambanks(memptrs_))
-			camera_->set(memptrs_.rambankdata()[0x100]);
+		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
 	virtual unsigned char curRomBank() const {
@@ -724,14 +723,14 @@ public:
 		enableRam_ = ss.enableRam;
 		setRambank();
 		setRombank();
+		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
 	virtual void SyncState(NewState *ns, bool isReader) {
 		NSS(rombank_);
 		NSS(rambank_);
 		NSS(enableRam_);
-		if (rambanks(memptrs_)) // hack to get around cameraRam_ not being able to be stated correctly with the newstate system
-			camera_->set(memptrs_.rambankdata()[0x100]);
+		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
 private:
@@ -885,7 +884,6 @@ Cartridge::Cartridge()
 , pocketCamera_(false)
 , rtc_(time_)
 , huc3_(time_)
-, camera_()
 {
 }
 
