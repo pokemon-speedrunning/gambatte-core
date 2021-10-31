@@ -103,7 +103,7 @@ public:
 	void getRtcRegs(unsigned long *dest, unsigned long cc) { rtc_.getRtcRegs(dest, cc); }
 	void setRtcRegs(unsigned long *src) { rtc_.setRtcRegs(src); }
 	void rtcWrite(unsigned data, unsigned long const cc) { rtc_.write(data, cc); }
-	unsigned char rtcRead() const { return *rtc_.activeLatch(); }
+	unsigned char rtcRead() const { return rtc_.activeLatch() ? *rtc_.activeLatch() : 0xFF; }
 	void loadSavedata(unsigned long cycleCounter);
 	void saveSavedata(unsigned long cycleCounter);
 	int saveSavedataLength(bool isDeterministic);
