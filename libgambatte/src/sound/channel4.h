@@ -72,7 +72,6 @@ private:
 		unsigned short reg_;
 		unsigned char nr3_;
 		bool master_;
-		bool cgb_;
 
 		void updateBackupCounter(unsigned long cc);
 	};

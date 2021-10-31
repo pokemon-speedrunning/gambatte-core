@@ -144,7 +144,7 @@ void SNES_SPC::ram_loaded()
 	
 	// Put STOP instruction around memory to catch PC underflow/overflow
 	memset( m.ram.padding1, cpu_pad_fill, sizeof m.ram.padding1 );
-	memset( m.ram.padding2, cpu_pad_fill, sizeof m.ram.padding2 );
+	memset( m.ram.ram + sizeof m.ram.ram - 0x100, cpu_pad_fill, 0x100 );
 }
 
 // Registers were just loaded. Applies these new values.
