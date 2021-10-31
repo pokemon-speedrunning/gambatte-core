@@ -1040,6 +1040,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
 	rtc_.set(false, 0);
 	huc3_.set(false);
+	camera_.set(NULL);
 
 	rom->rewind();
 	rom->read(reinterpret_cast<char*>(memptrs_.romdata()), filesize / rombank_size() * rombank_size());
@@ -1190,6 +1191,7 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
 	rtc_.set(false, 0);
 	huc3_.set(false);
+	camera_.set(NULL);
 	
 	std::memcpy(memptrs_.romdata(), romfiledata, (filesize / rombank_size() * rombank_size()));
 	std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
