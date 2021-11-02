@@ -81,7 +81,7 @@ void PSG::reset(bool ds) {
 void PSG::divReset(bool ds) {
 	int const divOffset = lastUpdate_ & ds;
 	unsigned long const cc = cycleCounter_ + divOffset;
-	cycleCounter_ = (cc & -0x1000) + 2 * (cc & 0x800) - divOffset;
+	cycleCounter_ = ((cc & -0x1000) + 2 * (cc & 0x800) - divOffset) % SoundUnit::counter_max;
 	ch1_.resetCc(cc - divOffset, cycleCounter_);
 	ch2_.resetCc(cc - divOffset, cycleCounter_);
 	ch3_.resetCc(cc - divOffset, cycleCounter_);
