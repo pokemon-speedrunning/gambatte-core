@@ -45,7 +45,7 @@ void Tima::saveState(SaveState &state) const {
 
 void Tima::loadState(SaveState const &state, TimaInterruptRequester timaIrq) {
 	divLastUpdate_ = state.mem.divLastUpdate - 0x100l * state.mem.ioamhram.get()[0x104];
-	lastUpdate_ = state.mem.timaLastUpdate;
+	lastUpdate_ = std::min(state.mem.timaLastUpdate, state.cpu.cycleCounter);
 	tmatime_ = state.mem.tmatime;
 	tima_ = state.mem.ioamhram.get()[0x105];
 	tma_  = state.mem.ioamhram.get()[0x106];
@@ -87,8 +87,12 @@ void Tima::updateTima(unsigned long const cc) {
 	}
 
 	unsigned long tmp = tima_ + ticks;
-	while (tmp > 0x100)
-		tmp -= 0x100 - tma_;
+	if (tmp > 0x100) {
+		unsigned const diff = 0x100 - tma_;
+		tmp -= diff * (tmp / diff - 0x100 / diff);
+		if (tmp > 0x100)
+			tmp -= diff;
+	}
 
 	if (tmp == 0x100) {
 		tmp = 0;
