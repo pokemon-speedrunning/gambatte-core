@@ -2,11 +2,9 @@ CXX = clang++
 
 CXXFLAGS = -DHAVE_STDINT_H \
 	-I./src -I./include -I./../common \
-	-Wall -Wextra -Werror=int-to-pointer-cast \
-	-Wcast-qual -Wfatal-errors -Wno-missing-braces \
-	-Wno-unused-parameter -Wno-parentheses -Wno-sign-compare \
-	-Wno-unused-variable -Wno-unused-function \
-	-pedantic -std=c++17 -fsanitize=fuzzer,address
+	-Wall -Wextra -fomit-frame-pointer \
+	-fno-rtti -pedantic -std=c++17 \
+	-fsanitize=fuzzer,address
 
 TARGET = gambatte
 
@@ -56,5 +54,5 @@ SRCS = \
 	src/file/file.cpp
 
 make: $(SRCS)
-	$(CXX) -o $(TARGET) $(SRCS) $(CXXFLAGS) $(LDFLAGS)
+	$(CXX) -o $(TARGET) $(SRCS) $(CXXFLAGS)
 
