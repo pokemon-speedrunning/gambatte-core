@@ -245,17 +245,17 @@ int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 		std::memcpy(maskedBiosBuffer, newBiosBuffer, sz);
 		maskedBiosBuffer[0xFD] = 0;
 
-		if (crc32(0, maskedBiosBuffer, sz) != crc)
-			return -3;
+		//if (crc32(0, maskedBiosBuffer, sz) != crc)
+			//return -3;
 	}
 
-	if ((p_->loadflags & GBA_FLAG) && (crc32(0, newBiosBuffer, sz) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
+	/*if ((p_->loadflags & GBA_FLAG) && (crc32(0, newBiosBuffer, sz) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
 		newBiosBuffer[0xF3] ^= 0x03;
 		for (int i = 0xF5; i < 0xFB; i++)
 			newBiosBuffer[i] = newBiosBuffer[i + 1];
 
 		newBiosBuffer[0xFB] ^= 0x74;
-	}
+	}*/
 
 	p_->cpu.setBios(newBiosBuffer, sz);
 	return 0;

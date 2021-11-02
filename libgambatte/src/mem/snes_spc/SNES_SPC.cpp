@@ -394,8 +394,6 @@ void SNES_SPC::cpu_write_smp_reg( int data, rel_time_t time, int addr )
 
 void SNES_SPC::cpu_write_high( int data, int i, rel_time_t time )
 {
-	#pragma GCC diagnostic ignored "-Warray-bounds"
-	#pragma GCC diagnostic ignored "-Wstringop-overflow"
 	if ( i < rom_size )
 	{
 		m.hi_ram [i] = (uint8_t) data;
@@ -408,7 +406,6 @@ void SNES_SPC::cpu_write_high( int data, int i, rel_time_t time )
 		RAM [i + rom_addr] = cpu_pad_fill; // restore overwritten padding
 		cpu_write( data, i + rom_addr - 0x10000, time );
 	}
-	#pragma GCC diagnostic pop
 }
 
 int const bits_in_int = CHAR_BIT * sizeof (int);

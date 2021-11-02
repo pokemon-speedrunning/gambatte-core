@@ -60,7 +60,6 @@ private:
 	unsigned char modeflag_;
 	unsigned long irBaseCycle_;
 	bool enabled_;
-	bool lastLatchData_;
 	bool halted_;
 	bool irReceivingPulse_;
 

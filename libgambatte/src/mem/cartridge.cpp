@@ -683,8 +683,7 @@ public:
 	, rambank_(0)
 	, enableRam_(false)
 	{
-		if (rambanks(memptrs_))
-			camera_->set(memptrs_.rambankdata()[0x100]);
+		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
 	virtual unsigned char curRomBank() const {
@@ -724,14 +723,14 @@ public:
 		enableRam_ = ss.enableRam;
 		setRambank();
 		setRombank();
+		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
 	virtual void SyncState(NewState *ns, bool isReader) {
 		NSS(rombank_);
 		NSS(rambank_);
 		NSS(enableRam_);
-		if (rambanks(memptrs_)) // hack to get around cameraRam_ not being able to be stated correctly with the newstate system
-			camera_->set(memptrs_.rambankdata()[0x100]);
+		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
 private:
@@ -885,7 +884,6 @@ Cartridge::Cartridge()
 , pocketCamera_(false)
 , rtc_(time_)
 , huc3_(time_)
-, camera_()
 {
 }
 
@@ -1042,6 +1040,9 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
 	rtc_.set(false, 0);
 	huc3_.set(false);
+	camera_.set(NULL);
+	mbc2_ = false;
+	pocketCamera_ = false;
 
 	rom->rewind();
 	rom->read(reinterpret_cast<char*>(memptrs_.romdata()), filesize / rombank_size() * rombank_size());
@@ -1192,6 +1193,9 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
 	rtc_.set(false, 0);
 	huc3_.set(false);
+	camera_.set(NULL);
+	mbc2_ = false;
+	pocketCamera_ = false;
 	
 	std::memcpy(memptrs_.romdata(), romfiledata, (filesize / rombank_size() * rombank_size()));
 	std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
@@ -1505,10 +1509,10 @@ PakInfo const Cartridge::pakInfo(bool const multipakCompat) const {
 	if (loaded()) {
 		unsigned crc = 0L;
 		unsigned const rombs = rombanks(memptrs_);
-		crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
+		//crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
 		return PakInfo(multipakCompat && presumedMulti64Mbc1(memptrs_.romdata(), rombs),
 		               rombs,
-			       crc,
+			       0,
 		               memptrs_.romdata());
 	}
 

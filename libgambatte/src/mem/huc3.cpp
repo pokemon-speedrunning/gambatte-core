@@ -33,7 +33,6 @@ HuC3Chip::HuC3Chip(Time &time)
 , modeflag_(HUC3_NONE)
 , irBaseCycle_(0)
 , enabled_(false)
-, lastLatchData_(false)
 , halted_(false)
 , irReceivingPulse_(false)
 {

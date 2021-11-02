@@ -5,8 +5,9 @@
 config.log
 *.gb
 *.gbc
+*.gba
+*.sgb
 *.exe
-Makefile*
 *.Debug
 *.Release
 gambatte_sdl/gambatte_sdl
@@ -39,3 +40,8 @@ gambatte_qt/src/platforms.pri
 *.dylib
 
 .DS_Store
+
+libgambatte/gambatte
+libgambatte/*.log
+libgambatte/CORPUS_DIR
+libgambatte/OLD_CORPUS_DIR
