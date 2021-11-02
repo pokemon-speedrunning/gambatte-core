@@ -384,7 +384,7 @@ std::size_t GB::saveState(gambatte::uint_least32_t const *videoBuf, std::ptrdiff
 
 bool GB::loadState(char const *stateBuf, std::size_t size) {
 	if (p_->cpu.loaded()) {
-		SaveState state;
+		SaveState state = SaveState();
 		p_->cpu.setStatePtrs(state);
 		if (StateSaver::loadState(state, stateBuf, size, true, p_->criticalLoadflags())) {
 			p_->cpu.loadState(state);
