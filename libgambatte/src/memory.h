@@ -42,6 +42,7 @@ public:
 	~Memory();
 	bool loaded() const { return cart_.loaded(); }
 	unsigned curRomBank() const { return cart_.curRomBank(); }
+	unsigned curSramBank() const { return cart_.curSramBank(); }
 	char const * romTitle() const { return cart_.romTitle(); }
 	int peekLY() const { return lcd_.peekLy(); }
 	int getLy(unsigned long const cc) { return nontrivial_ff_read(0x44, cc); }

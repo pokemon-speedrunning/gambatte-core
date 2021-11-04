@@ -374,6 +374,12 @@ public:
 	/** Link cable stuff; never touch for normal operation. */
 	int linkStatus(int which);
 
+	/** Get current ROM bank. */
+	int getRomBank();
+	
+	/** Get current SRAM bank. */
+	int getSramBank();
+
 	/**
 	  * Get reg and flag values.
 	  * @param dest length of at least 10, please

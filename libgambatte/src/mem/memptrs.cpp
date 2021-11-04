@@ -82,7 +82,6 @@ MemPtrs::MemPtrs()
 , rambankdata_(0)
 , wramdataend_(0)
 , oamDmaSrc_(oam_dma_src_off)
-, curRomBank_(1)
 , memchunk_len(0)
 {
 }
@@ -125,7 +124,6 @@ void MemPtrs::setRombank0(unsigned bank) {
 }
 
 void MemPtrs::setRombank(unsigned bank) {
-	curRomBank_ = bank;
 	romdata_[1] = romdata() + bank * rombank_size() - mm_rom1_begin;
 	rmem_[0x7] = rmem_[0x6] = rmem_[0x5] = rmem_[0x4] = romdata_[1];
 	disconnectOamDmaAreas();
@@ -236,5 +234,4 @@ SYNCFUNC(MemPtrs) {
 	MSS(rambankdata_);
 	MSS(wramdataend_);
 	NSS(oamDmaSrc_);
-	NSS(curRomBank_);
 }
