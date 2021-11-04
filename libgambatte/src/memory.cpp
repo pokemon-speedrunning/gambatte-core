@@ -994,7 +994,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 			return;
 
 		psg_.generateSamples(cc, isDoubleSpeed());
-		psg_.setNr30(data);
+		psg_.setNr30(data, interrupter_.getPc());
 		data |= 0x7F;
 		break;
 	case 0x1B:

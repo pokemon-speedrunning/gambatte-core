@@ -49,13 +49,22 @@ Channel3::Channel3()
 , vol_(0)
 , master_(false)
 , cgb_(false)
+, agb_(false)
 {
 }
 
-void Channel3::setNr0(unsigned data) {
+void Channel3::setNr0(unsigned data, unsigned long cc, unsigned short pc) {
 	nr0_ = data & psg_nr4_init;
-	if (!nr0_)
+	if (!nr0_) {
+		if (!agb_ && master_) {
+			if (waveCounter_ == cc + 1)
+				sampleBuf_ = waveRam_[pc % sizeof waveRam_];
+			else if (!cgb_ && lastReadTime_ == cc)
+				sampleBuf_ = waveRam_[0xA];
+		}
+
 		disableMaster_();
+	}
 }
 
 void Channel3::setNr2(unsigned data) {
@@ -67,13 +76,17 @@ void Channel3::setNr4(unsigned const data, unsigned long const cc) {
 	nr4_ = data & ~(1u * psg_nr4_init);
 
 	if (data & nr0_) {
-		if (!cgb_ && waveCounter_ == cc + 1) {
-			int const pos = (wavePos_ + 1) / 2 % sizeof waveRam_;
+		if (waveCounter_ == cc + 1) {
+			sampleBuf_ = waveRam_[0];
 
-			if (pos < 4)
-				waveRam_[0] = waveRam_[pos];
-			else
-				std::memcpy(waveRam_, waveRam_ + (pos & ~3), 4);
+			if (!cgb_) {
+				int const pos = (wavePos_ + 1) / 2 % sizeof waveRam_;
+
+				if (pos < 4)
+					waveRam_[0] = waveRam_[pos];
+				else
+					std::memcpy(waveRam_, waveRam_ + (pos & ~3), 4);
+			}
 		}
 
 		master_ = true;
@@ -96,8 +109,9 @@ void Channel3::resetCc(unsigned long cc, unsigned long newCc) {
 		waveCounter_ -= cc - newCc;
 }
 
-void Channel3::init(bool cgb) {
+void Channel3::init(bool cgb, bool agb) {
 	cgb_ = cgb;
+	agb_ = agb;
 }
 
 void Channel3::setStatePtrs(SaveState &state) {
@@ -235,4 +249,5 @@ SYNCFUNC(Channel3) {
 
 	NSS(master_);
 	NSS(cgb_);
+	NSS(agb_);
 }
