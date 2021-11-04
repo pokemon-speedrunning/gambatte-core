@@ -58,7 +58,7 @@ void Channel3::setNr0(unsigned data, unsigned long cc, unsigned short pc) {
 	if (!nr0_) {
 		if (!agb_ && master_) {
 			if (waveCounter_ == cc + 1)
-				sampleBuf_ = waveRam_[pc & 0xF];
+				sampleBuf_ = waveRam_[pc % sizeof waveRam_];
 			else if (!cgb_ && lastReadTime_ == cc)
 				sampleBuf_ = waveRam_[0xA];
 		}
