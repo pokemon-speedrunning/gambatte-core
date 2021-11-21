@@ -134,6 +134,9 @@ void Memory::loadState(SaveState const &state) {
 	intreq_.setEventTime<intevent_serial>(state.mem.nextSerialtime > state.cpu.cycleCounter
 		? state.mem.nextSerialtime
 		: state.cpu.cycleCounter);
+	intreq_.setEventTime<intevent_infrared>(state.mem.nextInfraredtime > state.cpu.cycleCounter
+		? state.mem.nextInfraredtime
+		: state.cpu.cycleCounter);
 	intreq_.setEventTime<intevent_unhalt>(state.mem.unhaltTime);
 	lastOamDmaUpdate_ = state.mem.lastOamDmaUpdate;
 	dmaSource_ = state.mem.dmaSource;
