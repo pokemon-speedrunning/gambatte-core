@@ -430,6 +430,7 @@ private:
 	void(*linkCallback_)();
 	bool linkCable_;
 	bool linkClockTrigger_;
+	bool infraredTrigger_;
 
 	void decEventCycles(IntEventId eventId, unsigned long dec);
 	void oamDmaInitSetup();
@@ -445,6 +446,7 @@ private:
 	void nontrivial_ff_write(unsigned p, unsigned data, unsigned long cycleCounter);
 	void nontrivial_write(unsigned p, unsigned data, unsigned long cycleCounter);
 	void updateSerial(unsigned long cc);
+	void updateInfrared(unsigned long cc);
 	void updateTimaIrq(unsigned long cc);
 	void updateIrqs(unsigned long cc);
 	bool isDoubleSpeed() const { return lcd_.isDoubleSpeed(); }

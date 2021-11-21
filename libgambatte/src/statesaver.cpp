@@ -248,6 +248,7 @@ SaverList::SaverList()
 	{ static char const label[] = { l,t,i,m,a,u,p, NUL }; ADD(mem.timaLastUpdate); }
 	{ static char const label[] = { t,m,a,t,i,m,e, NUL }; ADD(mem.tmatime); }
 	{ static char const label[] = { s,e,r,i,a,l,t, NUL }; ADD(mem.nextSerialtime); }
+	{ static char const label[] = { i,n,f,r,a,r,t, NUL }; ADD(mem.nextInfraredtime); }
 	{ static char const label[] = { l,o,d,m,a,u,p, NUL }; ADD(mem.lastOamDmaUpdate); }
 	{ static char const label[] = { m,i,n,i,n,t,t, NUL }; ADD(mem.minIntTime); }
 	{ static char const label[] = { u,n,h,a,l,t,t, NUL }; ADD(mem.unhaltTime); }

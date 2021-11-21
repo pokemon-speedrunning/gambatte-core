@@ -69,6 +69,7 @@ struct SaveState {
 		unsigned long timaLastUpdate;
 		unsigned long tmatime;
 		unsigned long nextSerialtime;
+		unsigned long nextInfraredtime;
 		unsigned long lastOamDmaUpdate;
 		unsigned long minIntTime;
 		unsigned long unhaltTime;
