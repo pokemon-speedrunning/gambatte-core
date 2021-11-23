@@ -817,7 +817,7 @@ unsigned LCD::getStat(unsigned const lycReg, unsigned long const cc) {
 		}
 
 		LyCnt const lycCmp = getLycCmpLy(ppu_.lyCounter(), cc);
-		if (lycReg == lycCmp.ly && lycCmp.timeToNextLy > 2)
+		if (lycReg == lycCmp.ly && lycCmp.timeToNextLy > 2 - (!isDoubleSpeed() && isAgb()))
 			stat |= lcdstat_lycflag;
 	}
 
