@@ -129,7 +129,9 @@ public:
 
 			lyReg = ppu_.lyCounter().ly();
 			if (lyReg == lcd_lines_per_frame - 1) {
-				if (ppu_.lyCounter().time() - cc <= 2 * lcd_cycles_per_line - 2)
+				if (isDoubleSpeed()
+					? ppu_.lyCounter().time() - cc <= 2 * lcd_cycles_per_line - 2
+					: ppu_.lyCounter().time() - cc <= lcd_cycles_per_line - 1u * isAgb())
 					lyReg = 0;
 			} else if (ppu_.lyCounter().time() - cc <= 10
 					&& ppu_.lyCounter().time() - cc <= 6u + 4 * isDoubleSpeed()) {
