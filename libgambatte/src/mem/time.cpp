@@ -51,14 +51,14 @@ void Time::saveState(SaveState &state, unsigned long const cc, bool isHuC3) {
 	state.time.lastCycles = lastCycles_;
 }
 
-void Time::loadState(SaveState const &state, bool isHuC3) {
+void Time::loadState(SaveState const &state, bool isHuC3, bool cgb) {
 	seconds_ = state.time.seconds;
 	if (isHuC3 || !useCycles_) {
 		lastTime_.tv_sec = state.time.lastTimeSec;
 		lastTime_.tv_usec = state.time.lastTimeUsec;
 	}
 	lastCycles_ = state.time.lastCycles;
-	ds_ = state.ppu.notCgbDmg & state.mem.ioamhram.get()[0x14D] >> 7;
+	ds_ = (cgb && state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
 }
 
 std::time_t Time::get(unsigned long const cc) {

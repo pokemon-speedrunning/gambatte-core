@@ -949,10 +949,10 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 }
 
 void Cartridge::loadState(SaveState const &state) {
-	camera_.loadState(state);
+	camera_.loadState(state, isCgb());
 	huc3_.loadState(state);
 	rtc_.loadState(state);
-	time_.loadState(state, isHuC3());
+	time_.loadState(state, isHuC3(), isCgb());
 	mbc_->loadState(state.mem);
 }
 
