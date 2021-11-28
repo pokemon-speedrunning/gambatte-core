@@ -306,7 +306,7 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.ppu.nextM0Irq = 0;
 	state.ppu.oldWy = state.mem.ioamhram.get()[0x14A];
 	state.ppu.pendingLcdstatIrq = false;
-	state.ppu.notCgbDmg = true;
+	state.ppu.notCgbDmg = cgb;
 
 	// spu.cycleCounter >> 12 & 7 represents the frame sequencer position.
 	state.spu.cycleCounter = state.cpu.cycleCounter >> 1;

@@ -58,7 +58,7 @@ void Time::loadState(SaveState const &state, bool isHuC3) {
 		lastTime_.tv_usec = state.time.lastTimeUsec;
 	}
 	lastCycles_ = state.time.lastCycles;
-	ds_ = (!state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
+	ds_ = state.ppu.notCgbDmg & state.mem.ioamhram.get()[0x14D] >> 7;
 }
 
 std::time_t Time::get(unsigned long const cc) {
