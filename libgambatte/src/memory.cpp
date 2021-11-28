@@ -67,7 +67,7 @@ Memory::Memory(Interrupter const &interrupter)
 , execCallback_(0)
 , cdCallback_(0)
 , linkCallback_(0)
-, linkCable_(false)
+, linked_(false)
 , linkClockTrigger_(false)
 , infraredTrigger_(false)
 {
@@ -97,7 +97,6 @@ unsigned long Memory::saveState(SaveState &state, unsigned long cc) {
 
 	state.mem.divLastUpdate = divLastUpdate_;
 	state.mem.nextSerialtime = intreq_.eventTime(intevent_serial);
-	state.mem.nextInfraredtime = intreq_.eventTime(intevent_infrared);
 	state.mem.unhaltTime = intreq_.eventTime(intevent_unhalt);
 	state.mem.lastOamDmaUpdate = oamDmaStartPos_
 		? lastOamDmaUpdate_ + ((oamDmaStartPos_ - oamDmaPos_) & 0xFF) * 4
@@ -133,9 +132,6 @@ void Memory::loadState(SaveState const &state) {
 
 	intreq_.setEventTime<intevent_serial>(state.mem.nextSerialtime > state.cpu.cycleCounter
 		? state.mem.nextSerialtime
-		: state.cpu.cycleCounter);
-	intreq_.setEventTime<intevent_infrared>(state.mem.nextInfraredtime > state.cpu.cycleCounter
-		? state.mem.nextInfraredtime
 		: state.cpu.cycleCounter);
 	intreq_.setEventTime<intevent_unhalt>(state.mem.unhaltTime);
 	lastOamDmaUpdate_ = state.mem.lastOamDmaUpdate;
@@ -184,7 +180,7 @@ void Memory::setEndtime(unsigned long cc, unsigned long inc) {
 }
 
 void Memory::updateSerial(unsigned long const cc) {
-	if (!linkCable_) {
+	if (!linked_) {
 		if (intreq_.eventTime(intevent_serial) != disabled_time) {
 			if (intreq_.eventTime(intevent_serial) <= cc) {
 				ioamhram_[0x101] = (((ioamhram_[0x101] + 1) << serialCnt_) - 1) & 0xFF;
@@ -206,15 +202,6 @@ void Memory::updateSerial(unsigned long const cc) {
 				if (linkCallback_)
 					linkCallback_();
 			}
-		}
-	}
-}
-
-void Memory::updateInfrared(unsigned long const cc) {
-	if (intreq_.eventTime(intevent_infrared) != disabled_time) {
-		if (intreq_.eventTime(intevent_infrared) <= cc) {
-			infraredTrigger_ = linkCable_;
-			intreq_.setEventTime<intevent_infrared>(disabled_time);
 		}
 	}
 }
@@ -280,9 +267,6 @@ unsigned long Memory::event(unsigned long cc) {
 		break;
 	case intevent_serial:
 		updateSerial(cc);
-		break;
-	case intevent_infrared:
-		updateInfrared(cc);
 		break;
 	case intevent_oam:
 		if (lastOamDmaUpdate_ != disabled_time) {
@@ -535,7 +519,6 @@ unsigned long Memory::resetCounters(unsigned long cc) {
 	decCycles(lastOamDmaUpdate_, dec);
 	decCycles(lastCartBusUpdate_, dec);
 	decEventCycles(intevent_serial, dec);
-	decEventCycles(intevent_infrared, dec);
 	decEventCycles(intevent_oam, dec);
 	decEventCycles(intevent_blit, dec);
 	decEventCycles(intevent_end, dec);
@@ -1267,11 +1250,8 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		return;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (!agbFlag_) {
-				updateInfrared(cc);
-				if ((ioamhram_[0x156] ^ data) & 0x01)
-					intreq_.setEventTime<intevent_infrared>(cc + (8 << isDoubleSpeed()));
-			}
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] ^ data) & 0x01))
+				infraredTrigger_ = true;
 
 			ioamhram_[0x156] = (data & 0xC1) | (ioamhram_[0x156] & 0x3E);
 		}
@@ -1482,28 +1462,31 @@ int Memory::linkStatus(int which) {
 		return 0;
 	case 258: // GetOut
 		return ioamhram_[0x101] & 0xFF;
-	case 259: // connect link cable
-		linkCable_ = true;
-		return 0;
-	case 260: // InfraredSignaled
+	case 259: // InfraredSignaled
 		return infraredTrigger_;
-	case 261: // AckInfraredSignal
+	case 260: // AckInfraredSignal
 		infraredTrigger_ = false;
 		return 0;
-	case 262: // GetOut
+	case 261: // GetOut
 		return ioamhram_[0x156] & 0x01;
-	case 263: // ShiftInOn
+	case 262: // ShiftInOn
 		if ((ioamhram_[0x156] & 0xC0) == 0xC0) // was enabled
 			ioamhram_[0x156] &= ~0x02;
 
 		return 0;
-	case 264: // ShiftInOff
+	case 263: // ShiftInOff
 		if ((ioamhram_[0x156] & 0xC0) == 0xC0) // was enabled
 			ioamhram_[0x156] |= 0x02;
 
 		return 0;
+	case 264: // enable link connection
+		linked_ = true;
+		return 0;
+	case 265: // disable link connection
+		linked_ = false;
+		return 0;
 	default: // ShiftIn
-		if (ioamhram_[0x102] & 0x80) { // was enabled
+		if (!(ioamhram_[0x102] & 0x01) || (ioamhram_[0x102] & 0x80)) { // was enabled
 			ioamhram_[0x101] = which;
 			ioamhram_[0x102] &= 0x7F;
 			intreq_.flagIrq(8);
@@ -1533,7 +1516,7 @@ SYNCFUNC(Memory) {
 	NSS(blanklcd_);
 	NSS(biosMode_);
 	NSS(stopped_);
-	NSS(linkCable_);
+	NSS(linked_);
 	NSS(linkClockTrigger_);
 	NSS(infraredTrigger_);
 }
