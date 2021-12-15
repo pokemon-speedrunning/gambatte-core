@@ -42,7 +42,7 @@ public:
 	~Memory();
 	bool loaded() const { return cart_.loaded(); }
 	unsigned getBank(unsigned type) { return cart_.getBank(type); }
-	unsigned getAddrBank(unsigned addr) { return cart_.getAddrBank(addr); }
+	unsigned getAddrBank(unsigned short addr) { return cart_.getAddrBank(addr); }
 	void setBank(unsigned type, unsigned bank) { cart_.setBank(type, bank); }
 	void setAddrBank(unsigned short addr, unsigned bank) { cart_.setAddrBank(addr, bank); }
 	char const * romTitle() const { return cart_.romTitle(); }
