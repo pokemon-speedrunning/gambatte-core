@@ -53,14 +53,6 @@ public:
 	{
 	}
 
-	virtual unsigned char curRomBank() const {
-		return 1;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return 0;
-	}
-
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -108,14 +100,6 @@ public:
 	, enableRam_(false)
 	, rambankMode_(false)
 	{
-	}
-
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -199,14 +183,6 @@ public:
 	{
 	}
 
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return 0;
-	}
-
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -288,14 +264,6 @@ public:
 	{
 	}
 
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return 0;
-	}
-
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -347,14 +315,6 @@ public:
 	, rombankMask_(rombankMask)
 	, rambankMask_(rambankMask)
 	{
-	}
-
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -455,14 +415,6 @@ public:
 	{
 	}
 
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return rambank_;
-	}
-
 	virtual bool disabledRam() const {
 		return !enableRam_;
 	}
@@ -531,14 +483,6 @@ public:
 	, enableRam_(false)
 	, rambankMode_(false)
 	{
-	}
-
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -617,14 +561,6 @@ public:
 	, rambank_(0)
 	, ramflag_(0)
 	{
-	}
-
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return rambank_;
 	}
 
 	virtual bool disabledRam() const {
@@ -718,14 +654,6 @@ public:
 		camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : NULL);
 	}
 
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return rambank_;
-	}
-
 	virtual bool disabledRam() const {
 		return false;
 	}
@@ -798,14 +726,6 @@ public:
 	: memptrs_(memptrs)
 	, rombank_(0)
 	{
-	}
-
-	virtual unsigned char curRomBank() const {
-		return rombank_;
-	}
-
-	virtual unsigned char curSramBank() const {
-		return 0;
 	}
 
 	virtual bool disabledRam() const {

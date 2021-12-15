@@ -375,7 +375,8 @@ void Sgb::onCommand() {
 		pendingCount = 3;
 		break;
 	case MLT_REQ:
-		joypadMask = (command[1] & 2) | !!(command[1] & 3);
+		joypadMask = command[1] & 3;
+		joypadIndex += joypadMask == 2;
 		joypadIndex &= joypadMask;
 		break;
 	case ATTR_SET:

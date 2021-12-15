@@ -75,10 +75,15 @@ public:
 	OamDmaSrc oamDmaSrc() const { return oamDmaSrc_; }
 	bool isInOamDmaConflictArea(unsigned p) const;
 
+	unsigned getBank(unsigned type) const;
+	unsigned getAddrBank(unsigned short addr) const;
+	void setBank(unsigned type, unsigned bank);
+	void setAddrBank(unsigned short addr, unsigned bank);
+
 	void setRombank0(unsigned bank);
 	void setRombank(unsigned bank);
 	void setRambank(unsigned ramFlags, unsigned rambank);
-	void setVrambank(unsigned bank) { vrambankptr_ = vramdata() + bank * vrambank_size() - mm_vram_begin; }
+	void setVrambank(unsigned bank) { banks_[VRAM_BANK] = bank; vrambankptr_ = vramdata() + bank * vrambank_size() - mm_vram_begin; }
 	void setWrambank(unsigned bank);
 	void setOamDmaSrc(OamDmaSrc oamDmaSrc);
 	template<bool isReader>void SyncState(NewState *ns);
@@ -99,6 +104,9 @@ private:
 	int memchunk_len;
 	int memchunk_saveoffs;
 	int memchunk_savelen;
+
+	enum { ROM0_BANK, ROMX_BANK, VRAM_BANK, SRAM_BANK, WRAM_BANK, NUM_BANK_TYPES };
+	unsigned banks_[NUM_BANK_TYPES];
 
 	static std::size_t pre_rom_pad_size() { return mm_rom1_begin; }
 	void disconnectOamDmaAreas();

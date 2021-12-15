@@ -535,7 +535,7 @@ void CPU::process(unsigned long const cycles) {
 				if (pc == (interruptAddresses[i] & 0xFFFF)) {
 					unsigned bank = interruptAddresses[i] >> 16;
 
-					if (!bank || bank == mem_.curRomBank()) {
+					if (!bank || bank == getAddrBank(pc)) {
 						hitInterruptAddress = interruptAddresses[i];
 						mem_.setEndtime(cycleCounter, 0);
 						break;
@@ -548,6 +548,8 @@ void CPU::process(unsigned long const cycles) {
 
 			int result[14];
 			if (tracecallback) {
+				hf2 = updateHf2FromHf1(hf1, hf2);
+
 				result[0] = mem_.callbackCycleOffset(cycleCounter);
 				result[1] = pc;
 				result[2] = sp;

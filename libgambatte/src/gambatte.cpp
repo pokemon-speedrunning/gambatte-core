@@ -441,15 +441,34 @@ void GB::externalWrite(unsigned short addr, unsigned char val) {
 }
 
 int GB::linkStatus(int which) {
-	return p_->cpu.linkStatus(which);
+	if (p_->cpu.loaded())
+		return p_->cpu.linkStatus(which);
+	else
+		return -1;
 }
 
-int GB::getRomBank() {
-	return p_->cpu.getRomBank();
+unsigned GB::getBank(unsigned type) {
+	if (p_->cpu.loaded())
+		return p_->cpu.getBank(type);
+	else
+		return 0;
 }
 
-int GB::getSramBank() {
-	return p_->cpu.getSramBank();
+unsigned GB::getAddrBank(unsigned short addr) {
+	if (p_->cpu.loaded())
+		return p_->cpu.getAddrBank(addr);
+	else
+		return 0;
+}
+
+void GB::setBank(unsigned type, unsigned bank) {
+	if (p_->cpu.loaded())
+		p_->cpu.setBank(type, bank);
+}
+
+void GB::setAddrBank(unsigned short addr, unsigned bank) {
+	if (p_->cpu.loaded())
+		p_->cpu.setAddrBank(addr, bank);
 }
 
 void GB::getRegs(int *dest) {

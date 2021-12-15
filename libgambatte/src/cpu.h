@@ -146,8 +146,11 @@ public:
 
 	int linkStatus(int which) { return mem_.linkStatus(which); }
 
-	unsigned getRomBank() { return mem_.curRomBank(); }
-	unsigned getSramBank() { return mem_.curSramBank(); }
+	unsigned getBank(unsigned type) { return mem_.getBank(type); }
+	unsigned getAddrBank(unsigned short addr) { return mem_.getAddrBank(addr); }
+
+	void setBank(unsigned type, unsigned bank) { mem_.setBank(type, bank); }
+	void setAddrBank(unsigned short addr, unsigned bank) { mem_.setAddrBank(addr, bank); }
 
 	void getRegs(int *dest);
 	void setRegs(int *src);

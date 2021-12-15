@@ -41,10 +41,11 @@ public:
 	explicit Memory(Interrupter const &interrupter);
 	~Memory();
 	bool loaded() const { return cart_.loaded(); }
-	unsigned curRomBank() const { return cart_.curRomBank(); }
-	unsigned curSramBank() const { return cart_.curSramBank(); }
+	unsigned getBank(unsigned type) { return cart_.getBank(type); }
+	unsigned getAddrBank(unsigned addr) { return cart_.getAddrBank(addr); }
+	void setBank(unsigned type, unsigned bank) { cart_.setBank(type, bank); }
+	void setAddrBank(unsigned short addr, unsigned bank) { cart_.setAddrBank(addr, bank); }
 	char const * romTitle() const { return cart_.romTitle(); }
-	int peekLY() const { return lcd_.peekLy(); }
 	int getLy(unsigned long const cc) { return nontrivial_ff_read(0x44, cc); }
 	PakInfo const pakInfo(bool multicartCompat) const { return cart_.pakInfo(multicartCompat); }
 	void setStatePtrs(SaveState &state);
