@@ -178,7 +178,7 @@ void MemPtrs::setBank(unsigned type, unsigned bank) {
 			break;
 		}
 		case WRAM_BANK:
-			setWrambank(std::max(bank, 1u) & (cgb ? 7 : 1));
+			setWrambank(std::max(bank & (cgb ? 7 : 1), 1u));
 			break;
 	}
 }
