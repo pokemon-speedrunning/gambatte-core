@@ -374,11 +374,24 @@ public:
 	/** Link cable stuff; never touch for normal operation. */
 	int linkStatus(int which);
 
-	/** Get current ROM bank. */
-	int getRomBank();
-	
-	/** Get current SRAM bank. */
-	int getSramBank();
+	/**
+	  * Get current bank for type of memory.
+	  * @param type of bank to get [0 = ROM0 Bank, 1 = ROMX Bank, 2 = VRAM Bank, 3 = SRAM Bank, 4 = WRAM Bank]
+	  */
+	unsigned getBank(unsigned type);
+
+	/** Get current bank for bankable memory at address. Returns 0 if not applicable. */
+	unsigned getAddrBank(unsigned short addr);
+
+	/**
+	  * Set current bank for type of memory. May be masked
+	  * @param type of bank to set [0 = ROM0 Bank, 1 = ROMX Bank, 2 = VRAM Bank, 3 = SRAM Bank, 4 = WRAM Bank]
+	  * @param bank to set
+	  */
+	void setBank(unsigned type, unsigned bank);
+
+	/** Set current bank for bankable memory at address. May be masked. */
+	void setAddrBank(unsigned short addr, unsigned bank);
 
 	/**
 	  * Get reg and flag values.

@@ -231,12 +231,20 @@ GBEXPORT int gambatte_linkstatus(GB *g, int which) {
 	return g->linkStatus(which);
 }
 
-GBEXPORT int gambatte_getrombank(GB *g) {
-	return g->getRomBank();
+GBEXPORT unsigned gambatte_getbank(GB *g, unsigned type) {
+	return g->getBank(type);
 }
 
-GBEXPORT int gambatte_getsrambank(GB *g) {
-	return g->getSramBank();
+GBEXPORT unsigned gambatte_getaddrbank(GB *g, unsigned short addr) {
+	return g->getAddrBank(addr);
+}
+
+GBEXPORT void gambatte_setbank(GB *g, unsigned type, unsigned bank) {
+	g->setBank(type, bank);
+}
+
+GBEXPORT void gambatte_setaddrbank(GB *g, unsigned short addr, unsigned bank) {
+	g->setAddrBank(addr, bank);
 }
 
 GBEXPORT void gambatte_getregs(GB *g, int *dest) {

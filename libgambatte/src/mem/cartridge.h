@@ -37,10 +37,8 @@ namespace gambatte {
 class Mbc {
 public:
 	virtual ~Mbc() {}
-	virtual unsigned char curRomBank() const = 0;
-	virtual unsigned char curSramBank() const = 0;
 	virtual bool disabledRam() const = 0;
-	virtual void romWrite(unsigned P, unsigned data, unsigned long cycleCounter) = 0;
+	virtual void romWrite(unsigned p, unsigned data, unsigned long cycleCounter) = 0;
 	virtual void saveState(SaveState::Mem &ss) const = 0;
 	virtual void loadState(SaveState::Mem const &ss) = 0;
 	virtual bool isAddressWithinAreaRombankCanBeMappedTo(unsigned address, unsigned rombank) const = 0;
@@ -69,11 +67,13 @@ public:
 	unsigned char * vrambankptr() const { return memptrs_.vrambankptr(); }
 	OamDmaSrc oamDmaSrc() const { return memptrs_.oamDmaSrc(); }
 	bool isInOamDmaConflictArea(unsigned p) const { return memptrs_.isInOamDmaConflictArea(p); }
+	unsigned getBank(unsigned type) { return memptrs_.getBank(type); }
+	unsigned getAddrBank(unsigned short addr) { return memptrs_.getAddrBank(addr); }
+	void setBank(unsigned type, unsigned bank) { memptrs_.setBank(type, bank); }
+	void setAddrBank(unsigned short addr, unsigned bank) { memptrs_.setAddrBank(addr, bank); }
 	void setVrambank(unsigned bank) { memptrs_.setVrambank(bank); }
 	void setWrambank(unsigned bank) { memptrs_.setWrambank(bank); }
 	void setOamDmaSrc(OamDmaSrc oamDmaSrc) { memptrs_.setOamDmaSrc(oamDmaSrc); }
-	unsigned char curRomBank() const { return mbc_->curRomBank(); }
-	unsigned char curSramBank() const { return mbc_->curSramBank(); }
 	bool disabledRam() const { return mbc_->disabledRam(); }
 	void mbcWrite(unsigned addr, unsigned data, unsigned long const cc) { mbc_->romWrite(addr, data, cc); }
 	bool isCgb() const { return gambatte::isCgb(memptrs_); }

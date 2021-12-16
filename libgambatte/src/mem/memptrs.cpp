@@ -117,13 +117,109 @@ void MemPtrs::reset(unsigned const rombanks, unsigned const rambanks, unsigned c
 	memchunk_savelen = wramdataend() - memchunk_ - memchunk_saveoffs;
 }
 
+unsigned MemPtrs::getBank(unsigned type) const {
+	if (type >= NUM_BANK_TYPES)
+		return 0;
+
+	return banks_[type];
+}
+
+unsigned MemPtrs::getAddrBank(unsigned short addr) const {
+	if (addr >= mm_oam_begin)
+		return 0;
+
+	switch (addr >> 13 & 7) {
+		case 0:
+		case 1:
+			return banks_[ROM0_BANK];
+		case 2:
+		case 3:
+			return banks_[ROMX_BANK];
+		case 4:
+			return banks_[VRAM_BANK];
+		case 5:
+			return banks_[SRAM_BANK];
+		default:
+			return (addr & 0x1000) ? banks_[WRAM_BANK] : 0;
+	}
+}
+
+void MemPtrs::setBank(unsigned type, unsigned bank) {
+	if (type >= NUM_BANK_TYPES)
+		return;
+
+	bool const cgb = isCgb(*this);
+	unsigned const rombanks = (romdataend() - romdata()) / rombank_size();
+	unsigned const rambanks = (rambankdataend() - rambankdata()) / rambank_size();
+
+	switch (type) {
+		case ROM0_BANK:
+			setRombank0(bank & (rombanks - 1));
+			break;
+		case ROMX_BANK:
+			setRombank(bank & (rombanks - 1));
+			break;
+		case VRAM_BANK:
+			setVrambank(bank & cgb);
+			break;
+		case SRAM_BANK:
+		{
+			unsigned flags = disabled;
+			if (rsrambankptr_ != rdisabledRam() - mm_sram_begin)
+				flags |= read_en;
+
+			if (wsrambankptr_ != wdisabledRam() - mm_sram_begin)
+				flags |= write_en;
+
+			if (!rsrambankptr_)
+				flags |= rtc_en;
+
+			setRambank(flags, bank & (rambanks - 1));
+			break;
+		}
+		case WRAM_BANK:
+			setWrambank(std::max(bank & (cgb ? 7 : 1), 1u));
+			break;
+	}
+}
+
+void MemPtrs::setAddrBank(unsigned short addr, unsigned bank) {
+	if (addr >= mm_oam_begin)
+		return;
+
+	switch (addr >> 13 & 7) {
+		case 0:
+		case 1:
+			setBank(ROM0_BANK, bank);
+			break;
+		case 2:
+		case 3:
+			setBank(ROMX_BANK, bank);
+			break;
+		case 4:
+			setBank(VRAM_BANK, bank);
+			break;
+		case 5:
+			setBank(SRAM_BANK, bank);
+			break;
+		case 6:
+		case 7:
+			if (addr & 0x1000)
+				setBank(WRAM_BANK, bank);
+
+			break;
+	}
+}
+
 void MemPtrs::setRombank0(unsigned bank) {
+	banks_[ROM0_BANK] = bank;
 	romdata_[0] = romdata() + bank * rombank_size();
 	rmem_[0x3] = rmem_[0x2] = rmem_[0x1] = rmem_[0x0] = romdata_[0];
 	disconnectOamDmaAreas();
 }
 
 void MemPtrs::setRombank(unsigned bank) {
+	banks_[ROMX_BANK] = bank;
 	romdata_[1] = romdata() + bank * rombank_size() - mm_rom1_begin;
 	rmem_[0x7] = rmem_[0x6] = rmem_[0x5] = rmem_[0x4] = romdata_[1];
 	disconnectOamDmaAreas();
@@ -132,6 +228,7 @@ void MemPtrs::setRombank(unsigned bank) {
 // GSR NOTE: Upstream Gambatte introduced a regression in this function that causes ROMs
 // with MBC3 RTC to crash; the bug is still present as of Gambatte r688 (1 Oct 2019)
 void MemPtrs::setRambank(unsigned const flags, unsigned const rambank) {
+	banks_[SRAM_BANK] = rambank;
 	unsigned char *srambankptr = 0;
 	if (!(flags & rtc_en)) {
 		srambankptr = rambankdata() != rambankdataend()
@@ -151,6 +248,7 @@ void MemPtrs::setRambank(unsigned const flags, unsigned const rambank) {
 }
 
 void MemPtrs::setWrambank(unsigned bank) {
+	banks_[WRAM_BANK] = bank;
 	wramdata_[1] = wramdata_[0] + (bank & 0x07 ? bank & 0x07 : 1) * wrambank_size();
 	rmem_[0xD] = wmem_[0xD] = wramdata_[1] - mm_wram1_begin;
 	disconnectOamDmaAreas();
@@ -234,4 +332,5 @@ SYNCFUNC(MemPtrs) {
 	MSS(rambankdata_);
 	MSS(wramdataend_);
 	NSS(oamDmaSrc_);
+	NSS(banks_);
 }
