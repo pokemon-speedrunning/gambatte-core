@@ -333,6 +333,7 @@ unsigned long Memory::dma(unsigned long cc) {
 	unsigned dmaDest = dmaDestination_;
 	unsigned dmaLength = ((ioamhram_[0x155] & 0x7F) + 1) * 0x10;
 	unsigned length = hdmaReqFlagged(intreq_) ? 0x10 : dmaLength;
+	unsigned const cartBusPullUpTime = cartBusPullUpTime_ >> !doubleSpeed;
 
 	if (1ul * dmaDest + length >= 0x10000) {
 		length = 0x10000 - dmaDest;
@@ -349,8 +350,8 @@ unsigned long Memory::dma(unsigned long cc) {
 
 	while (length--) {
 		unsigned const src = dmaSrc++ & 0xFFFF;
-		unsigned const data = (src & -vrambank_size()) == mm_vram_begin || src >= mm_oam_begin
-			? 0xFF
+		unsigned const data = (src & -vrambank_size()) == mm_vram_begin || src >= mm_wram_mirror_begin
+			? (lastCartBusUpdate_ + cartBusPullUpTime > cc ? cartBus_ : 0xFF)
 			: read(src, cc);
 
 		cc += 2 + 2 * doubleSpeed;
