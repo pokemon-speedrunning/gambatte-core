@@ -363,7 +363,12 @@ unsigned long Memory::dma(unsigned long cc) {
 				startOamDma(lOamDmaUpdate);
 
 			if (oamDmaPos_ < oam_size) {
-				ioamhram_[src & 0xFF] = data;
+				unsigned const p = src & 0xFF;
+				if (p >= oam_size) {
+					if (!agbFlag_)
+						ioamhram_[p & 0xE7] = data;
+				} else
+					ioamhram_[p] = data;
 			} else if (oamDmaPos_ == oam_size) {
 				endOamDma(lOamDmaUpdate);
 				if (oamDmaStartPos_ == 0)
