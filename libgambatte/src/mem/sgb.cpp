@@ -237,6 +237,7 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 		return -1;
 
 	uint_least32_t frame[256 * 224];
+	std::memset(frame, 0, sizeof frame);
 
 	unsigned long colors[16 * 4];
 	if (borderFade == 0 || borderFade > 64) {
