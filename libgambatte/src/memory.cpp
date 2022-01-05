@@ -1344,10 +1344,16 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 
 				if (!agbFlag_)
 					return;
+				else if (cart_.oamDmaSrc() == oam_dma_src_wram) {
+					ioamhram_[oamDmaPos_] = data;
+					return;
+				}
 			} else {
-				ioamhram_[oamDmaPos_] = cart_.oamDmaSrc() == oam_dma_src_wram
-					? ioamhram_[oamDmaPos_] & data
-					: data;
+				if (cart_.oamDmaSrc() == oam_dma_src_wram) {
+					ioamhram_[oamDmaPos_] = ioamhram_[oamDmaPos_] & data;
+					return;
+				} else
+					ioamhram_[oamDmaPos_] = data;
 			}
 
 			unsigned char* oamDmaSrc = 0;
@@ -1362,8 +1368,6 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 				oamDmaSrc = cart_.vrambankptr() + ioamhram_[0x146] * 0x100l;
 				break;
 			case oam_dma_src_wram:
-				oamDmaSrc = cart_.wramdata(ioamhram_[0x146] >> 4 & 1) + (ioamhram_[0x146] * 0x100l & 0xFFF);
-				break;
 			case oam_dma_src_invalid:
 			case oam_dma_src_off:
 				return;
