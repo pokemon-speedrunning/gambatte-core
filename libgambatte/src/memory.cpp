@@ -1335,9 +1335,12 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 
 		if (cart_.isInOamDmaConflictArea(p) && oamDmaPos_ < oam_size) {
 			if (isCgb()) {
-				if (p < mm_wram_begin)
-					ioamhram_[oamDmaPos_] = cart_.oamDmaSrc() != oam_dma_src_vram ? data : 0;
-				else if (cart_.oamDmaSrc() != oam_dma_src_wram) {
+				if (p < mm_wram_begin) {
+					if (cart_.oamDmaSrc() == oam_dma_src_vram)
+						ioamhram_[oamDmaPos_] = 0;
+					else if (!(agbFlag_ && cart_.oamDmaSrc() == oam_dma_src_rom))
+						ioamhram_[oamDmaPos_] = data;
+				} else if (cart_.oamDmaSrc() != oam_dma_src_wram) {
 					cart_.wramdata(ioamhram_[0x146] >> 4 & 1)[p & 0xFFF] = data;
 					return;
 				}
@@ -1350,7 +1353,7 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 				}
 			} else {
 				if (cart_.oamDmaSrc() == oam_dma_src_wram) {
-					ioamhram_[oamDmaPos_] = ioamhram_[oamDmaPos_] & data;
+					ioamhram_[oamDmaPos_] &= data;
 					return;
 				} else
 					ioamhram_[oamDmaPos_] = data;
