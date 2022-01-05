@@ -576,6 +576,7 @@ void Memory::updateOamDma(unsigned long const cc) {
 		if (oamDmaPos_ < oam_size) {
 			if (oamDmaSrc) ioamhram_[oamDmaPos_] = oamDmaSrc[oamDmaPos_];
 			else if (cart_.isHuC3()) ioamhram_[oamDmaPos_] = cart_.HuC3Read(oamDmaPos_, cc);
+			else if (cart_.isPocketCamera()) ioamhram_[oamDmaPos_] = cart_.cameraRead(oamDmaPos_, cc);
 			else ioamhram_[oamDmaPos_] = cart_.rtcRead();
 		} else if (oamDmaPos_ == oam_size) {
 			endOamDma(lastOamDmaUpdate_);
@@ -1328,7 +1329,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 	ioamhram_[p + 0x100] = data;
 }
 
-void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned long const cc) {
+void Memory::nontrivial_write(unsigned p, unsigned const data, unsigned long const cc) {
 	if (lastOamDmaUpdate_ != disabled_time) {
 		updateOamDma(cc);
 
@@ -1336,13 +1337,42 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 			if (isCgb()) {
 				if (p < mm_wram_begin)
 					ioamhram_[oamDmaPos_] = cart_.oamDmaSrc() != oam_dma_src_vram ? data : 0;
-				else if (cart_.oamDmaSrc() != oam_dma_src_wram)
+				else if (cart_.oamDmaSrc() != oam_dma_src_wram) {
 					cart_.wramdata(ioamhram_[0x146] >> 4 & 1)[p & 0xFFF] = data;
+					return;
+				}
+
+				if (!agbFlag_)
+					return;
 			} else {
 				ioamhram_[oamDmaPos_] = cart_.oamDmaSrc() == oam_dma_src_wram
 					? ioamhram_[oamDmaPos_] & data
 					: data;
 			}
+
+			unsigned char* oamDmaSrc = 0;
+			switch (cart_.oamDmaSrc()) {
+			case oam_dma_src_rom:
+				oamDmaSrc = cart_.romdata(ioamhram_[0x146] >> 6) + ioamhram_[0x146] * 0x100l;
+				break;
+			case oam_dma_src_sram:
+				oamDmaSrc = cart_.wsrambankptr() ? cart_.wsrambankptr() + ioamhram_[0x146] * 0x100l : 0;
+				break;
+			case oam_dma_src_vram:
+				oamDmaSrc = cart_.vrambankptr() + ioamhram_[0x146] * 0x100l;
+				break;
+			case oam_dma_src_wram:
+				oamDmaSrc = cart_.wramdata(ioamhram_[0x146] >> 4 & 1) + (ioamhram_[0x146] * 0x100l & 0xFFF);
+				break;
+			case oam_dma_src_invalid:
+			case oam_dma_src_off:
+				return;
+			}
+
+			if (oamDmaSrc) oamDmaSrc[oamDmaPos_] = data;
+			else if (cart_.isHuC3()) cart_.HuC3Write(oamDmaPos_, data, cc);
+			else if (cart_.isPocketCamera()) cart_.cameraWrite(oamDmaPos_, data, cc);
+			else cart_.rtcWrite(data, cc);
 
 			return;
 		}
