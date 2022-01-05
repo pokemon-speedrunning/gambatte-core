@@ -1359,7 +1359,7 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 			unsigned char* oamDmaSrc = 0;
 			switch (cart_.oamDmaSrc()) {
 			case oam_dma_src_rom:
-				cart_.mbcWrite(ioamhram_[0x146] * 0x100l + oamDmaPos_, data, cc);
+				//cart_.mbcWrite(ioamhram_[0x146] * 0x100l + oamDmaPos_, data, cc);
 				return;
 			case oam_dma_src_sram:
 				oamDmaSrc = cart_.wsrambankptr() ? cart_.wsrambankptr() + ioamhram_[0x146] * 0x100l : 0;
