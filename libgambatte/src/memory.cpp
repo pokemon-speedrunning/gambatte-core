@@ -1329,7 +1329,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 	ioamhram_[p + 0x100] = data;
 }
 
-void Memory::nontrivial_write(unsigned p, unsigned const data, unsigned long const cc) {
+void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned long const cc) {
 	if (lastOamDmaUpdate_ != disabled_time) {
 		updateOamDma(cc);
 
