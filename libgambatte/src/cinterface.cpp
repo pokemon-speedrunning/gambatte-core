@@ -72,7 +72,10 @@ GBEXPORT int gambatte_loadbiosbuf(GB *g, char const *biosfiledata, unsigned size
 }
 
 GBEXPORT int gambatte_runfor(GB *g, unsigned *videoBuf, int pitch, unsigned *audioBuf, unsigned *samples) {
-	return g->runFor(videoBuf, pitch, audioBuf, *(std::size_t *)samples);
+	std::size_t samps = *samples;
+	int ret = g->runFor(videoBuf, pitch, audioBuf, samps);
+	*samples = samps;
+	return ret;
 }
 
 GBEXPORT int gambatte_updatescreenborder(GB *g, unsigned *videoBuf, int pitch) {
@@ -80,7 +83,10 @@ GBEXPORT int gambatte_updatescreenborder(GB *g, unsigned *videoBuf, int pitch) {
 }
 
 GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned *samples) {
-	return g->generateSgbSamples(audioBuf, *(std::size_t *)samples);
+	std::size_t samps = *samples;
+	int ret = g->generateSgbSamples(audioBuf, samps);
+	*samples = samps;
+	return ret;
 }
 
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {
