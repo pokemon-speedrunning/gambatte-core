@@ -29,12 +29,21 @@ sourceFiles = Split('''
 			src/video.cpp
 			src/mem/camera.cpp
 			src/mem/cartridge.cpp
-			src/mem/huc3.cpp
+			src/mem/huc3_chip.cpp
 			src/mem/memptrs.cpp
 			src/mem/pakinfo.cpp
 			src/mem/rtc.cpp
 			src/mem/sgb.cpp
 			src/mem/time.cpp
+			src/mem/mbc/huc1.cpp
+			src/mem/mbc/huc3.cpp
+			src/mem/mbc/mbc0.cpp
+			src/mem/mbc/mbc1.cpp
+			src/mem/mbc/mbc2.cpp
+			src/mem/mbc/mbc3.cpp
+			src/mem/mbc/mbc5.cpp
+			src/mem/mbc/pocket_camera.cpp
+			src/mem/mbc/wisdom_tree.cpp
 			src/mem/snes_spc/dsp.cpp
 			src/mem/snes_spc/SNES_SPC.cpp
 			src/mem/snes_spc/SNES_SPC_misc.cpp

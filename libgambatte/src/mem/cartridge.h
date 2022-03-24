@@ -19,11 +19,12 @@
 #ifndef CARTRIDGE_H
 #define CARTRIDGE_H
 
+#include "mbc/mbc.h"
 #include "loadres.h"
 #include "memptrs.h"
 #include "time.h"
 #include "rtc.h"
-#include "huc3.h"
+#include "huc3_chip.h"
 #include "camera.h"
 #include "savestate.h"
 #include "scoped_ptr.h"
@@ -33,21 +34,6 @@
 #include <vector>
 
 namespace gambatte {
-
-class Mbc {
-public:
-	virtual ~Mbc() {}
-	virtual bool disabledRam() const = 0;
-	virtual void romWrite(unsigned p, unsigned data, unsigned long cycleCounter) = 0;
-	virtual void saveState(SaveState::Mem &ss) const = 0;
-	virtual void loadState(SaveState::Mem const &ss) = 0;
-	virtual bool isAddressWithinAreaRombankCanBeMappedTo(unsigned address, unsigned rombank) const = 0;
-	template<bool isReader>void SyncState(NewState *ns) {
-		// can't have virtual templates, so..
-		SyncState(ns, isReader);
-	}
-	virtual void SyncState(NewState *ns, bool isReader) = 0;
-};
 
 class Cartridge {
 public:
@@ -120,6 +106,7 @@ public:
 	class PakInfo const pakInfo(bool multicartCompat) const;
 	void setGameGenie(std::string const &codes);
 	bool isMbc2() const { return mbc2_; }
+	bool isHuC1() const { return huc1_; }
 	bool isHuC3() const { return huc3_.isHuC3(); }
 	unsigned char HuC3Read(unsigned p, unsigned long const cc) { return huc3_.read(p, cc); }
 	void HuC3Write(unsigned p, unsigned data, unsigned long const cc) { huc3_.write(p, data, cc); }
@@ -132,6 +119,7 @@ public:
 
 private:
 	bool mbc2_;
+	bool huc1_;
 	bool pocketCamera_;
 	struct AddrData {
 		unsigned long addr;

@@ -70,6 +70,7 @@ Memory::Memory(Interrupter const &interrupter)
 , linked_(false)
 , linkClockTrigger_(false)
 , infraredTrigger_(false)
+, infraredState_(false)
 {
 	intreq_.setEventTime<intevent_blit>(1l * lcd_vres * lcd_cycles_per_line);
 	intreq_.setEventTime<intevent_end>(0);
@@ -684,6 +685,13 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 			return 0xFF;
 
 		break;
+	case 0x56:
+		if (isCgb() && !isCgbDmg()) {
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && infraredState_)
+				return ioamhram_[0x156] & ~0x02;
+		}
+
+		return ioamhram_[0x156] | 0x02;
 	case 0x69:
 		if (isCgb() && !isCgbDmg())
 			return lcd_.cgbBgColorRead(ioamhram_[0x168] & 0x3F, cc);
@@ -750,6 +758,9 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 			if (cart_.disabledRam())
 				return cartBus_;
 
+			if (cart_.isHuC1())
+				return 0xC0 | infraredState_;
+
 			if (cart_.isHuC3())
 				return cart_.HuC3Read(p, cc);
 			
@@ -805,6 +816,13 @@ unsigned Memory::nontrivial_ff_peek(unsigned const p, unsigned long const cc) {
 			return 0xFF;
 
 		break;
+	case 0x56:
+		if (isCgb() && !isCgbDmg()) {
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && infraredState_)
+				return ioamhram_[0x156] & ~0x02;
+		}
+
+		return ioamhram_[0x156] | 0x02;
 	default:
 		break;
 	}
@@ -836,6 +854,9 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 
 			if (cart_.disabledRam())
 				return cartBus_;
+
+			if (cart_.isHuC1())
+				return 0xC0 | infraredState_;
 
 			if (cart_.isHuC3() || cart_.isPocketCamera())
 				return 0xFF; // unsafe to peek
@@ -1359,6 +1380,8 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 		} else if (p < mm_wram_begin) {
 			if (cart_.wsrambankptr())
 				cart_.wsrambankptr()[p] = data;
+			else if (cart_.isHuC1())
+				infraredTrigger_ |= data & linked_;
 			else if (cart_.isHuC3())
 				cart_.HuC3Write(p, data, cc);
 			else if (cart_.isPocketCamera())
@@ -1475,14 +1498,10 @@ int Memory::linkStatus(int which) {
 	case 261: // GetOut
 		return ioamhram_[0x156] & 0x01;
 	case 262: // ShiftInOn
-		if ((ioamhram_[0x156] & 0xC0) == 0xC0) // was enabled
-			ioamhram_[0x156] &= ~0x02;
-
+		infraredState_ = true;
 		return 0;
 	case 263: // ShiftInOff
-		if ((ioamhram_[0x156] & 0xC0) == 0xC0) // was enabled
-			ioamhram_[0x156] |= 0x02;
-
+		infraredState_ = false;
 		return 0;
 	case 264: // enable link connection
 		linked_ = true;
@@ -1524,4 +1543,5 @@ SYNCFUNC(Memory) {
 	NSS(linked_);
 	NSS(linkClockTrigger_);
 	NSS(infraredTrigger_);
+	NSS(infraredState_);
 }

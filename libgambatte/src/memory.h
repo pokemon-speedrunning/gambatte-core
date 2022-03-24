@@ -432,6 +432,7 @@ private:
 	bool linked_;
 	bool linkClockTrigger_;
 	bool infraredTrigger_;
+	bool infraredState_;
 
 	void decEventCycles(IntEventId eventId, unsigned long dec);
 	void oamDmaInitSetup();

@@ -16,7 +16,7 @@
 //   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#include "huc3.h"
+#include "huc3_chip.h"
 #include "../savestate.h"
 //#include <stdio.h>
 
