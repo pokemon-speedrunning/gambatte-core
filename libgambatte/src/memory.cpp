@@ -759,7 +759,7 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | (infraredState_ >> 1 & 1);
+				return 0xC0 | (infraredState_ >> 1 & linked_);
 
 			if (cart_.isHuC3())
 				return cart_.HuC3Read(p, cc);
@@ -856,7 +856,7 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | (infraredState_ >> 1 & 1);
+				return 0xC0 | (infraredState_ >> 1 & linked_);
 
 			if (cart_.isHuC3() || cart_.isPocketCamera())
 				return 0xFF; // unsafe to peek
@@ -1382,9 +1382,12 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 		} else if (p < mm_wram_begin) {
 			if (cart_.wsrambankptr())
 				cart_.wsrambankptr()[p] = data;
-			else if (cart_.isHuC1())
-				infraredTrigger_ |= data & linked_;
-			else if (cart_.isHuC3())
+			else if (cart_.isHuC1()) {
+				if (linked_) {
+					infraredTrigger_ = (infraredState_ ^ data) & 1;
+					infraredState_ = (infraredState_ & 2) | (data & 1);
+				}
+			} else if (cart_.isHuC3())
 				cart_.HuC3Write(p, data, cc);
 			else if (cart_.isPocketCamera())
 				cart_.cameraWrite(p, data, cc);
