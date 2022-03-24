@@ -51,7 +51,7 @@ void Mbc1::romWrite(unsigned const p, unsigned const data, unsigned long const /
 		setRambank();
 		break;
 	case 1:
-		bankReg1_ = data & rombankMask_ ? data & rombankMask_ : 1;
+		bankReg1_ = data & 0x1F ? data & rombankMask_ : 1;
 		updateBanking();
 		break;
 	case 2:
