@@ -70,7 +70,7 @@ Memory::Memory(Interrupter const &interrupter)
 , linked_(false)
 , linkClockTrigger_(false)
 , infraredTrigger_(false)
-, infraredState_(false)
+, infraredState_(0)
 {
 	intreq_.setEventTime<intevent_blit>(1l * lcd_vres * lcd_cycles_per_line);
 	intreq_.setEventTime<intevent_end>(0);
@@ -687,7 +687,7 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 		break;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && infraredState_)
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && (infraredState_ & 2))
 				return ioamhram_[0x156] & ~0x02;
 		}
 
@@ -759,7 +759,7 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | infraredState_;
+				return 0xC0 | (infraredState_ >> 1 & 1);
 
 			if (cart_.isHuC3())
 				return cart_.HuC3Read(p, cc);
@@ -818,7 +818,7 @@ unsigned Memory::nontrivial_ff_peek(unsigned const p, unsigned long const cc) {
 		break;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && infraredState_)
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && (infraredState_ & 2))
 				return ioamhram_[0x156] & ~0x02;
 		}
 
@@ -856,7 +856,7 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | infraredState_;
+				return 0xC0 | (infraredState_ >> 1 & 1);
 
 			if (cart_.isHuC3() || cart_.isPocketCamera())
 				return 0xFF; // unsafe to peek
@@ -1276,8 +1276,10 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		return;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] ^ data) & 0x01))
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] ^ data) & 0x01)) {
 				infraredTrigger_ = true;
+				infraredState_ = (infraredState_ & 2) | (data & 1);
+			}
 
 			ioamhram_[0x156] = (data & 0xC1) | (ioamhram_[0x156] & 0x3E);
 		}
@@ -1495,13 +1497,13 @@ int Memory::linkStatus(int which) {
 	case 260: // AckInfraredSignal
 		infraredTrigger_ = false;
 		return 0;
-	case 261: // GetOut
-		return ioamhram_[0x156] & 0x01;
+	case 261: // GetInfraredOut
+		return infraredState_ & 1;
 	case 262: // ShiftInOn
-		infraredState_ = true;
+		infraredState_ |= 2;
 		return 0;
 	case 263: // ShiftInOff
-		infraredState_ = false;
+		infraredState_ &= ~2;
 		return 0;
 	case 264: // enable link connection
 		linked_ = true;
