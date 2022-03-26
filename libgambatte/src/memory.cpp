@@ -1273,8 +1273,10 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 
 		return;
 	case 0x56:
-		if (isCgb() && !isCgbDmg() && !agbFlag_) {
-			cart_.setIrSignal(Infrared::this_gb, data & 1);
+		if (isCgb() && !isCgbDmg()) {
+			if (!agbFlag_)
+				cart_.setIrSignal(Infrared::this_gb, data & 1);
+
 			ioamhram_[0x156] = (data & 0xC1) | (ioamhram_[0x156] & 0x3E);
 		}
 
