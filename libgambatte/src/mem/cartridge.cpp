@@ -518,11 +518,12 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 				baseTime = Time::now();
 
 			if (isHuC3()) {
-				unsigned char huc3Regs[0x100] { 0 };
-				for (unsigned i = 0; i < 0x100; i++) {
+				unsigned char huc3Regs[0x100 + 4] { 0 };
+				for (unsigned i = 0; i < 0x104; i++) {
 					huc3Regs[i] = file.get() & 0xFF;
 					if (file.eof()) {
 						huc3Regs[i] = 0;
+						huc3Regs[0x16] = 1; // rtc enable
 						break;
 					}
 				}
@@ -577,9 +578,9 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 		file.put(baseTime.tv_usec >>  8 & 0xFF);
 		file.put(baseTime.tv_usec       & 0xFF);
 		if (isHuC3()) {
-			unsigned char huc3Regs[0x100];
+			unsigned char huc3Regs[0x100 + 4];
 			getHuC3Regs(huc3Regs, cc);
-			for (unsigned i = 0; i < 0x100; i++)
+			for (unsigned i = 0; i < 0x104; i++)
 				file.put(huc3Regs[i] & 0xFF);
 		} else {
 			unsigned long rtcRegs[11];
@@ -620,7 +621,7 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDetermin
 		*dest++ = (baseTime.tv_usec >>  8 & 0xFF);
 		*dest++ = (baseTime.tv_usec       & 0xFF);
 		if (isHuC3()) {
-			unsigned char huc3Regs[0x100];
+			unsigned char huc3Regs[0x100 + 4];
 			getHuC3Regs(huc3Regs, cc);
 			std::memcpy(dest, huc3Regs, sizeof huc3Regs);
 		} else {
@@ -667,7 +668,7 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 			baseTime = Time::now();
 
 		if (isHuC3()) {
-			unsigned char huc3Regs[0x100];
+			unsigned char huc3Regs[0x100 + 4];
 			std::memcpy(huc3Regs, data, sizeof huc3Regs);
 			setHuC3Regs(huc3Regs);
 		} else {

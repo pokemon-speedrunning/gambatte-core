@@ -99,11 +99,19 @@ void HuC3Chip::setBaseTime(timeval baseTime, unsigned long const cc) {
 
 void HuC3Chip::getHuC3Regs(unsigned char *dest, unsigned long const cc) {
 	updateClock(cc);
-	std::memcpy(dest, io_, sizeof io_);
+	dest[0] = (rtcCycles_ >> 24) & 0xFF;
+	dest[1] = (rtcCycles_ >> 16) & 0xFF;
+	dest[2] = (rtcCycles_ >> 8) & 0xFF;
+	dest[3] = rtcCycles_ & 0xFF;
+	std::memcpy(&dest[4], io_, sizeof io_);
 }
 
 void HuC3Chip::setHuC3Regs(unsigned char *src) {
-	std::memcpy(io_, src, sizeof io_);
+	rtcCycles_ = src[0] & 0xFF;
+	rtcCycles_ = (rtcCycles_ << 8) | (src[1] & 0xFF);
+	rtcCycles_ = (rtcCycles_ << 8) | (src[2] & 0xFF);
+	rtcCycles_ = (rtcCycles_ << 8) | (src[3] & 0xFF);
+	std::memcpy(io_, &src[4], sizeof io_);
 }
 
 void HuC3Chip::setStatePtrs(SaveState &state) {
@@ -202,13 +210,13 @@ void HuC3Chip::write(unsigned /*p*/, unsigned data, unsigned long const cc) {
 						ioIndex_ = (ioIndex_ + 1) & 0xFF;
 						break;
 					case 0x40:
-						ioIndex_ = (data & 0x0F) | (ioIndex_ & 0xF0);
+						ioIndex_ = (transferValue_ & 0x0F) | (ioIndex_ & 0xF0);
 						break;
 					case 0x50:
-						ioIndex_ = ((data & 0x0F) << 4) | (ioIndex_ & 0x0F);
+						ioIndex_ = ((transferValue_ & 0x0F) << 4) | (ioIndex_ & 0x0F);
 						break;
 					case 0x60:
-						switch (data & 0xF) {
+						switch (transferValue_ & 0xF) {
 							case 0x0: // latch rtc
 								updateClock(cc);
 								std::memcpy(&io_[0x00], &io_[0x10], 0x06);
