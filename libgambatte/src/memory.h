@@ -382,7 +382,7 @@ public:
 		biosSize_ = size;
 	}
 
-	unsigned timeNow(unsigned long const cc) const { return cart_.timeNow(cc); }
+	unsigned timeNow() const { return cart_.timeNow(); }
 
 	unsigned long getDivLastUpdate() { return divLastUpdate_; }
 	unsigned char getRawIOAMHRAM(int offset) { return ioamhram_[offset]; }

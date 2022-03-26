@@ -28,6 +28,13 @@ namespace gambatte {
 
 struct SaveState;
 
+class Clock {
+public:
+	virtual void updateClock(unsigned long const cc);
+	virtual unsigned timeNow() const;
+	virtual void setBaseTime(timeval baseTime, unsigned long const cc);
+};
+
 class Time {
 public:
 	static timeval now() {
@@ -37,38 +44,34 @@ public:
 	}
 
 	Time();
-	void saveState(SaveState &state, unsigned long cycleCounter, bool isHuC3);
-	void loadState(SaveState const &state, bool isHuC3, bool cgb);
+	void saveState(SaveState &state, unsigned long cycleCounter);
+	void loadState(SaveState const &state, bool cgb);
 
-	std::time_t get(unsigned long cycleCounter);
-	void set(std::time_t seconds, unsigned long cycleCounter);
-	void reset(std::time_t seconds, unsigned long cycleCounter);
-	void resetCc(unsigned long oldCc, unsigned long newCc, bool isHuC3);
-	void speedChange(unsigned long cycleCounter, bool isHuC3);
+	void resetCc(unsigned long oldCc, unsigned long newCc);
+	void speedChange(unsigned long cycleCounter);
 
-	timeval baseTime(unsigned long cycleCounter, bool isHuC3);
-	void setBaseTime(timeval baseTime, unsigned long cycleCounter);
-	void setTimeMode(bool useCycles, unsigned long cycleCounter, bool isHuC3);
-	void setRtcDivisorOffset(long const rtcDivisorOffset) { rtcDivisor_ = 0x400000L + rtcDivisorOffset; }
-	
+	void setTimeMode(bool useCycles, unsigned long cycleCounter);
+
+	void set(Clock *clock) { clock_ = clock; }
+	unsigned timeNow() const { return clock_ ? clock_->timeNow() : 0; }
+	void setBaseTime(timeval baseTime, unsigned long const cycleCounter) { if (clock_) clock_->setBaseTime(baseTime, cycleCounter); }
+
 	unsigned long getRtcDivisor() { return rtcDivisor_; }
-	unsigned timeNow(unsigned long cycleCounter) const;
-	
+	void setRtcDivisorOffset(long const rtcDivisorOffset) { rtcDivisor_ = 0x400000L + rtcDivisorOffset; }	
+
 	unsigned long diff(unsigned long cycleCounter);
 
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
-	std::time_t seconds_;
 	timeval lastTime_;
 	unsigned long lastCycles_;
 	bool useCycles_;
 	unsigned long rtcDivisor_;
 	bool ds_;
 
-	void update(unsigned long cycleCounter);
-	void cyclesFromTime(unsigned long cycleCounter);
-	void timeFromCycles(unsigned long cycleCounter);
+	Clock *clock_;
+	void update(unsigned long const cc) { if (clock_) clock_->updateClock(cc); }
 };
 
 }

@@ -159,7 +159,7 @@ public:
 	void setInterruptAddresses(int *addrs, int numAddrs);
 	int getHitInterruptAddress();
 
-	unsigned timeNow() const { return mem_.timeNow(cycleCounter_); }
+	unsigned timeNow() const { return mem_.timeNow(); }
 
 	unsigned long getCycleCounter() { return cycleCounter_; }
 	unsigned long getDivLastUpdate() { return mem_.getDivLastUpdate(); }

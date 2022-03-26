@@ -26,7 +26,7 @@ namespace gambatte {
 
 struct SaveState;
 
-class Rtc {
+class Rtc : public Clock {
 public:
 	Rtc(Time &time);
 	unsigned char const * activeLatch() const { return activeLatch_; }
@@ -38,8 +38,6 @@ public:
 
 	void getRtcRegs(unsigned long *dest, unsigned long const cc);
 	void setRtcRegs(unsigned long *src);
-
-	void setBaseTime(timeval basetime, unsigned long const cc);
 
 	void set(bool enabled, unsigned bank) {
 		bank &= 0xF;
@@ -54,8 +52,9 @@ public:
 		(this->*activeSet_)(data, cc);
 	}
 
-	void update(unsigned long const cc);
-	unsigned timeNow() const;
+	virtual void updateClock(unsigned long const cc);
+	virtual unsigned timeNow() const;
+	virtual void setBaseTime(timeval baseTime, unsigned long const cc);
 
 	template<bool isReader>void SyncState(NewState *ns);
 

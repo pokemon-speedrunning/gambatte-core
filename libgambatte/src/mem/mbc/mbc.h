@@ -216,7 +216,7 @@ private:
 	unsigned char rambank_;
 	unsigned char ramflag_;
 
-	void setRambank() const;
+	void setRambank(bool setRamflag = true) const;
 	void setRombank() const;
 };
 
