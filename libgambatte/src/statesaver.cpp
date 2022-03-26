@@ -383,6 +383,7 @@ SaverList::SaverList()
 	{ static char const label[] = { r,t,c,l,h,     NUL }; ADD(rtc.latchH); }
 	{ static char const label[] = { r,t,c,l,m,     NUL }; ADD(rtc.latchM); }
 	{ static char const label[] = { r,t,c,l,s,     NUL }; ADD(rtc.latchS); }
+	{ static char const label[] = { i,r,t,r,i,g,   NUL }; ADD(ir.irTrigger); }
 	{ static char const label[] = { i,r,t,s,i,g,   NUL }; ADD(ir.thisGbIrSignal); }
 	{ static char const label[] = { i,r,l,s,i,g,   NUL }; ADD(ir.linkedGbIrSignal); }
 	{ static char const label[] = { h,NO3,h,a,l,t,t, NUL }; ADD(huc3.haltTime); }
