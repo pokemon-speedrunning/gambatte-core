@@ -30,6 +30,7 @@ sourceFiles = Split('''
 			src/mem/camera.cpp
 			src/mem/cartridge.cpp
 			src/mem/huc3_chip.cpp
+			src/mem/infrared.cpp
 			src/mem/memptrs.cpp
 			src/mem/pakinfo.cpp
 			src/mem/rtc.cpp

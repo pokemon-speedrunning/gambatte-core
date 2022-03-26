@@ -21,11 +21,6 @@
 
 #include "mbc/mbc.h"
 #include "loadres.h"
-#include "memptrs.h"
-#include "time.h"
-#include "rtc.h"
-#include "huc3_chip.h"
-#include "camera.h"
 #include "savestate.h"
 #include "scoped_ptr.h"
 #include "newstate.h"
@@ -107,6 +102,10 @@ public:
 	void setGameGenie(std::string const &codes);
 	bool isMbc2() const { return mbc2_; }
 	bool isHuC1() const { return huc1_; }
+	bool getIrTrigger() const { return ir_.getIrTrigger(); }
+	void ackIrTrigger() { ir_.ackIrTrigger(); }
+	bool getIrSignal(Infrared::WhichIrGb which) const { return ir_.getIrSignal(which); }
+	void setIrSignal(Infrared::WhichIrGb which, bool signal) { ir_.setIrSignal(which, signal); }
 	bool isHuC3() const { return huc3_.isHuC3(); }
 	unsigned char HuC3Read(unsigned p, unsigned long const cc) { return huc3_.read(p, cc); }
 	void HuC3Write(unsigned p, unsigned data, unsigned long const cc) { huc3_.write(p, data, cc); }
@@ -130,6 +129,7 @@ private:
 	MemPtrs memptrs_;
 	Time time_;
 	Rtc rtc_;
+	Infrared ir_;
 	HuC3Chip huc3_;
 	Camera camera_;
 	scoped_ptr<Mbc> mbc_;

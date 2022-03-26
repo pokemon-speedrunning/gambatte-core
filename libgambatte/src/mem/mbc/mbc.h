@@ -22,6 +22,7 @@
 #include "../memptrs.h"
 #include "../time.h"
 #include "../rtc.h"
+#include "../infrared.h"
 #include "../huc3_chip.h"
 #include "../camera.h"
 #include "savestate.h"
@@ -181,7 +182,7 @@ private:
 
 class HuC1 : public DefaultMbc {
 public:
-	explicit HuC1(MemPtrs &memptrs);
+	explicit HuC1(MemPtrs &memptrs, Infrared *const ir_);
 	virtual bool disabledRam() const;
 	virtual void romWrite(unsigned const p, unsigned const data, unsigned long const /*cc*/);
 	virtual void saveState(SaveState::Mem &ss) const;
@@ -190,6 +191,7 @@ public:
 
 private:
 	MemPtrs &memptrs_;
+	Infrared *const ir_;
 	unsigned char rombank_;
 	unsigned char rambank_;
 	unsigned char ramflag_;

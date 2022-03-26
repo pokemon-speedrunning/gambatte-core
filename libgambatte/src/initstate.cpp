@@ -358,6 +358,9 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.spu.ch4.nr4 = 0;
 	state.spu.ch4.master = false;
 
+	state.ir.irTrigger = true;
+	state.ir.thisGbIrSignal = false;
+
 	state.huc3.haltTime = state.time.seconds;
 	state.huc3.dataTime = 0;
 	state.huc3.writingTime = 0;

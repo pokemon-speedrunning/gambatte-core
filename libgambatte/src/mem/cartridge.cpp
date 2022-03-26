@@ -130,6 +130,7 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 
 	time_.saveState(state, cc, isHuC3());
 	rtc_.saveState(state);
+	ir_.saveState(state);
 	huc3_.saveState(state);
 	camera_.saveState(state);
 }
@@ -137,6 +138,7 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 void Cartridge::loadState(SaveState const &state) {
 	camera_.loadState(state, isCgb());
 	huc3_.loadState(state);
+	ir_.loadState(state);
 	rtc_.loadState(state);
 	time_.loadState(state, isHuC3(), isCgb());
 	mbc_->loadState(state.mem);
@@ -304,7 +306,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 		}
 		break;
 	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
-	case type_huc1: mbc_.reset(new HuC1(memptrs_)); huc1_ = true; break;
+	case type_huc1: mbc_.reset(new HuC1(memptrs_, &ir_)); huc1_ = true; break;
 	case type_huc3:
 		huc3_.set(true);
 		mbc_.reset(new HuC3(memptrs_, &huc3_));
@@ -452,7 +454,7 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 		}
 		break;
 	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
-	case type_huc1: mbc_.reset(new HuC1(memptrs_)); huc1_ = true; break;
+	case type_huc1: mbc_.reset(new HuC1(memptrs_, &ir_)); huc1_ = true; break;
 	case type_huc3:
 		huc3_.set(true);
 		mbc_.reset(new HuC3(memptrs_, &huc3_));
@@ -751,6 +753,7 @@ SYNCFUNC(Cartridge) {
 	SSS(memptrs_);
 	SSS(time_);
 	SSS(rtc_);
+	SSS(ir_);
 	SSS(huc3_);
 	SSS(camera_);
 	TSS(mbc_);

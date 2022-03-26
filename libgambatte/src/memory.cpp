@@ -69,8 +69,6 @@ Memory::Memory(Interrupter const &interrupter)
 , linkCallback_(0)
 , linked_(false)
 , linkClockTrigger_(false)
-, infraredTrigger_(false)
-, infraredState_(0)
 {
 	intreq_.setEventTime<intevent_blit>(1l * lcd_vres * lcd_cycles_per_line);
 	intreq_.setEventTime<intevent_end>(0);
@@ -687,7 +685,7 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 		break;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && (infraredState_ & 2))
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
 				return ioamhram_[0x156] & ~0x02;
 		}
 
@@ -759,7 +757,7 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | (infraredState_ >> 1 & linked_);
+				return 0xC0 | (linked_ && cart_.getIrSignal(Infrared::linked_gb));
 
 			if (cart_.isHuC3())
 				return cart_.HuC3Read(p, cc);
@@ -818,7 +816,7 @@ unsigned Memory::nontrivial_ff_peek(unsigned const p, unsigned long const cc) {
 		break;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && (infraredState_ & 2))
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
 				return ioamhram_[0x156] & ~0x02;
 		}
 
@@ -856,7 +854,7 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | (infraredState_ >> 1 & linked_);
+				return 0xC0 | (linked_ && cart_.getIrSignal(Infrared::linked_gb));
 
 			if (cart_.isHuC3() || cart_.isPocketCamera())
 				return 0xFF; // unsafe to peek
@@ -1275,12 +1273,8 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 
 		return;
 	case 0x56:
-		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] ^ data) & 0x01)) {
-				infraredTrigger_ = true;
-				infraredState_ = (infraredState_ & 2) | (data & 1);
-			}
-
+		if (isCgb() && !isCgbDmg() && !agbFlag_) {
+			cart_.setIrSignal(Infrared::this_gb, data & 1);
 			ioamhram_[0x156] = (data & 0xC1) | (ioamhram_[0x156] & 0x3E);
 		}
 
@@ -1383,10 +1377,7 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 			if (cart_.wsrambankptr())
 				cart_.wsrambankptr()[p] = data;
 			else if (cart_.isHuC1()) {
-				if (linked_) {
-					infraredTrigger_ = (infraredState_ ^ data) & 1;
-					infraredState_ = (infraredState_ & 2) | (data & 1);
-				}
+				cart_.setIrSignal(Infrared::this_gb, data & 1);
 			} else if (cart_.isHuC3())
 				cart_.HuC3Write(p, data, cc);
 			else if (cart_.isPocketCamera())
@@ -1496,17 +1487,17 @@ int Memory::linkStatus(int which) {
 	case 258: // GetOut
 		return ioamhram_[0x101] & 0xFF;
 	case 259: // InfraredSignaled
-		return infraredTrigger_;
+		return cart_.getIrTrigger();
 	case 260: // AckInfraredSignal
-		infraredTrigger_ = false;
+		cart_.ackIrTrigger();
 		return 0;
 	case 261: // GetInfraredOut
-		return infraredState_ & 1;
+		return cart_.getIrSignal(Infrared::this_gb);
 	case 262: // ShiftInOn
-		infraredState_ |= 2;
+		cart_.setIrSignal(Infrared::linked_gb, true);
 		return 0;
 	case 263: // ShiftInOff
-		infraredState_ &= ~2;
+		cart_.setIrSignal(Infrared::linked_gb, false);
 		return 0;
 	case 264: // enable link connection
 		linked_ = true;
@@ -1547,6 +1538,4 @@ SYNCFUNC(Memory) {
 	NSS(stopped_);
 	NSS(linked_);
 	NSS(linkClockTrigger_);
-	NSS(infraredTrigger_);
-	NSS(infraredState_);
 }

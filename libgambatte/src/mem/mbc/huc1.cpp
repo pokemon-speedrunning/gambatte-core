@@ -20,8 +20,9 @@
 
 namespace gambatte {
 
-HuC1::HuC1(MemPtrs &memptrs)
+HuC1::HuC1(MemPtrs &memptrs, Infrared *const ir)
 : memptrs_(memptrs)
+, ir_(ir)
 , rombank_(1)
 , rambank_(0)
 , ramflag_(0)
@@ -76,15 +77,18 @@ void HuC1::setRambank() const {
 	switch (ramflag_) {
 		case 0x0: // read-only mode
 			flags = MemPtrs::read_en;
+			ir_->setIrSignal(Infrared::this_gb, false);
 			break;
 		case 0xA: // read/write mode
 			flags = MemPtrs::read_en | MemPtrs::write_en;
+			ir_->setIrSignal(Infrared::this_gb, false);
 			break;
 		case 0xE: // IR mode
 			flags = MemPtrs::read_en | MemPtrs::write_en | MemPtrs::rtc_en;
 			break;
 		default: // disabled?
 			flags = MemPtrs::disabled;
+			ir_->setIrSignal(Infrared::this_gb, false);
 			break;
 	}
 

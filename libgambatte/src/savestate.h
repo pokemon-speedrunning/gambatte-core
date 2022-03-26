@@ -242,6 +242,12 @@ struct SaveState {
 		unsigned char latchS;
 	} rtc;
 
+	struct Infrared {
+		unsigned char /*bool*/ irTrigger;
+		unsigned char /*bool*/ thisGbIrSignal;
+		unsigned char /*bool*/ linkedGbIrSignal;
+	} ir;
+
 	struct HuC3 {
 		unsigned long haltTime;
 		unsigned long dataTime;

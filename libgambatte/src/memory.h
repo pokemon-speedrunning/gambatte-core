@@ -431,8 +431,6 @@ private:
 	void(*linkCallback_)();
 	bool linked_;
 	bool linkClockTrigger_;
-	bool infraredTrigger_;
-	unsigned char infraredState_; // bit 1 = linked gb IR state, bit 0 = this gb IR state
 
 	void decEventCycles(IntEventId eventId, unsigned long dec);
 	void oamDmaInitSetup();
