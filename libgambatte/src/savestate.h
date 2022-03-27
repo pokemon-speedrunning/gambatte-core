@@ -79,7 +79,7 @@ struct SaveState {
 		unsigned char rambank;
 		unsigned char oamDmaPos;
 		unsigned char haltHdmaState;
-		unsigned char HuC3RAMflag;
+		unsigned char ramflag;
 		unsigned char /*bool*/ IME;
 		unsigned char /*bool*/ halted;
 		unsigned char /*bool*/ enableRam;
@@ -249,14 +249,19 @@ struct SaveState {
 	} ir;
 
 	struct HuC3 {
-		unsigned long haltTime;
-		unsigned long dataTime;
-		unsigned long writingTime;
+		Ptr<unsigned char> io;
+
+		unsigned char ioIndex;
+		unsigned char transferValue;
+		unsigned char ramflag;
 		unsigned long irBaseCycle;
-		unsigned char /*bool*/ halted;
-		unsigned char shift;
-		unsigned char ramValue;
-		unsigned char modeflag;
+		unsigned long rtcCycles;
+		unsigned short /*signed*/ currentSample;
+		unsigned long toneLastUpdate;
+		unsigned long nextPhaseChangeTime;
+		unsigned long /*signed*/ remainingToneSamples;
+		unsigned char /*bool*/ committing;
+		unsigned char /*bool*/ highIoReadOnly;
 		unsigned char /*bool*/ irReceivingPulse;
 	} huc3;
 

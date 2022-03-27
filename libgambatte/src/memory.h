@@ -343,6 +343,10 @@ public:
 			: -1;
 	}
 
+	unsigned generateMbcSamples(short *soundBuf) {
+		return cart_.generateSamples(soundBuf);
+	}
+
 	void setDmgPaletteColor(int palNum, int colorNum, unsigned long rgb32) {
 		if (!isSgb())
 			lcd_.setDmgPaletteColor(palNum, colorNum, rgb32);
@@ -382,7 +386,7 @@ public:
 		biosSize_ = size;
 	}
 
-	unsigned timeNow(unsigned long const cc) const { return cart_.timeNow(cc); }
+	unsigned timeNow() const { return cart_.timeNow(); }
 
 	unsigned long getDivLastUpdate() { return divLastUpdate_; }
 	unsigned char getRawIOAMHRAM(int offset) { return ioamhram_[offset]; }

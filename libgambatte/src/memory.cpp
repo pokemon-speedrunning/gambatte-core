@@ -1450,6 +1450,9 @@ std::size_t Memory::fillSoundBuffer(unsigned long cc) {
 	if (isSgb())
 		sgb_.accumulateSamples(samples);
 
+	if (cart_.isHuC3())
+		cart_.accumulateSamples(cc);
+
 	return samples;
 }
 

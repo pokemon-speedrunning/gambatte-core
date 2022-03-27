@@ -55,13 +55,13 @@ void HuC1::romWrite(unsigned const p, unsigned const data, unsigned long const /
 void HuC1::saveState(SaveState::Mem &ss) const {
 	ss.rombank = rombank_;
 	ss.rambank = rambank_;
-	ss.HuC3RAMflag = ramflag_;
+	ss.ramflag = ramflag_;
 }
 
 void HuC1::loadState(SaveState::Mem const &ss) {
 	rombank_ = ss.rombank;
 	rambank_ = ss.rambank;
-	ramflag_ = ss.HuC3RAMflag;
+	ramflag_ = ss.ramflag;
 	setRambank();
 	setRombank();
 }

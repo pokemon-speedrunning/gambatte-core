@@ -103,6 +103,10 @@ int asHex(char c) {
 	return c >= 'A' ? c - 'A' + 0xA : c - '0';
 }
 
+static bool operator>(timeval l, timeval r) {
+	return (l.tv_sec * 1000000 + l.tv_usec) > (r.tv_sec * 1000000 + r.tv_usec);
+}
+
 }
 
 Cartridge::Cartridge()
@@ -119,16 +123,13 @@ void Cartridge::setStatePtrs(SaveState &state) {
 	state.mem.sram.set(memptrs_.rambankdata(), memptrs_.rambankdataend() - memptrs_.rambankdata());
 	state.mem.wram.set(memptrs_.wramdata(0), memptrs_.wramdataend() - memptrs_.wramdata(0));
 
+	huc3_.setStatePtrs(state);
 	camera_.setStatePtrs(state);
 }
 
 void Cartridge::saveState(SaveState &state, unsigned long const cc) {
-	state.mem.HuC3RAMflag = 0; // let's not leave random data here
 	mbc_->saveState(state.mem);
-	if (!isHuC3())
-		rtc_.update(cc);
-
-	time_.saveState(state, cc, isHuC3());
+	time_.saveState(state, cc);
 	rtc_.saveState(state);
 	ir_.saveState(state);
 	huc3_.saveState(state);
@@ -137,10 +138,10 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 
 void Cartridge::loadState(SaveState const &state) {
 	camera_.loadState(state, isCgb());
-	huc3_.loadState(state);
+	huc3_.loadState(state, isCgb());
 	ir_.loadState(state);
 	rtc_.loadState(state);
-	time_.loadState(state, isHuC3(), isCgb());
+	time_.loadState(state, isCgb());
 	mbc_->loadState(state.mem);
 }
 
@@ -266,6 +267,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	ggUndoList_.clear();
 	mbc_.reset();
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
+	time_.set(NULL);
 	rtc_.set(false, 0);
 	huc3_.set(false);
 	camera_.set(NULL);
@@ -303,6 +305,8 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 				mbc_.reset(new Mbc30(memptrs_, rtc));
 			else
 				mbc_.reset(new Mbc3 (memptrs_, rtc));
+
+			time_.set(rtc);
 		}
 		break;
 	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
@@ -310,6 +314,7 @@ LoadRes Cartridge::loadROM(std::string const &romfile,
 	case type_huc3:
 		huc3_.set(true);
 		mbc_.reset(new HuC3(memptrs_, &huc3_));
+		time_.set(&huc3_);
 		break;
 	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); pocketCamera_ = true; break;
 	case type_wisdomtree: mbc_.reset(new WisdomTree(memptrs_)); break;
@@ -420,6 +425,7 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 
 	mbc_.reset();
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
+	time_.set(NULL);
 	rtc_.set(false, 0);
 	huc3_.set(false);
 	camera_.set(NULL);
@@ -451,6 +457,8 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 				mbc_.reset(new Mbc30(memptrs_, rtc));
 			else
 				mbc_.reset(new Mbc3 (memptrs_, rtc));
+
+			time_.set(rtc);
 		}
 		break;
 	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
@@ -458,6 +466,7 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 	case type_huc3:
 		huc3_.set(true);
 		mbc_.reset(new HuC3(memptrs_, &huc3_));
+		time_.set(&huc3_);
 		break;
 	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); pocketCamera_ = true; break;
 	case type_wisdomtree: mbc_.reset(new WisdomTree(memptrs_)); break;
@@ -474,7 +483,7 @@ int Cartridge::saveSavedataLength(bool isDeterministic) {
 		ret = memptrs_.rambankdataend() - memptrs_.rambankdata();
 	}
 	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
-		ret += isHuC3() ? 8 : (8 + 14);
+		ret += 8 + (isHuC3() ? 0x104 : 14);
 	}
 	return ret;
 }
@@ -508,14 +517,22 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 				baseTime.tv_usec = baseTime.tv_usec << 8 | (file.get() & 0xFF);
 			} else
 				baseTime.tv_usec = 0;
-				
-			if (baseTime.tv_sec > Time::now().tv_sec) // prevent malformed RTC files from giving negative times
+
+			if (baseTime > Time::now()) // prevent malformed RTC files from giving negative times
 				baseTime = Time::now();
-				
-			if (isHuC3())
-				time_.setBaseTime(baseTime, cc);
-			else {
-				unsigned long rtcRegs [11] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+			if (isHuC3()) {
+				unsigned char huc3Regs[0x100 + 4] { 0 };
+				for (unsigned i = 0; i < 0x104; i++) {
+					huc3Regs[i] = file.get() & 0xFF;
+					if (file.eof()) {
+						huc3Regs[i] = 0;
+						break;
+					}
+				}
+				setHuC3Regs(huc3Regs);
+			} else {
+				unsigned long rtcRegs[11] { 0 };
 				rtcRegs[Dh] = file.get() & 0xC1;
 				if (!file.eof()) {
 					rtcRegs[Dl] = file.get() & 0xFF;
@@ -536,8 +553,9 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 					rtcRegs[Dh] = 0;
 
 				setRtcRegs(rtcRegs);
-				rtc_.setBaseTime(baseTime, cc);
 			}
+
+			time_.setBaseTime(baseTime, cc);
 		}
 	}
 }
@@ -553,7 +571,7 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 
 	if (hasRtc(memptrs_.romdata()[0x147])) {
 		std::ofstream file((sbp + ".rtc").c_str(), std::ios::binary | std::ios::out);
-		timeval baseTime = time_.baseTime(cc, isHuC3());
+		timeval baseTime = Time::now();
 		file.put(baseTime.tv_sec  >> 24 & 0xFF);
 		file.put(baseTime.tv_sec  >> 16 & 0xFF);
 		file.put(baseTime.tv_sec  >>  8 & 0xFF);
@@ -562,8 +580,13 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 		file.put(baseTime.tv_usec >> 16 & 0xFF);
 		file.put(baseTime.tv_usec >>  8 & 0xFF);
 		file.put(baseTime.tv_usec       & 0xFF);
-		if (!isHuC3()) {
-			unsigned long rtcRegs [11];
+		if (isHuC3()) {
+			unsigned char huc3Regs[0x100 + 4];
+			getHuC3Regs(huc3Regs, cc);
+			for (unsigned i = 0; i < 0x104; i++)
+				file.put(huc3Regs[i] & 0xFF);
+		} else {
+			unsigned long rtcRegs[11];
 			getRtcRegs(rtcRegs, cc);
 			file.put(rtcRegs[Dh]      & 0xC1);
 			file.put(rtcRegs[Dl]      & 0xFF);
@@ -591,16 +614,20 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDetermin
 	}
 
 	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
-		timeval basetime = time_.baseTime(cc, isHuC3());
-		*dest++ = (basetime.tv_sec  >> 24 & 0xFF);
-		*dest++ = (basetime.tv_sec  >> 16 & 0xFF);
-		*dest++ = (basetime.tv_sec  >>  8 & 0xFF);
-		*dest++ = (basetime.tv_sec        & 0xFF);
-		*dest++ = (basetime.tv_usec >> 24 & 0xFF);
-		*dest++ = (basetime.tv_usec >> 16 & 0xFF);
-		*dest++ = (basetime.tv_usec >>  8 & 0xFF);
-		*dest++ = (basetime.tv_usec       & 0xFF);
-		if (!isHuC3()) {
+		timeval baseTime = Time::now();
+		*dest++ = (baseTime.tv_sec  >> 24 & 0xFF);
+		*dest++ = (baseTime.tv_sec  >> 16 & 0xFF);
+		*dest++ = (baseTime.tv_sec  >>  8 & 0xFF);
+		*dest++ = (baseTime.tv_sec        & 0xFF);
+		*dest++ = (baseTime.tv_usec >> 24 & 0xFF);
+		*dest++ = (baseTime.tv_usec >> 16 & 0xFF);
+		*dest++ = (baseTime.tv_usec >>  8 & 0xFF);
+		*dest++ = (baseTime.tv_usec       & 0xFF);
+		if (isHuC3()) {
+			unsigned char huc3Regs[0x100 + 4];
+			getHuC3Regs(huc3Regs, cc);
+			std::memcpy(dest, huc3Regs, sizeof huc3Regs);
+		} else {
 			unsigned long rtcRegs[11];
 			getRtcRegs(rtcRegs, cc);
 			*dest++ = (rtcRegs[Dh]      & 0xC1);
@@ -630,23 +657,25 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 	}
 
 	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
-		timeval basetime;
-		basetime.tv_sec = (*data++ & 0xFF);
-		basetime.tv_sec = basetime.tv_sec << 8 | (*data++ & 0xFF);
-		basetime.tv_sec = basetime.tv_sec << 8 | (*data++ & 0xFF);
-		basetime.tv_sec = basetime.tv_sec << 8 | (*data++ & 0xFF);
-		basetime.tv_usec = (*data++ & 0xFF);
-		basetime.tv_usec = basetime.tv_usec << 8 | (*data++ & 0xFF);
-		basetime.tv_usec = basetime.tv_usec << 8 | (*data++ & 0xFF);
-		basetime.tv_usec = basetime.tv_usec << 8 | (*data++ & 0xFF);
+		timeval baseTime;
+		baseTime.tv_sec = (*data++ & 0xFF);
+		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
+		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
+		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
+		baseTime.tv_usec = (*data++ & 0xFF);
+		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
+		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
+		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
 
-		if (basetime.tv_sec > Time::now().tv_sec) // prevent malformed save files from giving negative times
-			basetime = Time::now();
+		if (baseTime > Time::now()) // prevent malformed save files from giving negative times
+			baseTime = Time::now();
 
-		if (isHuC3())
-			time_.setBaseTime(basetime, cc);
-		else {
-			unsigned long rtcRegs [11];
+		if (isHuC3()) {
+			unsigned char huc3Regs[0x100 + 4];
+			std::memcpy(huc3Regs, data, sizeof huc3Regs);
+			setHuC3Regs(huc3Regs);
+		} else {
+			unsigned long rtcRegs[11];
 			rtcRegs[Dh] = *data++ & 0xC1;
 			rtcRegs[Dl] = *data++ & 0xFF;
 			rtcRegs[H] = *data++ & 0x1F;
@@ -662,8 +691,9 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 			rtcRegs[M+L] = *data++ & 0x3F;
 			rtcRegs[S+L] = *data++ & 0x3F;
 			setRtcRegs(rtcRegs);
-			rtc_.setBaseTime(basetime, cc);
 		}
+
+		time_.setBaseTime(baseTime, cc);
 	}
 }
 
@@ -742,7 +772,7 @@ PakInfo const Cartridge::pakInfo(bool const multipakCompat) const {
 		crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
 		return PakInfo(multipakCompat && presumedMulti64Mbc1(memptrs_.romdata(), rombs),
 		               rombs,
-			       crc,
+		               crc,
 		               memptrs_.romdata());
 	}
 

@@ -149,13 +149,20 @@ public:
 
 	/**
 	  * Outputs SGB audio to the provided buffer.
-	  * Must be called after every runFor call if SGB audio is used.
 	  *
-	  * @param audioBuf buffer with space >= 4096
-	  * @param samples  out: number of samples produced
+	  * @param audioBuf buffer with space >= 2048
+	  * @param samples  out: number of stereo samples produced
 	  * @return gb sample remainder, or -1 on failure
 	  */
 	unsigned generateSgbSamples(short *audioBuf, std::size_t &samples);
+
+	/**
+	  * Outputs MBC audio to the provided buffer.
+	  *
+	  * @param audioBuf buffer with space >= 35112 + 2064
+	  * @return stereo sample count, 0 indicates the current MBC does not output audio
+	  */
+	unsigned generateMbcSamples(short *audioBuf);
 
 	/**
 	  * Sets layers to be rendered.

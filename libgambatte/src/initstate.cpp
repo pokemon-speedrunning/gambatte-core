@@ -93,6 +93,7 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.mem.rambank = 0;
 	state.mem.oamDmaPos = 0xFE;
 	state.mem.haltHdmaState = 0;
+	state.mem.ramflag = 0;
 	state.mem.IME = false;
 	state.mem.halted = false;
 	state.mem.enableRam = false;
@@ -361,13 +362,17 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.ir.irTrigger = true;
 	state.ir.thisGbIrSignal = false;
 
-	state.huc3.haltTime = state.time.seconds;
-	state.huc3.dataTime = 0;
-	state.huc3.writingTime = 0;
-	state.huc3.halted = false;
-	state.huc3.shift = 0;
-	state.huc3.ramValue = 1;
-	state.huc3.modeflag = 2; // huc3_none
+	state.huc3.ioIndex = 0;
+	state.huc3.transferValue = 0;
+	state.huc3.ramflag = 0;
+	state.huc3.irBaseCycle = 0;
+	state.huc3.currentSample = 0;
+	state.huc3.toneLastUpdate = 0;
+	state.huc3.nextPhaseChangeTime = 0;
+	state.huc3.remainingToneSamples = 0;
+	state.huc3.committing = false;
+	state.huc3.highIoReadOnly = true; // ???
+	state.huc3.irReceivingPulse = false;
 
 	std::memset(   state.camera.matrix.ptr, 0,    state.camera.matrix.size());
 	std::memset(state.camera.oldMatrix.ptr, 0, state.camera.oldMatrix.size());
@@ -408,6 +413,10 @@ void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb
 	state.time.lastTimeSec = Time::now().tv_sec;
 	state.time.lastTimeUsec = Time::now().tv_usec;
 	state.time.lastCycles = state.cpu.cycleCounter;
+
+	std::memset(state.huc3.io.ptr, 0, state.huc3.io.size());
+
+	state.huc3.rtcCycles = 0;
 
 	state.rtc.dataDh = 0;
 	state.rtc.dataDl = 0;

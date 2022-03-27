@@ -41,7 +41,7 @@ Rtc::Rtc(Time &time)
 {
 }
 
-void Rtc::update(unsigned long const cc) {
+void Rtc::updateClock(unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor();
 	unsigned long diff = time_.diff(cc);
 	if (!(dataDh_ & 0x40)) {
@@ -83,7 +83,7 @@ unsigned Rtc::timeNow() const {
 }
 
 void Rtc::doLatch(unsigned long const cc) {
-	update(cc);
+	updateClock(cc);
 	latchDh_ = dataDh_;
 	latchDl_ = dataDl_;
 	latchH_ = dataH_;
@@ -174,10 +174,10 @@ void Rtc::loadState(SaveState const &state) {
 	doSwapActive();
 }
 
-enum { Dh = 0, Dl = 1, H = 2, M = 3, S = 4, C = 5, L = 6};
+enum { Dh = 0, Dl = 1, H = 2, M = 3, S = 4, C = 5, L = 6 };
 
 void Rtc::getRtcRegs(unsigned long *dest, unsigned long const cc) {
-	update(cc);
+	updateClock(cc);
 	dest[Dh] = dataDh_;
 	dest[Dl] = dataDl_;
 	dest[H] = dataH_;
@@ -223,11 +223,11 @@ void Rtc::setRtcRegs(unsigned long *src) {
 	latchS_ = src[S+L];
 }
 
-void Rtc::setBaseTime(timeval basetime, unsigned long const cc) {
+void Rtc::setBaseTime(timeval baseTime, unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor();
 	timeval now_ = Time::now();
-	unsigned long long diff = ((now_.tv_sec - basetime.tv_sec) * cycleDivisor)
-	+ (((now_.tv_usec - basetime.tv_usec) * cycleDivisor) / 1000000.0f)
+	unsigned long long diff = ((now_.tv_sec - baseTime.tv_sec) * cycleDivisor)
+	+ (((now_.tv_usec - baseTime.tv_usec) * cycleDivisor) / 1000000.0f)
 	+ cc;
 	if (!(dataDh_ & 0x40)) {
 		dataC_ += diff % cycleDivisor;
@@ -264,31 +264,31 @@ void Rtc::setBaseTime(timeval basetime, unsigned long const cc) {
 }
 
 void Rtc::setDh(unsigned const newDh, unsigned const long cc) {
-	update(cc);
+	updateClock(cc);
 	dataDh_ = newDh & 0xC1;
 }
 
 void Rtc::setDl(unsigned const newLowdays, unsigned const long cc) {
-	update(cc);
+	updateClock(cc);
 	dataDl_ = newLowdays;
 }
 
 void Rtc::setH(unsigned const newHours, unsigned const long cc) {
-	update(cc);
+	updateClock(cc);
 	dataH_ = newHours & 0x1F;
 	if (dataH_ >= 24)
 		dataH_ -= 0x20;
 }
 
 void Rtc::setM(unsigned const newMinutes, unsigned const long cc) {
-	update(cc);
+	updateClock(cc);
 	dataM_ = newMinutes & 0x3F;
 	if (dataM_ >= 60)
 		dataM_ -= 0x40;
 }
 
 void Rtc::setS(unsigned const newSeconds, unsigned const long cc) {
-	update(cc);
+	updateClock(cc);
 	dataS_ = newSeconds & 0x3F;
 	if (dataS_ >= 60)
 		dataS_ -= 0x40;

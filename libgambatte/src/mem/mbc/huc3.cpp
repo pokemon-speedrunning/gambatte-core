@@ -36,22 +36,18 @@ bool HuC3::disabledRam() const {
 void HuC3::romWrite(unsigned const p, unsigned const data, unsigned long const /*cc*/) {
 	switch (p >> 13 & 3) {
 	case 0:
-		ramflag_ = data;
-		//printf("[HuC3] set ramflag to %02X\n", data);
+		ramflag_ = data & 0xF;
 		setRambank();
 		break;
 	case 1:
-		//printf("[HuC3] set rombank to %02X\n", data);
 		rombank_ = data;
 		setRombank();
 		break;
 	case 2:
-		//printf("[HuC3] set rambank to %02X\n", data);
 		rambank_ = data;
 		setRambank();
 		break;
 	case 3:
-		// GEST: "programs will write 1 here"
 		break;
 	}
 }
@@ -59,14 +55,14 @@ void HuC3::romWrite(unsigned const p, unsigned const data, unsigned long const /
 void HuC3::saveState(SaveState::Mem &ss) const {
 	ss.rombank = rombank_;
 	ss.rambank = rambank_;
-	ss.HuC3RAMflag = ramflag_;
+	ss.ramflag = ramflag_;
 }
 
 void HuC3::loadState(SaveState::Mem const &ss) {
 	rombank_ = ss.rombank;
 	rambank_ = ss.rambank;
-	ramflag_ = ss.HuC3RAMflag;
-	setRambank();
+	ramflag_ = ss.ramflag;
+	setRambank(false);
 	setRombank();
 }
 
@@ -76,21 +72,27 @@ void HuC3::SyncState(NewState *ns, bool isReader) {
 	NSS(ramflag_);
 }
 
-void HuC3::setRambank() const {
-	huc3_->setRamflag(ramflag_);
+void HuC3::setRambank(bool setRamflag) const {
+	if (setRamflag)
+		huc3_->setRamflag(ramflag_);
 
 	unsigned flags;
-	if (ramflag_ >= 0x0B && ramflag_ < 0x0F) {
-		// System registers mode
-		flags = MemPtrs::read_en | MemPtrs::write_en | MemPtrs::rtc_en;
-	}
-	else if (ramflag_ == 0x0A || ramflag_ > 0x0D) {
-		// Read/write mode
-		flags = MemPtrs::read_en | MemPtrs::write_en;
-	}
-	else {
-		// Read-only mode ??
-		flags = MemPtrs::read_en;
+	switch (ramflag_) {
+		case 0x0: // read-only mode
+			flags = MemPtrs::read_en;
+			break;
+		case 0xA: // read/write mode
+			flags = MemPtrs::read_en | MemPtrs::write_en;
+			break;
+		case 0xB: // register write mode
+		case 0xC: // register read mode
+		case 0xD: // register commit mode
+		case 0xE: // IR mode
+			flags = MemPtrs::read_en | MemPtrs::write_en | MemPtrs::rtc_en;
+			break;
+		default: // disabled?
+			flags = MemPtrs::disabled;
+			break;
 	}
 
 	memptrs_.setRambank(flags, rambank_ & (rambanks(memptrs_) - 1));

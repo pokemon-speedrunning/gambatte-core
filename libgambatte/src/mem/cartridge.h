@@ -59,30 +59,18 @@ public:
 	void mbcWrite(unsigned addr, unsigned data, unsigned long const cc) { mbc_->romWrite(addr, data, cc); }
 	bool isCgb() const { return gambatte::isCgb(memptrs_); }
 	void resetCc(unsigned long const oldCc, unsigned long const newCc) {
-		bool isHuC3 = huc3_.isHuC3();
-		if (!isHuC3)
-			rtc_.update(oldCc);
-
-		time_.resetCc(oldCc, newCc, isHuC3);
+		time_.resetCc(oldCc, newCc);
+		huc3_.resetCc(oldCc, newCc);
 		camera_.resetCc(oldCc, newCc);
 	}
 	void speedChange(unsigned long const cc) {
-		bool isHuC3 = huc3_.isHuC3();
-		if (!isHuC3)
-			rtc_.update(cc);
-
-		time_.speedChange(cc, isHuC3);
+		time_.speedChange(cc);
+		huc3_.speedChange(cc);
 		camera_.speedChange(cc);
 	}
-	void setTimeMode(bool useCycles, unsigned long const cc) {
-		bool isHuC3 = huc3_.isHuC3();
-		if (!isHuC3)
-			rtc_.update(cc);
-
-		time_.setTimeMode(useCycles, cc, isHuC3);
-	}
+	void setTimeMode(bool useCycles, unsigned long const cc) { time_.setTimeMode(useCycles, cc); }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { time_.setRtcDivisorOffset(rtcDivisorOffset); }
-	unsigned timeNow(unsigned long const cc) const { return huc3_.isHuC3() ? time_.timeNow(cc) : rtc_.timeNow(); }	
+	unsigned timeNow() const { return time_.timeNow(); }
 	void getRtcRegs(unsigned long *dest, unsigned long cc) { rtc_.getRtcRegs(dest, cc); }
 	void setRtcRegs(unsigned long *src) { rtc_.setRtcRegs(src); }
 	void rtcWrite(unsigned data, unsigned long const cc) { rtc_.write(data, cc); }
@@ -107,6 +95,10 @@ public:
 	bool getIrSignal(Infrared::WhichIrGb which) const { return ir_.getIrSignal(which); }
 	void setIrSignal(Infrared::WhichIrGb which, bool signal) { ir_.setIrSignal(which, signal); }
 	bool isHuC3() const { return huc3_.isHuC3(); }
+	void accumulateSamples(unsigned long const cc) { huc3_.accumulateSamples(cc); }
+	unsigned generateSamples(short *soundbuf) { return huc3_.generateSamples(soundbuf); }
+	void getHuC3Regs(unsigned char *dest, unsigned long cc) { huc3_.getHuC3Regs(dest, cc); }
+	void setHuC3Regs(unsigned char *src) { huc3_.setHuC3Regs(src); }
 	unsigned char HuC3Read(unsigned p, unsigned long const cc) { return huc3_.read(p, cc); }
 	void HuC3Write(unsigned p, unsigned data, unsigned long const cc) { huc3_.write(p, data, cc); }
 	bool isPocketCamera() const { return pocketCamera_; }
