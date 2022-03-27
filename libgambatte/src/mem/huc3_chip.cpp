@@ -141,7 +141,7 @@ void HuC3Chip::accumulateSamples(unsigned long const cc) {
 			samplesToWrite += remainingToneSamples_;
 			remainingToneSamples_ = 0;
 		}
-		std::fill_n(&toneBuf_[toneBufPos_ << 1], samplesToWrite << 1, currentSample_ * ((io_[0x72] & 0x8) >> 2));
+		std::fill_n(&toneBuf_[toneBufPos_ << 1], samplesToWrite << 1, (io_[0x72] & 0x8) ? currentSample_ >> 1 : 0);
 		toneBufPos_ += samplesToWrite;
 		samples -= samplesToWrite;
 		nextPhaseChangeTime_ -= samplesToWrite;
