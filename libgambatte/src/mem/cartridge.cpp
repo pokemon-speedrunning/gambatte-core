@@ -103,6 +103,10 @@ int asHex(char c) {
 	return c >= 'A' ? c - 'A' + 0xA : c - '0';
 }
 
+static bool operator>(timeval l, timeval r) {
+	return (l.tv_sec * 1000000 + l.tv_usec) > (r.tv_sec * 1000000 + r.tv_usec);
+}
+
 }
 
 Cartridge::Cartridge()
@@ -514,7 +518,7 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 			} else
 				baseTime.tv_usec = 0;
 
-			if (baseTime.tv_sec > Time::now().tv_sec) // prevent malformed RTC files from giving negative times
+			if (baseTime > Time::now()) // prevent malformed RTC files from giving negative times
 				baseTime = Time::now();
 
 			if (isHuC3()) {
@@ -523,7 +527,6 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 					huc3Regs[i] = file.get() & 0xFF;
 					if (file.eof()) {
 						huc3Regs[i] = 0;
-						huc3Regs[0x16] = 1; // rtc enable
 						break;
 					}
 				}
@@ -664,7 +667,7 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
 		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
 
-		if (baseTime.tv_sec > Time::now().tv_sec) // prevent malformed save files from giving negative times
+		if (baseTime > Time::now()) // prevent malformed save files from giving negative times
 			baseTime = Time::now();
 
 		if (isHuC3()) {

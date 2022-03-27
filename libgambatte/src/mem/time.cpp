@@ -21,17 +21,6 @@
 
 namespace gambatte {
 
-static timeval operator-(timeval l, timeval r) {
-	timeval t;
-	t.tv_sec = l.tv_sec - r.tv_sec;
-	t.tv_usec = l.tv_usec - r.tv_usec;
-	if (t.tv_usec < 0) {
-		t.tv_sec--;
-		t.tv_usec += 1000000;
-	}
-	return t;
-}
-
 Time::Time()
 : useCycles_(true)
 , rtcDivisor_(0x400000)
