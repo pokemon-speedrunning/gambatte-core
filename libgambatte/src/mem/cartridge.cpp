@@ -134,7 +134,7 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 
 void Cartridge::loadState(SaveState const &state) {
 	camera_.loadState(state, isCgb());
-	huc3_.loadState(state);
+	huc3_.loadState(state, isCgb());
 	ir_.loadState(state);
 	rtc_.loadState(state);
 	time_.loadState(state, isCgb());
@@ -479,7 +479,7 @@ int Cartridge::saveSavedataLength(bool isDeterministic) {
 		ret = memptrs_.rambankdataend() - memptrs_.rambankdata();
 	}
 	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
-		ret += 8 + (isHuC3() ? 0x100 : 14);
+		ret += 8 + (isHuC3() ? 0x104 : 14);
 	}
 	return ret;
 }

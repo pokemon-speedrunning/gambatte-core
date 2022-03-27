@@ -391,6 +391,10 @@ SaverList::SaverList()
 	{ static char const label[] = { h,NO3,x,f,e,r,   NUL }; ADD(huc3.transferValue); }
 	{ static char const label[] = { h,u,c,NO3,r,a,m, NUL }; ADD(huc3.ramflag); }
 	{ static char const label[] = { h,NO3,r,t,c,c,   NUL }; ADD(huc3.rtcCycles); }
+	{ static char const label[] = { h,NO3,s,a,m,p,   NUL }; ADD(huc3.currentSample); }
+	{ static char const label[] = { h,NO3,t,l,u,     NUL }; ADD(huc3.toneLastUpdate); }
+	{ static char const label[] = { h,NO3,n,p,c,t,   NUL }; ADD(huc3.nextPhaseChangeTime); }
+	{ static char const label[] = { h,NO3,r,s,a,m,p, NUL }; ADD(huc3.remainingToneSamples); }
 	{ static char const label[] = { h,NO3,c,o,m,     NUL }; ADD(huc3.committing); }
 	{ static char const label[] = { h,NO3,h,i,o,r,o, NUL }; ADD(huc3.highIoReadOnly); }
 	{ static char const label[] = { h,NO3,i,r,c,y, NUL }; ADD(huc3.irBaseCycle); }

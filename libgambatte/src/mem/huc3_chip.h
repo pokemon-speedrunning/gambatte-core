@@ -31,7 +31,7 @@ public:
 
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
-	void loadState(SaveState const &state);
+	void loadState(SaveState const &state, bool cgb);
 
 	void setRamflag(unsigned char ramflag) {
 		ramflag_ = ramflag;
@@ -42,8 +42,14 @@ public:
 	bool isHuC3() const { return enabled_; }
 	void set(bool enabled) { enabled_ = enabled; }
 
-	void getHuC3Regs(unsigned char *dest, unsigned long const cc);
+	void getHuC3Regs(unsigned char *dest, unsigned long cycleCounter);
 	void setHuC3Regs(unsigned char *src);
+
+	void resetCc(unsigned long oldCc, unsigned long newCc);
+	void speedChange(unsigned long cycleCounter);
+
+	void accumulateSamples(unsigned long cycleCounter);
+	unsigned generateSamples(short *soundBuf);
 
 	unsigned char read(unsigned p, unsigned long const cc);
 	void write(unsigned p, unsigned data, unsigned long cycleCounter);
@@ -54,6 +60,8 @@ public:
 	virtual void setBaseTime(timeval baseTime, unsigned long const cc);
 
 private:
+	enum { max_samples = 35112 + 2064 };
+
 	Time &time_;
 	unsigned char io_[0x100];
 	unsigned char ioIndex_;
@@ -61,10 +69,17 @@ private:
 	unsigned char ramflag_;
 	unsigned long irBaseCycle_;
 	unsigned long rtcCycles_;
+	short toneBuf_[max_samples * 2];
+	short currentSample_;
+	unsigned long toneBufPos_;
+	unsigned long toneLastUpdate_;
+	unsigned long nextPhaseChangeTime_;
+	long remainingToneSamples_;
 	bool enabled_;
 	bool committing_;
 	bool highIoReadOnly_;
 	bool irReceivingPulse_;
+	bool ds_;
 };
 
 }

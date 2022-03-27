@@ -343,6 +343,10 @@ public:
 			: -1;
 	}
 
+	unsigned generateMbcSamples(short *soundBuf) {
+		return cart_.generateSamples(soundBuf);
+	}
+
 	void setDmgPaletteColor(int palNum, int colorNum, unsigned long rgb32) {
 		if (!isSgb())
 			lcd_.setDmgPaletteColor(palNum, colorNum, rgb32);

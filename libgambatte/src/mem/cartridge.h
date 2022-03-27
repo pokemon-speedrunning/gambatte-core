@@ -60,10 +60,12 @@ public:
 	bool isCgb() const { return gambatte::isCgb(memptrs_); }
 	void resetCc(unsigned long const oldCc, unsigned long const newCc) {
 		time_.resetCc(oldCc, newCc);
+		huc3_.resetCc(oldCc, newCc);
 		camera_.resetCc(oldCc, newCc);
 	}
 	void speedChange(unsigned long const cc) {
 		time_.speedChange(cc);
+		huc3_.speedChange(cc);
 		camera_.speedChange(cc);
 	}
 	void setTimeMode(bool useCycles, unsigned long const cc) { time_.setTimeMode(useCycles, cc); }
@@ -93,6 +95,8 @@ public:
 	bool getIrSignal(Infrared::WhichIrGb which) const { return ir_.getIrSignal(which); }
 	void setIrSignal(Infrared::WhichIrGb which, bool signal) { ir_.setIrSignal(which, signal); }
 	bool isHuC3() const { return huc3_.isHuC3(); }
+	void accumulateSamples(unsigned long const cc) { huc3_.accumulateSamples(cc); }
+	unsigned generateSamples(short *soundbuf) { return huc3_.generateSamples(soundbuf); }
 	void getHuC3Regs(unsigned char *dest, unsigned long cc) { huc3_.getHuC3Regs(dest, cc); }
 	void setHuC3Regs(unsigned char *src) { huc3_.setHuC3Regs(src); }
 	unsigned char HuC3Read(unsigned p, unsigned long const cc) { return huc3_.read(p, cc); }

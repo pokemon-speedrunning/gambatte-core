@@ -52,6 +52,10 @@ public:
 		return mem_.generateSgbSamples(soundBuf, samples);
 	}
 
+	unsigned generateMbcSamples(short *soundBuf) {
+		return mem_.generateMbcSamples(soundBuf);
+	}
+
 	void setInputGetter(InputGetter *getInput, void *p) {
 		mem_.setInputGetter(getInput, p);
 	}

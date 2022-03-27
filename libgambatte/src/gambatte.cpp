@@ -95,6 +95,10 @@ unsigned GB::generateSgbSamples(short *soundBuf, std::size_t &samples) {
 	return p_->cpu.generateSgbSamples(soundBuf, samples);
 }
 
+unsigned GB::generateMbcSamples(short *soundBuf) {
+	return p_->cpu.generateMbcSamples(soundBuf);
+}
+
 void GB::setLayers(unsigned mask) {
 	p_->cpu.setLayers(mask);
 }

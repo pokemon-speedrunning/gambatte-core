@@ -89,6 +89,10 @@ GBEXPORT int gambatte_generatesgbsamples(GB *g, short *audioBuf, unsigned *sampl
 	return ret;
 }
 
+GBEXPORT int gambatte_generatembcsamples(GB *g, short *audioBuf) {
+	return g->generateMbcSamples(audioBuf);
+}
+
 GBEXPORT void gambatte_setlayers(GB *g, unsigned mask) {
 	g->setLayers(mask);
 }

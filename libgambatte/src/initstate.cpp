@@ -362,14 +362,14 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.ir.irTrigger = true;
 	state.ir.thisGbIrSignal = false;
 
-	std::memset(state.huc3.io.ptr, 0, state.huc3.io.size());
-	state.huc3.io.ptr[0x16] = 1; // RTC enable
-
 	state.huc3.ioIndex = 0;
 	state.huc3.transferValue = 0;
 	state.huc3.ramflag = 0;
 	state.huc3.irBaseCycle = 0;
-	state.huc3.rtcCycles = 0;
+	state.huc3.currentSample = 0;
+	state.huc3.toneLastUpdate = 0;
+	state.huc3.nextPhaseChangeTime = 0;
+	state.huc3.remainingToneSamples = 0;
 	state.huc3.committing = false;
 	state.huc3.highIoReadOnly = true; // ???
 	state.huc3.irReceivingPulse = false;
@@ -413,6 +413,10 @@ void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb
 	state.time.lastTimeSec = Time::now().tv_sec;
 	state.time.lastTimeUsec = Time::now().tv_usec;
 	state.time.lastCycles = state.cpu.cycleCounter;
+
+	std::memset(state.huc3.io.ptr, 0, state.huc3.io.size());
+
+	state.huc3.rtcCycles = 0;
 
 	state.rtc.dataDh = 0;
 	state.rtc.dataDl = 0;

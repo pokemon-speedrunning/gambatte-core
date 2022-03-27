@@ -256,6 +256,10 @@ struct SaveState {
 		unsigned char ramflag;
 		unsigned long irBaseCycle;
 		unsigned long rtcCycles;
+		unsigned short /*signed*/ currentSample;
+		unsigned long toneLastUpdate;
+		unsigned long nextPhaseChangeTime;
+		unsigned long /*signed*/ remainingToneSamples;
 		unsigned char /*bool*/ committing;
 		unsigned char /*bool*/ highIoReadOnly;
 		unsigned char /*bool*/ irReceivingPulse;

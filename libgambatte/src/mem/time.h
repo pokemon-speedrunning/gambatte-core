@@ -54,7 +54,7 @@ public:
 
 	void set(Clock *clock) { clock_ = clock; }
 	unsigned timeNow() const { return clock_ ? clock_->timeNow() : 0; }
-	void setBaseTime(timeval baseTime, unsigned long const cycleCounter) { if (clock_) clock_->setBaseTime(baseTime, cycleCounter); }
+	void setBaseTime(timeval baseTime, unsigned long const cc) { if (clock_) clock_->setBaseTime(baseTime, cc); }
 
 	unsigned long getRtcDivisor() { return rtcDivisor_; }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { rtcDivisor_ = 0x400000L + rtcDivisorOffset; }	
