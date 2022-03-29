@@ -143,104 +143,78 @@ public:
 		return ret;
 	}
 
+	template <bool peek, bool execute, bool opcode>
 	unsigned read(unsigned p, unsigned long cc) {
-		if (readCallback_)
+		if (!peek && !execute && readCallback_)
 			readCallback_(p, callbackCycleOffset(cc));
-
-		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
-			return readBios(p);
-		else if (cdCallback_) {
-			CDMapResult map = CDMap(p);
-			if (map.type != eCDLog_AddrType_None)
-				cdCallback_(map.addr, map.type, eCDLog_Flags_Data);
-		}
-		if (cart_.disabledRam() && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			return cart_.rmem(p >> 12)
-				? (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) > cc ? cartBus_ : 0xFF)
-				: nontrivial_read(p, cc);
-		}
-		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			p &= 0xA1FF;
-			return cart_.rmem(p >> 12)
-				? (cart_.rmem(p >> 12)[p] & 0x0F) | (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) > cc ? (cartBus_ & 0xF0) : 0xF0)
-				: nontrivial_read(p, cc);
-		}
-		if ((p < mm_vram_begin) || (!isCgb() && (p >= mm_wram_begin && p < mm_oam_begin))) {
-			cartBus_ = cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
-			lastCartBusUpdate_ = cc;
-			return cartBus_;
-		}
-		if (cart_.isPocketCamera() && cart_.cameraIsActive(cc) && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			return cart_.rmem(p >> 12)
-				? 0x00
-				: nontrivial_read(p, cc);
-		}
-		return cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
-	}
-
-	unsigned read_excb(unsigned p, unsigned long cc, bool opcode) {
-		if (opcode && execCallback_)
+		else if (opcode && execCallback_)
 			execCallback_(p, callbackCycleOffset(cc));
 
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
-		else if (cdCallback_) {
+		else if (!peek && cdCallback_) {
 			CDMapResult map = CDMap(p);
-			if (map.type != eCDLog_AddrType_None)
-				cdCallback_(map.addr, map.type, opcode ? eCDLog_Flags_ExecOpcode : eCDLog_Flags_ExecOperand);
+			if (map.type != eCDLog_AddrType_None) {
+				eCDLog_Flags flags;
+				if (execute && opcode)
+					flags = eCDLog_Flags_ExecOpcode;
+				else if (execute)
+					flags = eCDLog_Flags_ExecOperand;
+				else
+					flags = eCDLog_Flags_Data;
+
+				cdCallback_(map.addr, map.type, flags);
+			}
 		}
-		if (cart_.disabledRam() && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			return cart_.rmem(p >> 12)
-				? (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) > cc ? cartBus_ : 0xFF)
-				: nontrivial_read(p, cc);
+
+		unsigned char const *const rmem = cart_.rmem(p >> 12);
+		unsigned (Memory::*nontrivial_handling)(unsigned, unsigned long) = peek ? &Memory::nontrivial_peek : &Memory::nontrivial_read;
+		switch (p >> 13 & 7) {
+			case 0:
+			case 1:
+			case 2:
+			case 3:
+				if (!peek) {
+					cartBus_ = rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+					lastCartBusUpdate_ = cc;
+					return cartBus_;
+				}
+				// fallthrough
+			case 4:
+				return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+			case 5:
+				if (!cart_.disabledRam() | !cart_.isMbc2() | !cart_.isPocketCamera())
+					return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+				else if (cart_.disabledRam())
+					return rmem ? cartBus(cc) : (this->*nontrivial_handling)(p, cc);
+				else if (cart_.isMbc2())
+					return rmem ? ((rmem[p & 0xA1FF] & 0x0F) | (cartBus(cc) & 0xF0)) : (this->*nontrivial_handling)(p & 0xA1FF, cc);
+				else if (!peek && cart_.isPocketCamera() && cart_.cameraIsActive(cc))
+					return rmem ? 0x00 : (this->*nontrivial_handling)(p, cc);
+				else
+					return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+			case 6:
+				if (!peek && !isCgb()) {
+					cartBus_ = rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+					lastCartBusUpdate_ = cc;
+					return cartBus_;
+				}
+				return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+			case 7:
+				if (!peek && !isCgb() && p < mm_oam_begin) {
+					cartBus_ = rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
+					lastCartBusUpdate_ = cc;
+					return cartBus_;
+				}
+				// fallthrough
+			default:
+				return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
 		}
-		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			p &= 0xA1FF;
-			return cart_.rmem(p >> 12)
-				? (cart_.rmem(p >> 12)[p] & 0x0F) | (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) > cc ? (cartBus_ & 0xF0) : 0xF0)
-				: nontrivial_read(p, cc);
-		}
-		if ((p < mm_vram_begin) || (!isCgb() && (p >= mm_wram_begin && p < mm_oam_begin))) {
-			cartBus_ = cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
-			lastCartBusUpdate_ = cc;
-			return cartBus_;
-		}
-		if (cart_.isPocketCamera() && (p >= mm_sram_begin && p < mm_wram_begin) && cart_.cameraIsActive(cc)) {
-			return cart_.rmem(p >> 12)
-				? 0x00
-				: nontrivial_read(p, cc);
-		}
-		return cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_read(p, cc);
+
+		
 	}
 
-	unsigned peek(unsigned p, unsigned long cc) {
-		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
-			return readBios(p);
-
-		if (cart_.disabledRam() && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			return cart_.rmem(p >> 12)
-				? (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) > cc ? cartBus_ : 0xFF)
-				: nontrivial_peek(p, cc);
-		}
-		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin)) {
-			p &= 0xA1FF;
-			return cart_.rmem(p >> 12)
-				? (cart_.rmem(p >> 12)[p] & 0x0F) | (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) > cc ? (cartBus_ & 0xF0) : 0xF0)
-				: nontrivial_peek(p, cc);
-		}
-		return cart_.rmem(p >> 12) ? cart_.rmem(p >> 12)[p] : nontrivial_peek(p, cc);
-	}
-
-	void write_nocb(unsigned p, unsigned data, unsigned long cc) {
-		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin))
-			p &= 0xA1FF;
-
-		if (cart_.wmem(p >> 12))
-			cart_.wmem(p >> 12)[p] = data;
-		else
-			nontrivial_write(p, data, cc);
-	}
-
+	template <bool poke>
 	void write(unsigned p, unsigned data, unsigned long cc) {
 		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin))
 			p &= 0xA1FF;
@@ -250,13 +224,15 @@ public:
 		else
 			nontrivial_write(p, data, cc);
 
-		if (writeCallback_)
-			writeCallback_(p, callbackCycleOffset(cc));
+		if (!poke) {
+			if (writeCallback_)
+				writeCallback_(p, callbackCycleOffset(cc));
 
-		if (cdCallback_ && !biosMode_) {
-			CDMapResult map = CDMap(p);
-			if (map.type != eCDLog_AddrType_None)
-				cdCallback_(map.addr, map.type, eCDLog_Flags_Data);
+			if (cdCallback_ && !biosMode_) {
+				CDMapResult map = CDMap(p);
+				if (map.type != eCDLog_AddrType_None)
+					cdCallback_(map.addr, map.type, eCDLog_Flags_Data);
+			}
 		}
 	}
 
@@ -453,6 +429,11 @@ private:
 	void updateTimaIrq(unsigned long cc);
 	void updateIrqs(unsigned long cc);
 	bool isDoubleSpeed() const { return lcd_.isDoubleSpeed(); }
+	unsigned char cartBus(unsigned long const cc) const {
+		return (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) >= cc)
+		? cartBus_
+		: 0xFF;
+	}
 };
 
 }

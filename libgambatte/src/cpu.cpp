@@ -126,7 +126,7 @@ void CPU::loadState(SaveState const &state) {
 	opcode_ = state.cpu.opcode;
 	prefetched_ = state.cpu.prefetched;
 	if (state.cpu.skip) {
-		opcode_ = mem_.read(pc, cycleCounter_);
+		opcode_ = mem_.read<false, true, true>(pc, cycleCounter_);
 		prefetched_ = true;
 	}
 }
@@ -140,12 +140,12 @@ void CPU::loadState(SaveState const &state) {
 #define de() ( d * 0x100u | e )
 #define hl() ( h * 0x100u | l )
 
-#define READ(dest, addr) do { (dest) = mem_.read(addr, cycleCounter); cycleCounter += 4; } while (0)
-#define PC_READ_OPCODE(dest) do { (dest) = mem_.read_excb(pc, cycleCounter, true); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
-#define PC_READ_OPERAND(dest, operand) do { (operand) = (dest) = mem_.read_excb(pc, cycleCounter, false); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
+#define READ(dest, addr) do { (dest) = mem_.read<false, false, false>(addr, cycleCounter); cycleCounter += 4; } while (0)
+#define PC_READ_OPCODE(dest) do { (dest) = mem_.read<false, true, true>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
+#define PC_READ_OPERAND(dest, operand) do { (operand) = (dest) = mem_.read<false, true, false>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
 #define FF_READ(dest, addr) do { (dest) = mem_.ff_read(addr, cycleCounter); cycleCounter += 4; } while (0)
 
-#define WRITE(addr, data) do { mem_.write(addr, data, cycleCounter); cycleCounter += 4; } while (0)
+#define WRITE(addr, data) do { mem_.write<false>(addr, data, cycleCounter); cycleCounter += 4; } while (0)
 #define FF_WRITE(addr, data) do { mem_.ff_write(addr, data, cycleCounter); cycleCounter += 4; } while (0)
 
 #define PC_MOD(data) do { pc = data; cycleCounter += 4; } while (0)
@@ -965,7 +965,7 @@ void CPU::process(unsigned long const cycles) {
 			case 0x3A:
 				{
 					unsigned addr = hl();
-					a = mem_.read(addr, cycleCounter);
+					a = mem_.read<false, false, false>(addr, cycleCounter);
 					cycleCounter += 4;
 
 					addr = (addr - 1) & 0xFFFF;
@@ -1060,7 +1060,7 @@ void CPU::process(unsigned long const cycles) {
 
 				// halt (4n cycles):
 			case 0x76:
-				opcode_ = mem_.read(pc, cycleCounter);
+				opcode_ = mem_.read<false, true, true>(pc, cycleCounter);
 				if (mem_.pendingIrqs(cycleCounter)) {
 					prefetched_ = true;
 				} else {

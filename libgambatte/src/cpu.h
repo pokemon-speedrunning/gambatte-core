@@ -141,11 +141,11 @@ public:
 	void setBios(unsigned char *buffer, std::size_t size) { mem_.setBios(buffer, size); }
 
 	unsigned char externalRead(unsigned short addr) {
-		return mem_.peek(addr, cycleCounter_);
+		return mem_.read<true, false, false>(addr, cycleCounter_);
 	}
 
 	void externalWrite(unsigned short addr, unsigned char val) {
-		mem_.write_nocb(addr, val, cycleCounter_);
+		mem_.write<true>(addr, val, cycleCounter_);
 	}
 
 	int linkStatus(int which) { return mem_.linkStatus(which); }

@@ -31,7 +31,7 @@ Interrupter::Interrupter(unsigned short &sp, unsigned short &pc, unsigned char &
 
 void Interrupter::prefetch(unsigned long cc, Memory &mem) {
 	if (!prefetched_) {
-		opcode_ = mem.read(pc_, cc);
+		opcode_ = mem.read<false, true, true>(pc_, cc);
 		pc_ = (pc_ + 1) & 0xFFFF;
 		prefetched_ = true;
 	}
@@ -45,7 +45,7 @@ unsigned long Interrupter::interrupt(unsigned long cc, Memory &memory) {
 	}
 	cc += 12;
 	sp_ = (sp_ - 1) & 0xFFFF;
-	memory.write(sp_, pc_ >> 8, cc);
+	memory.write<false>(sp_, pc_ >> 8, cc);
 	cc += 4;
 
 	unsigned const pendingIrqs = memory.pendingIrqs(cc);
@@ -58,7 +58,7 @@ unsigned long Interrupter::interrupt(unsigned long cc, Memory &memory) {
 		address = 0x50 + n;
 
 	sp_ = (sp_ - 1) & 0xFFFF;
-	memory.write(sp_, pc_ & 0xFF, cc);
+	memory.write<false>(sp_, pc_ & 0xFF, cc);
 	memory.ackIrq(n, cc);
 	pc_ = address;
 	cc += 4;
@@ -95,7 +95,7 @@ void Interrupter::setGameShark(std::string const &codes) {
 void Interrupter::applyVblankCheats(unsigned long const cc, Memory &memory) {
 	for (std::size_t i = 0, size = gsCodes_.size(); i < size; ++i) {
 		if (gsCodes_[i].type == 0x01)
-			memory.write(gsCodes_[i].address, gsCodes_[i].value, cc);
+			memory.write<true>(gsCodes_[i].address, gsCodes_[i].value, cc);
 	}
 }
 

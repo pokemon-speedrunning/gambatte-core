@@ -351,7 +351,7 @@ unsigned long Memory::dma(unsigned long cc) {
 		unsigned const src = dmaSrc++ & 0xFFFF;
 		unsigned const data = (src & -vrambank_size()) == mm_vram_begin || src >= mm_wram_mirror_begin
 			? (lastCartBusUpdate_ + cartBusPullUpTime > cc ? cartBus_ : 0xFF)
-			: read(src, cc);
+			: read<false, false, false>(src, cc);
 
 		cc += 2 + 2 * doubleSpeed;
 
