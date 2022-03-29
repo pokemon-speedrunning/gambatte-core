@@ -147,7 +147,7 @@ public:
 	unsigned read(unsigned p, unsigned long cc) {
 		if (!peek && !execute && readCallback_)
 			readCallback_(p, callbackCycleOffset(cc));
-		else if (opcode && execCallback_)
+		else if (!peek && opcode && execCallback_)
 			execCallback_(p, callbackCycleOffset(cc));
 
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
@@ -209,9 +209,7 @@ public:
 				// fallthrough
 			default:
 				return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
-		}
-
-		
+		}		
 	}
 
 	template <bool poke>
