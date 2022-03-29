@@ -209,7 +209,7 @@ public:
 				// fallthrough
 			default:
 				return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
-		}		
+		}
 	}
 
 	template <bool poke>
