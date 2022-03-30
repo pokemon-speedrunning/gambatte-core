@@ -81,7 +81,7 @@ public:
 	}
 
 	void setTraceCallback(void (*callback)(void *)) {
-		tracecallback = callback;
+		traceCallback_ = callback;
 	}
 
 	void setScanlineCallback(void (*callback)(), int sl) {
@@ -141,11 +141,11 @@ public:
 	void setBios(unsigned char *buffer, std::size_t size) { mem_.setBios(buffer, size); }
 
 	unsigned char externalRead(unsigned short addr) {
-		return mem_.read<true, false, false>(addr, cycleCounter_);
+		return mem_.read<true, false, false, false>(addr, cycleCounter_);
 	}
 
 	void externalWrite(unsigned short addr, unsigned char val) {
-		mem_.write<true>(addr, val, cycleCounter_);
+		mem_.write<true, false>(addr, val, cycleCounter_);
 	}
 
 	int linkStatus(int which) { return mem_.linkStatus(which); }
@@ -187,9 +187,9 @@ private:
 	int numInterruptAddresses;
 	int hitInterruptAddress;
 
-	void process(unsigned long cycles);
+	template <bool callbacksActive> void process(unsigned long cycles);
 
-	void (*tracecallback)(void *);
+	void (*traceCallback_)(void *);
 };
 
 }

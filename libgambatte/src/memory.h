@@ -46,7 +46,6 @@ public:
 	void setBank(unsigned type, unsigned bank) { cart_.setBank(type, bank); }
 	void setAddrBank(unsigned short addr, unsigned bank) { cart_.setAddrBank(addr, bank); }
 	char const * romTitle() const { return cart_.romTitle(); }
-	int getLy(unsigned long const cc) { return nontrivial_ff_read(0x44, cc); }
 	PakInfo const pakInfo(bool multicartCompat) const { return cart_.pakInfo(multicartCompat); }
 	void setStatePtrs(SaveState &state);
 	unsigned long saveState(SaveState &state, unsigned long cc);
@@ -94,8 +93,9 @@ public:
 		return bios_[p];
 	}
 
+	template <bool callbacksActive>
 	unsigned ff_read(unsigned p, unsigned long cc) {
-		if (readCallback_)
+		if (callbacksActive && readCallback_)
 			readCallback_(p, callbackCycleOffset(cc));
 
 		return p < 0x80 ? nontrivial_ff_read(p, cc) : ioamhram_[p + 0x100];
@@ -143,16 +143,16 @@ public:
 		return ret;
 	}
 
-	template <bool peek, bool execute, bool opcode>
+	template <bool peek, bool execute, bool opcode, bool callbacksActive>
 	unsigned read(unsigned p, unsigned long cc) {
-		if (!peek && !execute && readCallback_)
+		if (!peek && callbacksActive && !execute && readCallback_)
 			readCallback_(p, callbackCycleOffset(cc));
-		else if (!peek && opcode && execCallback_)
+		else if (!peek && callbacksActive && execute && opcode && execCallback_)
 			execCallback_(p, callbackCycleOffset(cc));
 
 		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
-		else if (!peek && cdCallback_) {
+		else if (!peek && callbacksActive && cdCallback_) {
 			CDMapResult map = CDMap(p);
 			if (map.type != eCDLog_AddrType_None) {
 				eCDLog_Flags flags;
@@ -183,7 +183,7 @@ public:
 			case 4:
 				return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
 			case 5:
-				if (!cart_.disabledRam() | !cart_.isMbc2() | !cart_.isPocketCamera())
+				if (!cart_.disabledRam() & !cart_.isMbc2() & !cart_.isPocketCamera())
 					return rmem ? rmem[p] : (this->*nontrivial_handling)(p, cc);
 				else if (cart_.disabledRam())
 					return rmem ? cartBus(cc) : (this->*nontrivial_handling)(p, cc);
@@ -212,7 +212,7 @@ public:
 		}
 	}
 
-	template <bool poke>
+	template <bool poke, bool callbacksActive>
 	void write(unsigned p, unsigned data, unsigned long cc) {
 		if (cart_.isMbc2() && (p >= mm_sram_begin && p < mm_wram_begin))
 			p &= 0xA1FF;
@@ -222,7 +222,7 @@ public:
 		else
 			nontrivial_write(p, data, cc);
 
-		if (!poke) {
+		if (!poke && callbacksActive) {
 			if (writeCallback_)
 				writeCallback_(p, callbackCycleOffset(cc));
 
@@ -234,15 +234,16 @@ public:
 		}
 	}
 
+	template <bool callbacksActive>
 	void ff_write(unsigned p, unsigned data, unsigned long cc) {
 		if (p - 0x80u < 0x7Fu)
 			ioamhram_[p + 0x100] = data;
 		else
 			nontrivial_ff_write(p, data, cc);
 
-		if (writeCallback_)
+		if (callbacksActive && writeCallback_)
 			writeCallback_(mm_io_begin + p, callbackCycleOffset(cc));
-		if (cdCallback_ && !biosMode_) {
+		if (callbacksActive && cdCallback_ && !biosMode_) {
 			CDMapResult map = CDMap(mm_io_begin + p);
 			if (map.type != eCDLog_AddrType_None)
 				cdCallback_(map.addr, map.type, eCDLog_Flags_Data);
@@ -265,19 +266,19 @@ public:
 	}
 
 	void setReadCallback(MemoryCallback callback) {
-		this->readCallback_ = callback;
+		readCallback_ = callback;
 	}
 
 	void setWriteCallback(MemoryCallback callback) {
-		this->writeCallback_ = callback;
+		writeCallback_ = callback;
 	}
 
 	void setExecCallback(MemoryCallback callback) {
-		this->execCallback_ = callback;
+		execCallback_ = callback;
 	}
 
 	void setCDCallback(CDCallback cdc) {
-		this->cdCallback_ = cdc;
+		cdCallback_ = cdc;
 	}
 
 	void setScanlineCallback(void (*callback)(), int sl) {
@@ -285,13 +286,15 @@ public:
 	}
 
 	void setLinkCallback(void(*callback)()) {
-		this->linkCallback_ = callback;
+		linkCallback_ = callback;
 	}
 
 	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
 		if (cart_.isPocketCamera())
 			cart_.setCameraCallback(callback);
 	}
+
+	inline bool slowCallbacksActive() { return readCallback_ || writeCallback_ || execCallback_ || cdCallback_; }
 
 	void setEndtime(unsigned long cc, unsigned long inc);
 

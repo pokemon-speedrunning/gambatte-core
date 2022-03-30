@@ -41,12 +41,15 @@ CPU::CPU()
 , opcode_(0)
 , prefetched_(false)
 , numInterruptAddresses(0)
-, tracecallback(0)
+, traceCallback_(0)
 {
 }
 
 long CPU::runFor(unsigned long const cycles) {
-	process(cycles);
+	if (traceCallback_ || mem_.slowCallbacksActive())
+		process<true>(cycles);
+	else
+		process<false>(cycles);
 
 	long const csb = mem_.cyclesSinceBlit(cycleCounter_);
 
@@ -126,7 +129,7 @@ void CPU::loadState(SaveState const &state) {
 	opcode_ = state.cpu.opcode;
 	prefetched_ = state.cpu.prefetched;
 	if (state.cpu.skip) {
-		opcode_ = mem_.read<false, true, true>(pc, cycleCounter_);
+		opcode_ = mem_.read<false, true, true, false>(pc, cycleCounter_);
 		prefetched_ = true;
 	}
 }
@@ -140,13 +143,13 @@ void CPU::loadState(SaveState const &state) {
 #define de() ( d * 0x100u | e )
 #define hl() ( h * 0x100u | l )
 
-#define READ(dest, addr) do { (dest) = mem_.read<false, false, false>(addr, cycleCounter); cycleCounter += 4; } while (0)
-#define PC_READ_OPCODE(dest) do { (dest) = mem_.read<false, true, true>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
-#define PC_READ_OPERAND(dest, operand) do { (operand) = (dest) = mem_.read<false, true, false>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
-#define FF_READ(dest, addr) do { (dest) = mem_.ff_read(addr, cycleCounter); cycleCounter += 4; } while (0)
+#define READ(dest, addr) do { (dest) = mem_.read<false, false, false, callbacksActive>(addr, cycleCounter); cycleCounter += 4; } while (0)
+#define PC_READ_OPCODE(dest) do { (dest) = mem_.read<false, true, true, callbacksActive>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
+#define PC_READ_OPERAND(dest, operand) do { (dest) = mem_.read<false, true, false, callbacksActive>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; if (callbacksActive) (operand) = (dest); } while (0)
+#define FF_READ(dest, addr) do { (dest) = mem_.ff_read<callbacksActive>(addr, cycleCounter); cycleCounter += 4; } while (0)
 
-#define WRITE(addr, data) do { mem_.write<false>(addr, data, cycleCounter); cycleCounter += 4; } while (0)
-#define FF_WRITE(addr, data) do { mem_.ff_write(addr, data, cycleCounter); cycleCounter += 4; } while (0)
+#define WRITE(addr, data) do { mem_.write<false, callbacksActive>(addr, data, cycleCounter); cycleCounter += 4; } while (0)
+#define FF_WRITE(addr, data) do { mem_.ff_write<callbacksActive>(addr, data, cycleCounter); cycleCounter += 4; } while (0)
 
 #define PC_MOD(data) do { pc = data; cycleCounter += 4; } while (0)
 
@@ -511,6 +514,7 @@ unsigned long freeze(Memory &mem, unsigned long cc) {
 
 }
 
+template <bool callbacksActive>
 void CPU::process(unsigned long const cycles) {
 	mem_.setEndtime(cycleCounter_, cycles);
 	mem_.updateInput();
@@ -546,8 +550,8 @@ void CPU::process(unsigned long const cycles) {
 			if (hitInterruptAddress != -1)
 				break;
 
-			int result[14];
-			if (tracecallback) {
+			unsigned result[14];
+			if (callbacksActive && traceCallback_) {
 				hf2 = updateHf2FromHf1(hf1, hf2);
 
 				result[0] = mem_.callbackCycleOffset(cycleCounter);
@@ -562,7 +566,7 @@ void CPU::process(unsigned long const cycles) {
 				result[9] = h;
 				result[10] = l;
 				result[11] = prefetched_;
-				result[13] = mem_.getLy(cycleCounter);
+				result[13] = mem_.ff_read<false>(0x44, cycleCounter);
 			}
 
 			if (!prefetched_) {
@@ -965,7 +969,7 @@ void CPU::process(unsigned long const cycles) {
 			case 0x3A:
 				{
 					unsigned addr = hl();
-					a = mem_.read<false, false, false>(addr, cycleCounter);
+					a = mem_.read<false, false, false, callbacksActive>(addr, cycleCounter);
 					cycleCounter += 4;
 
 					addr = (addr - 1) & 0xFFFF;
@@ -1060,7 +1064,7 @@ void CPU::process(unsigned long const cycles) {
 
 				// halt (4n cycles):
 			case 0x76:
-				opcode_ = mem_.read<false, true, true>(pc, cycleCounter);
+				opcode_ = mem_.read<false, true, true, callbacksActive>(pc, cycleCounter);
 				if (mem_.pendingIrqs(cycleCounter)) {
 					prefetched_ = true;
 				} else {
@@ -1275,7 +1279,7 @@ void CPU::process(unsigned long const cycles) {
 				unsigned char temp;
 				PC_READ_OPERAND(temp, operandHigh);
 
-				switch (operandHigh) {
+				switch (temp) {
 				case 0x00: rlc_r(b); break;
 				case 0x01: rlc_r(c); break;
 				case 0x02: rlc_r(d); break;
@@ -2056,9 +2060,9 @@ void CPU::process(unsigned long const cycles) {
 				break;
 			}
 
-			if (tracecallback) {
+			if (callbacksActive && traceCallback_) {
 				result[12] = opcode << 16 | operandHigh << 8 | operandLow;
-				tracecallback((void*)result);
+				traceCallback_((void*)result);
 			}
 		}
 		cycleCounter = mem_.event(cycleCounter);

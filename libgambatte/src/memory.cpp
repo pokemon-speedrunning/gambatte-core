@@ -351,7 +351,7 @@ unsigned long Memory::dma(unsigned long cc) {
 		unsigned const src = dmaSrc++ & 0xFFFF;
 		unsigned const data = (src & -vrambank_size()) == mm_vram_begin || src >= mm_wram_mirror_begin
 			? (lastCartBusUpdate_ + cartBusPullUpTime > cc ? cartBus_ : 0xFF)
-			: read<false, false, false>(src, cc);
+			: read<false, false, false, false>(src, cc);
 
 		cc += 2 + 2 * doubleSpeed;
 
@@ -1101,7 +1101,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 
 			if (!(data & 0x80)) {
 				for (unsigned i = 0x10; i < 0x26; ++i)
-					ff_write(i, 0, cc);
+					ff_write<false>(i, 0, cc);
 
 				psg_.setEnabled(false);
 			} else {
