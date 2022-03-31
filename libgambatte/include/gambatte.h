@@ -79,11 +79,11 @@ public:
 	  * Load ROM image from buffer.
 	  *
 	  * @param romfiledata    Buffer with ROM data.
-	  * @param romfilelegnth  Length of ROM data in bytes.
+	  * @param size           Length of ROM data in bytes.
 	  * @param flags          ORed combination of LoadFlags.
 	  * @return 0 on success, negative value on failure.
 	  */
-	LoadRes load(char const *romfiledata, unsigned romfilelength, unsigned flags);
+	LoadRes load(char const *romfiledata, std::size_t size, unsigned flags);
 
 	/**
 	  * Load bios image.

@@ -24,7 +24,7 @@ namespace gambatte {
 Time::Time()
 : useCycles_(true)
 , rtcDivisor_(0x400000)
-, clock_(NULL)
+, clock_(0)
 {
 }
 

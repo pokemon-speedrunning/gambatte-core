@@ -24,7 +24,7 @@
 namespace gambatte {
 
 Camera::Camera()
-: cameraRam_(NULL)
+: cameraRam_(0)
 , trigger_(0)
 , n_(false)
 , vh_(0)

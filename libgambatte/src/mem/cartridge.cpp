@@ -157,176 +157,11 @@ void Cartridge::setSaveDir(std::string const &dir) {
 		saveDir_ += '/';
 }
 
-LoadRes Cartridge::loadROM(std::string const &romfile,
-                           bool const cgbMode,
-                           bool const multicartCompat)
-{
-	if (romfile.empty()) {
-		mbc_.reset();
-		return LOADRES_IO_ERROR;
-	}
-
-	scoped_ptr<File> const rom(newFileInstance(romfile));
-	if (rom->fail())
-		return LOADRES_IO_ERROR;
-
-	enum Cartridgetype { type_plain,
-	                     type_mbc1,
-	                     type_mbc2,
-	                     type_mbc3,
-	                     type_mbc5,
-	                     type_huc1,
-	                     type_huc3,
-	                     type_pocketcamera,
-	                     type_wisdomtree };
-	Cartridgetype type = type_plain;
-	unsigned rambanks = 1;
-	unsigned rombanks = 2;
-	bool cgb = false;
-
-	{
-		unsigned char header[0x150];
-		rom->read(reinterpret_cast<char *>(header), sizeof header);
-
-		switch (header[0x0147]) {
-		case 0x00: type = type_plain; break;
-		case 0x01:
-		case 0x02:
-		case 0x03: type = type_mbc1; break;
-		case 0x05:
-		case 0x06: type = type_mbc2; break;
-		case 0x08:
-		case 0x09: type = type_plain; break;
-		case 0x0B:
-		case 0x0C:
-		case 0x0D: return LOADRES_UNSUPPORTED_MBC_MMM01;
-		case 0x0F:
-		case 0x10:
-		case 0x11:
-		case 0x12:
-		case 0x13: type = type_mbc3; break;
-		case 0x1B:
-			if (multicartCompat && header[0x014A] == 0xE1)
-				return LOADRES_UNSUPPORTED_MBC_EMS_MULTICART;
-			else {
-				type = type_mbc5;
-				break;
-			}
-		case 0x19:
-		case 0x1A:
-		case 0x1C:
-		case 0x1D:
-		case 0x1E: type = type_mbc5; break;
-		case 0x20: return LOADRES_UNSUPPORTED_MBC_MBC6;
-		case 0x22: return LOADRES_UNSUPPORTED_MBC_MBC7;
-		case 0xBE:
-			if (multicartCompat)
-				return LOADRES_UNSUPPORTED_MBC_BUNG_MULTICART;
-			else
-				return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
-		case 0xFC: type = type_pocketcamera; break;
-		case 0xFD: return LOADRES_UNSUPPORTED_MBC_TAMA5;
-		case 0xFE: type = type_huc3; break;
-		case 0xFF: type = type_huc1; break;
-		case 0xC0:
-			if (multicartCompat && header[0x014A] == 0xD1) {
-				type = type_wisdomtree;
-				break;
-			} else
-				return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
-		default:   return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
-		}
-
-		/*switch (header[0x0148]) {
-		case 0x00: rombanks = 2; break;
-		case 0x01: rombanks = 4; break;
-		case 0x02: rombanks = 8; break;
-		case 0x03: rombanks = 16; break;
-		case 0x04: rombanks = 32; break;
-		case 0x05: rombanks = 64; break;
-		case 0x06: rombanks = 128; break;
-		case 0x07: rombanks = 256; break;
-		case 0x08: rombanks = 512; break;
-		case 0x52: rombanks = 72; break;
-		case 0x53: rombanks = 80; break;
-		case 0x54: rombanks = 96; break;
-		default: return -1;
-		}*/
-
-		rambanks = numRambanksFromH14x(header[0x147], header[0x149]);
-		cgb = cgbMode;
-	}
-
-	std::size_t const filesize = rom->size();
-	rombanks = std::max(pow2ceil(filesize / rombank_size()), 2u);
-
-	if (multicartCompat && type == type_plain && rombanks > 2)
-		type = type_wisdomtree; // todo: better hack than this (probably should just use crc32s?)
-
-	defaultSaveBasePath_.clear();
-	ggUndoList_.clear();
-	mbc_.reset();
-	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
-	time_.set(NULL);
-	rtc_.set(false, 0);
-	huc3_.set(false);
-	camera_.set(NULL);
-	mbc2_ = false;
-	huc1_ = false;
-	pocketCamera_ = false;
-
-	rom->rewind();
-	rom->read(reinterpret_cast<char*>(memptrs_.romdata()), filesize / rombank_size() * rombank_size());
-	std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
-	            0xFF,
-	            (rombanks - filesize / rombank_size()) * rombank_size());
-	enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
-
-	if (rom->fail())
-		return LOADRES_IO_ERROR;
-
-	defaultSaveBasePath_ = stripExtension(romfile);
-
-	switch (type) {
-	case type_plain: mbc_.reset(new Mbc0(memptrs_)); break;
-	case type_mbc1:
-		if (multicartCompat && presumedMulti64Mbc1(memptrs_.romdata(), rombanks)) {
-			mbc_.reset(new Mbc1Multi64(memptrs_));
-		} else
-			mbc_.reset(new Mbc1(memptrs_));
-
-		break;
-	case type_mbc2: mbc_.reset(new Mbc2(memptrs_)); mbc2_ = true; break;
-	case type_mbc3:
-		{
-			bool mbc30 = rombanks > 0x80 || rambanks > 0x04;
-			Rtc *rtc = hasRtc(memptrs_.romdata()[0x147]) ? &rtc_ : 0;
-			if(mbc30)
-				mbc_.reset(new Mbc30(memptrs_, rtc));
-			else
-				mbc_.reset(new Mbc3 (memptrs_, rtc));
-
-			time_.set(rtc);
-		}
-		break;
-	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
-	case type_huc1: mbc_.reset(new HuC1(memptrs_, &ir_)); huc1_ = true; break;
-	case type_huc3:
-		huc3_.set(true);
-		mbc_.reset(new HuC3(memptrs_, &huc3_));
-		time_.set(&huc3_);
-		break;
-	case type_pocketcamera: mbc_.reset(new PocketCamera(memptrs_, &camera_)); pocketCamera_ = true; break;
-	case type_wisdomtree: mbc_.reset(new WisdomTree(memptrs_)); break;
-	}
-
-	return LOADRES_OK;
-}
-
-LoadRes Cartridge::loadROM(char const *romfiledata,
-                           unsigned romfilelength,
+LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
+                           std::size_t const size,
 						   bool const cgbMode,
-						   bool const multicartCompat)
+						   bool const multicartCompat,
+                           std::string const &filepath)
 {
 	enum Cartridgetype { type_plain,
 	                     type_mbc1,
@@ -344,8 +179,8 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 
 	{
 		unsigned char header[0x150];
-		if (romfilelength >= sizeof header)
-			std::memcpy(header, romfiledata, sizeof header);
+		if (size >= sizeof header)
+			std::memcpy(header, buffer.get(), sizeof header);
 		else
 			return LOADRES_IO_ERROR;
 
@@ -393,8 +228,8 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 			if (header[0x014A] == 0xD1) {
 				type = type_wisdomtree;
 				break;
-			} else
-				return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
+			}
+			// fallthrough
 		default:   return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
 		}
 
@@ -417,27 +252,31 @@ LoadRes Cartridge::loadROM(char const *romfiledata,
 		rambanks = numRambanksFromH14x(header[0x147], header[0x149]);
 		cgb = cgbMode;
 	}
-	std::size_t const filesize = romfilelength;
-	rombanks = std::max(pow2ceil(filesize / rombank_size()), 2u);
+
+	rombanks = std::max(pow2ceil(size / rombank_size()), 2u);
 
 	if (multicartCompat && type == type_plain && rombanks > 2)
 		type = type_wisdomtree; // todo: better hack than this (probably should just use crc32s?)
 
+	defaultSaveBasePath_.clear();
+	ggUndoList_.clear();
 	mbc_.reset();
 	memptrs_.reset(rombanks, rambanks, cgb ? 8 : 2);
-	time_.set(NULL);
+	time_.set(0);
 	rtc_.set(false, 0);
 	huc3_.set(false);
-	camera_.set(NULL);
+	camera_.set(0);
 	mbc2_ = false;
 	huc1_ = false;
 	pocketCamera_ = false;
 
-	std::memcpy(memptrs_.romdata(), romfiledata, (filesize / rombank_size() * rombank_size()));
-	std::memset(memptrs_.romdata() + filesize / rombank_size() * rombank_size(),
+	std::memcpy(memptrs_.romdata(), buffer.get(), (size / rombank_size() * rombank_size()));
+	std::memset(memptrs_.romdata() + size / rombank_size() * rombank_size(),
 	            0xFF,
-	            (rombanks - filesize / rombank_size()) * rombank_size());
+	            (rombanks - size / rombank_size()) * rombank_size());
 	enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
+
+	defaultSaveBasePath_ = stripExtension(filepath);
 
 	switch (type) {
 	case type_plain: mbc_.reset(new Mbc0(memptrs_)); break;

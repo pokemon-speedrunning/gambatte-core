@@ -45,8 +45,7 @@ int serialCntFrom(unsigned long cyclesUntilDone, bool cgbFast) {
 } // unnamed namespace.
 
 Memory::Memory(Interrupter const &interrupter)
-: bios_(0)
-, biosSize_(0)
+: biosSize_(0)
 , getInput_(0)
 , divLastUpdate_(0)
 , lastOamDmaUpdate_(disabled_time)
@@ -72,10 +71,6 @@ Memory::Memory(Interrupter const &interrupter)
 {
 	intreq_.setEventTime<intevent_blit>(1l * lcd_vres * lcd_cycles_per_line);
 	intreq_.setEventTime<intevent_end>(0);
-}
-
-Memory::~Memory() {
-	delete []bios_;
 }
 
 void Memory::setStatePtrs(SaveState &state) {
@@ -1403,11 +1398,11 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 		ioamhram_[p - mm_oam_begin] = data;
 }
 
-LoadRes Memory::loadROM(std::string const &romfile, unsigned const flags) {
+LoadRes Memory::loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, unsigned flags, std::string const &filepath) {
 	bool const cgbMode = flags & GB::LoadFlag::CGB_MODE;
 	bool const multicartCompat = flags & GB::LoadFlag::MULTICART_COMPAT;
 
-	if (LoadRes const fail = cart_.loadROM(romfile, cgbMode, multicartCompat))
+	if (LoadRes const fail = cart_.loadROM(buffer, size, cgbMode, multicartCompat, filepath))
 		return fail;
 
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
@@ -1417,29 +1412,13 @@ LoadRes Memory::loadROM(std::string const &romfile, unsigned const flags) {
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 	interrupter_.setGameShark(std::string());
 
-	if (agbFlag_ && (crc32(0, bios_, biosSize_) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
-		bios_[0xF3] ^= 0x03;
-		for (int i = 0xF5; i < 0xFB; i++)
-			bios_[i] = bios_[i + 1];
+	if (!filepath.empty() && agbFlag_ && (crc32(0, bios_.get(), biosSize_) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
+		bios_.get()[0xF3] ^= 0x03;
+		for (unsigned i = 0xF5; i < 0xFB; i++)
+			bios_.get()[i] = bios_.get()[i + 1];
 
-		bios_[0xFB] ^= 0x74;
+		bios_.get()[0xFB] ^= 0x74;
 	}
-
-	return LOADRES_OK;
-}
-
-LoadRes Memory::loadROM(char const *romfiledata, unsigned romfilelength, unsigned const flags) {
-	bool const cgbMode = flags & GB::LoadFlag::CGB_MODE;
-	bool const multicartCompat = flags & GB::LoadFlag::MULTICART_COMPAT;
-
-	if (LoadRes const fail = cart_.loadROM(romfiledata, romfilelength, cgbMode, multicartCompat))
-		return fail;
-
-	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
-	gbIsSgb_ = flags & GB::LoadFlag::SGB_MODE;
-
-	psg_.init(cart_.isCgb(), agbFlag_);
-	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 
 	return LOADRES_OK;
 }

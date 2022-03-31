@@ -59,6 +59,24 @@ struct GB::Priv {
 	bool implicitSave() {
 		return !(loadflags & READONLY_SAV);
 	}
+
+	void resetInternal(std::size_t samplesToStall, bool initialLoad) {
+		SaveState state;
+		cpu.setStatePtrs(state);
+		cpu.saveState(state);
+		setInitState(state, loadflags & CGB_MODE, loadflags & SGB_MODE, loadflags & GBA_FLAG, samplesToStall << 1, cpu.romTitle());
+
+		if (loadflags & NO_BIOS)
+			setPostBiosState(state, loadflags & CGB_MODE, loadflags & GBA_FLAG, cpu.romTitle()[15] & 0x80);
+
+		if (initialLoad)
+			setInitStateCart(state, loadflags & CGB_MODE, loadflags & GBA_FLAG);
+
+		if (samplesToStall > 0)
+			cpu.stall(samplesToStall << 1);
+
+		cpu.loadState(state);
+	}
 };
 
 GB::GB() : p_(new Priv) {}
@@ -108,17 +126,7 @@ void GB::reset(std::size_t samplesToStall, std::string const &build) {
 		if (p_->implicitSave())
 			p_->cpu.saveSavedata();
 
-		SaveState state;
-		p_->cpu.setStatePtrs(state);
-		p_->cpu.saveState(state);
-		setInitState(state, p_->loadflags & CGB_MODE, p_->loadflags & SGB_MODE, p_->loadflags & GBA_FLAG, samplesToStall > 0 ? samplesToStall << 1 : 0, p_->cpu.romTitle());
-		if (p_->loadflags & NO_BIOS)
-			setPostBiosState(state, p_->loadflags & CGB_MODE, p_->loadflags & GBA_FLAG, externalRead(0x143) & 0x80);
-
-		p_->cpu.loadState(state);
-
-		if (samplesToStall > 0)
-			p_->cpu.stall(samplesToStall << 1);
+		p_->resetInternal(samplesToStall, false);
 
 		if (!build.empty())
 			p_->cpu.setOsdElement(newResetElement(build, GB::pakInfo().crc()));
@@ -181,19 +189,23 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 	if (p_->cpu.loaded() && p_->implicitSave())
 		p_->cpu.saveSavedata();
 
-	LoadRes const loadres = p_->cpu.load(romfile, flags);
+	if (romfile.empty())
+		return LOADRES_IO_ERROR;
+
+	scoped_ptr<File> const rom(newFileInstance(romfile));
+
+	if (rom->fail())
+		return LOADRES_IO_ERROR;
+
+	std::size_t sz = rom->size();
+	transfer_ptr<unsigned char> romBuffer(new unsigned char[sz]);
+	rom->read(reinterpret_cast<char *>(romBuffer.get()), sz);
+
+	LoadRes const loadres = p_->cpu.load(romBuffer, sz, flags, romfile);
 
 	if (loadres == LOADRES_OK) {
-		SaveState state;
-		p_->cpu.setStatePtrs(state);
-		p_->cpu.saveState(state);
 		p_->loadflags = flags;
-		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, 0, p_->cpu.romTitle());
-		if (flags & NO_BIOS)
-			setPostBiosState(state, flags & CGB_MODE, flags & GBA_FLAG, externalRead(0x143) & 0x80);
-
-		setInitStateCart(state, flags & CGB_MODE, flags & GBA_FLAG);
-		p_->cpu.loadState(state);
+		p_->resetInternal(0, true);
 		p_->cpu.loadSavedata();
 
 		p_->stateNo = 1;
@@ -203,31 +215,30 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 	return loadres;
 }
 
-LoadRes GB::load(char const *romfiledata, unsigned romfilelength, unsigned const flags) {
-	LoadRes const loadres = p_->cpu.load(romfiledata, romfilelength, flags);
+LoadRes GB::load(char const *romfiledata, std::size_t size, unsigned const flags) {
+	transfer_ptr<unsigned char> romBuffer(new unsigned char[size]);
+	std::memcpy(romBuffer.get(), romfiledata, size);
+
+	LoadRes const loadres = p_->cpu.load(romBuffer, size, flags, std::string());
 
 	if (loadres == LOADRES_OK) {
-		SaveState state;
-		p_->cpu.setStatePtrs(state);
-		p_->cpu.saveState(state);
-		p_->loadflags = flags;
-		setInitState(state, flags & CGB_MODE, flags & SGB_MODE, flags & GBA_FLAG, (flags & GBA_FLAG) ? 971616 : 0, p_->cpu.romTitle());
-		if (flags & NO_BIOS)
-			setPostBiosState(state, flags & CGB_MODE, flags & GBA_FLAG, externalRead(0x143) & 0x80);
-
-		setInitStateCart(state, flags & CGB_MODE, flags & GBA_FLAG);
-		p_->cpu.loadState(state);
-
+		std::size_t samplesToStall = 0;
 		if (flags & GBA_FLAG && !(flags & NO_BIOS))
-			p_->cpu.stall(971616); // GBA takes 971616 cycles to switch to CGB mode; CGB CPU is inactive during this time.
+			samplesToStall = 485808; // GBA takes 485808 samples to switch to CGB mode; CGB CPU is inactive during this time.
 		else if (flags & SGB_MODE)
-			p_->cpu.stall(128 * (2 << 15));
+			samplesToStall = 128 * (2 << 14);
+
+		p_->loadflags = flags;
+		p_->resetInternal(samplesToStall, true);
 	}
 
 	return loadres;
 }
 
 int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
+	if (biosfile.empty())
+		return -1;
+
 	scoped_ptr<File> const bios(newFileInstance(biosfile));
 
 	if (bios->fail())
@@ -238,35 +249,38 @@ int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 	if (size != 0 && sz != size)
 		return -2;
 
-	unsigned char newBiosBuffer[sz];
-	bios->read((char *)newBiosBuffer, sz);
+	transfer_ptr<unsigned char> biosBuffer(new unsigned char[sz]);
+	bios->read(reinterpret_cast<char *>(biosBuffer.get()), sz);
 
 	if (bios->fail())
 		return -1;
 
 	if (crc != 0) {
-		unsigned char maskedBiosBuffer[sz];
-		std::memcpy(maskedBiosBuffer, newBiosBuffer, sz);
-		maskedBiosBuffer[0xFD] = 0;
+		unsigned char unmaskedByte = biosBuffer.get()[0xFD];
+		biosBuffer.get()[0xFD] = 0;
 
-		if (crc32(0, maskedBiosBuffer, sz) != crc)
+		if (crc32(0, biosBuffer.get(), sz) != crc)
 			return -3;
+
+		biosBuffer.get()[0xFD] = unmaskedByte;
 	}
 
-	if ((p_->loadflags & GBA_FLAG) && (crc32(0, newBiosBuffer, sz) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
-		newBiosBuffer[0xF3] ^= 0x03;
-		for (int i = 0xF5; i < 0xFB; i++)
-			newBiosBuffer[i] = newBiosBuffer[i + 1];
+	if ((p_->loadflags & GBA_FLAG) && (crc32(0, biosBuffer.get(), sz) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
+		biosBuffer.get()[0xF3] ^= 0x03;
+		for (unsigned i = 0xF5; i < 0xFB; i++)
+			biosBuffer.get()[i] = biosBuffer.get()[i + 1];
 
-		newBiosBuffer[0xFB] ^= 0x74;
+		biosBuffer.get()[0xFB] ^= 0x74;
 	}
 
-	p_->cpu.setBios(newBiosBuffer, sz);
+	p_->cpu.setBios(biosBuffer, sz);
 	return 0;
 }
 
 int GB::loadBios(char const *biosfiledata, std::size_t size) {
-	p_->cpu.setBios((unsigned char*)biosfiledata, size);
+	transfer_ptr<unsigned char> biosBuffer(new unsigned char[size]);
+	std::memcpy(biosBuffer.get(), biosfiledata, size);
+	p_->cpu.setBios(biosBuffer, size);
 	return 0;
 }
 

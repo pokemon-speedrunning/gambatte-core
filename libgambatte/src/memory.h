@@ -39,7 +39,6 @@ class FilterInfo;
 class Memory {
 public:
 	explicit Memory(Interrupter const &interrupter);
-	~Memory();
 	bool loaded() const { return cart_.loaded(); }
 	unsigned getBank(unsigned type) { return cart_.getBank(type); }
 	unsigned getAddrBank(unsigned short addr) { return cart_.getAddrBank(addr); }
@@ -90,7 +89,7 @@ public:
 	void ackIrq(unsigned bit, unsigned long cc);
 
 	unsigned readBios(unsigned p) {
-		return bios_[p];
+		return bios_.get()[p];
 	}
 
 	template <bool callbacksActive>
@@ -252,8 +251,7 @@ public:
 
 	unsigned long event(unsigned long cycleCounter);
 	unsigned long resetCounters(unsigned long cycleCounter);
-	LoadRes loadROM(std::string const &romfile, unsigned flags);
-	LoadRes loadROM(char const *romfiledata, unsigned romfilelength, unsigned flags);
+	LoadRes loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, unsigned flags, std::string const &filepath);
 	void setSaveDir(std::string const &dir) { cart_.setSaveDir(dir); }
 
 	void setInputGetter(InputGetter *getInput, void *p) {
@@ -356,10 +354,8 @@ public:
 	void setGameShark(std::string const &codes) { interrupter_.setGameShark(codes); }
 	void updateInput();
 
-	void setBios(unsigned char *buffer, std::size_t size) {
-		delete []bios_;
-		bios_ = new unsigned char[size];
-		std::memcpy(bios_, buffer, size);
+	void setBios(transfer_ptr<unsigned char> buffer, std::size_t size) {
+		bios_ = buffer;
 		biosSize_ = size;
 	}
 
@@ -379,7 +375,7 @@ private:
 	Cartridge cart_;
 	Sgb sgb_;
 	unsigned char ioamhram_[0x200];
-	unsigned char *bios_;
+	scoped_ptr<unsigned char> bios_;
 	std::size_t biosSize_;
 	InputGetter *getInput_;
 	void *getInputP_;

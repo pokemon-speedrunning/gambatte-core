@@ -118,7 +118,7 @@ void Sgb::saveSpcState() {
 }
 
 void Sgb::loadSpcState() {
-	spc.set_output(NULL, 0);
+	spc.set_output(0, 0);
 	unsigned char *i = spcState;
 	spc.copy_state(&i, loadStateCallback);
 }
