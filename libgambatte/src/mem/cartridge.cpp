@@ -132,6 +132,7 @@ Cartridge::Cartridge()
 , rtc_(time_)
 , huc3_(time_)
 {
+	std::memset(romHeader, 0, sizeof romHeader);
 }
 
 void Cartridge::setStatePtrs(SaveState &state) {
@@ -173,9 +174,8 @@ void Cartridge::setSaveDir(std::string const &dir) {
 		saveDir_ += '/';
 }
 
-LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
-                           std::size_t const size,
-						   bool const cgbMode,
+LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
+                           bool const cgbMode,
                            std::string const &filepath)
 {
 	enum Cartridgetype { type_plain,
@@ -192,22 +192,22 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 	unsigned rambanks = 1;
 	unsigned rombanks = 2;
 	bool cgb = false;
+	bool badMmm01 = false;
 
 	{
-		unsigned char header[0x150];
-		if (size >= sizeof header)
-			std::memcpy(header, buffer.get(), sizeof header);
+		if (buffer.size() >= sizeof romHeader)
+			std::memcpy(romHeader, buffer.get(), sizeof romHeader);
 		else
 			return LOADRES_IO_ERROR;
 
-		if (header[0x147] == 0x1B && header[0x14A] == 0xE1)
+		if (romHeader[0x147] == 0x1B && romHeader[0x14A] == 0xE1)
 			return LOADRES_UNSUPPORTED_MBC_EMS_MULTICART;
-		else if (header[0x147] == 0xC0 && header[0x14A] == 0xD1)
+		else if (romHeader[0x147] == 0xC0 && romHeader[0x14A] == 0xD1)
 			type = type_wisdomtree;
-		else if (presumedMmm01(buffer.get(), size)) {
+		else if (presumedMmm01(buffer.get(), buffer.size())) {
 			type = type_mmm01;
-			std::memcpy(header, buffer.get() + size + -2 * rombank_size(), sizeof header);
-		} else switch (header[0x147]) {
+			std::memcpy(romHeader, buffer.get() + buffer.size() + -2 * rombank_size(), sizeof romHeader);
+		} else switch (romHeader[0x147]) {
 		case 0x00: type = type_plain; break;
 		case 0x01:
 		case 0x02:
@@ -218,7 +218,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 		case 0x09: type = type_plain; break;
 		case 0x0B:
 		case 0x0C:
-		case 0x0D: type = type_mmm01; break; // probably wrong ???
+		case 0x0D: type = type_mmm01; badMmm01 = true; break;
 		case 0x0F:
 		case 0x10:
 		case 0x11:
@@ -240,7 +240,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 		default:   return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
 		}
 
-		/*switch (header[0x0148]) {
+		/*switch (romHeader[0x0148]) {
 		case 0x00: rombanks = 2; break;
 		case 0x01: rombanks = 4; break;
 		case 0x02: rombanks = 8; break;
@@ -256,14 +256,25 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 		default: return -1;
 		}*/
 
-		rambanks = numRambanksFromH14x(header[0x147], header[0x149]);
+		rambanks = numRambanksFromH14x(romHeader[0x147], romHeader[0x149]);
 		cgb = cgbMode;
 	}
 
-	rombanks = std::max(pow2ceil(size / rombank_size()), 2u);
+	rombanks = std::max(pow2ceil(buffer.size() / rombank_size()), 2u);
 
 	if (type == type_plain && rombanks > 2)
 		type = type_wisdomtree; // todo: better hack than this (probably should just use crc32s?)
+
+	if (badMmm01) {
+		if (rombanks != (buffer.size() / rombank_size())) // probably just bad
+			return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
+		else {
+			Array<unsigned char> const temp(rombank_size() * 2);
+			std::memcpy(temp.get(), buffer.get(), temp.size());
+			std::memmove(buffer.get(), buffer.get() + temp.size(), buffer.size() - temp.size());
+			std::memcpy(buffer.get() + buffer.size() - temp.size(), temp.get(), temp.size());
+		}
+	}
 
 	defaultSaveBasePath_.clear();
 	ggUndoList_.clear();
@@ -277,10 +288,10 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 	huc1_ = false;
 	pocketCamera_ = false;
 
-	std::memcpy(memptrs_.romdata(), buffer.get(), (size / rombank_size() * rombank_size()));
-	std::memset(memptrs_.romdata() + size / rombank_size() * rombank_size(),
+	std::memcpy(memptrs_.romdata(), buffer.get(), (buffer.size() / rombank_size() * rombank_size()));
+	std::memset(memptrs_.romdata() + buffer.size() / rombank_size() * rombank_size(),
 	            0xFF,
-	            (rombanks - size / rombank_size()) * rombank_size());
+	            (rombanks - buffer.size() / rombank_size()) * rombank_size());
 	enforce8bit(memptrs_.romdata(), rombanks * rombank_size());
 
 	defaultSaveBasePath_ = stripExtension(filepath);
@@ -298,7 +309,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 	case type_mbc3:
 		{
 			bool mbc30 = rombanks > 0x80 || rambanks > 0x04;
-			Rtc *rtc = hasRtc(memptrs_.romdata()[0x147]) ? &rtc_ : 0;
+			Rtc *rtc = hasRtc(romHeader[0x147]) ? &rtc_ : 0;
 			if(mbc30)
 				mbc_.reset(new Mbc30(memptrs_, rtc));
 			else
@@ -326,10 +337,10 @@ enum { Dh = 0, Dl = 1, H = 2, M = 3, S = 4, C = 5, L = 6 };
 
 int Cartridge::saveSavedataLength(bool isDeterministic) {
 	int ret = 0;
-	if (hasBattery(memptrs_.romdata()[0x147])) {
+	if (hasBattery(romHeader[0x147])) {
 		ret = memptrs_.rambankdataend() - memptrs_.rambankdata();
 	}
-	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
+	if (hasRtc(romHeader[0x147]) && !isDeterministic) {
 		ret += 8 + (isHuC3() ? 0x104 : 14);
 	}
 	return ret;
@@ -338,7 +349,7 @@ int Cartridge::saveSavedataLength(bool isDeterministic) {
 void Cartridge::loadSavedata(unsigned long const cc) {
 	std::string const &sbp = saveBasePath();
 
-	if (hasBattery(memptrs_.romdata()[0x147])) {
+	if (hasBattery(romHeader[0x147])) {
 		std::ifstream file((sbp + ".sav").c_str(), std::ios::binary | std::ios::in);
 
 		if (file.is_open()) {
@@ -348,7 +359,7 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 		}
 	}
 
-	if (hasRtc(memptrs_.romdata()[0x147])) {
+	if (hasRtc(romHeader[0x147])) {
 		std::ifstream file((sbp + ".rtc").c_str(), std::ios::binary | std::ios::in);
 		if (file) {
 			timeval baseTime;
@@ -410,13 +421,13 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 void Cartridge::saveSavedata(unsigned long const cc) {
 	std::string const &sbp = saveBasePath();
 
-	if (hasBattery(memptrs_.romdata()[0x147])) {
+	if (hasBattery(romHeader[0x147])) {
 		std::ofstream file((sbp + ".sav").c_str(), std::ios::binary | std::ios::out);
 		file.write(reinterpret_cast<char const *>(memptrs_.rambankdata()),
 		           memptrs_.rambankdataend() - memptrs_.rambankdata());
 	}
 
-	if (hasRtc(memptrs_.romdata()[0x147])) {
+	if (hasRtc(romHeader[0x147])) {
 		std::ofstream file((sbp + ".rtc").c_str(), std::ios::binary | std::ios::out);
 		timeval baseTime = Time::now();
 		file.put(baseTime.tv_sec  >> 24 & 0xFF);
@@ -454,13 +465,13 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 }
 
 void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDeterministic) {
-	if (hasBattery(memptrs_.romdata()[0x147])) {
+	if (hasBattery(romHeader[0x147])) {
 		int length = memptrs_.rambankdataend() - memptrs_.rambankdata();
 		std::memcpy(dest, memptrs_.rambankdata(), length);
 		dest += length;
 	}
 
-	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
+	if (hasRtc(romHeader[0x147]) && !isDeterministic) {
 		timeval baseTime = Time::now();
 		*dest++ = (baseTime.tv_sec  >> 24 & 0xFF);
 		*dest++ = (baseTime.tv_sec  >> 16 & 0xFF);
@@ -496,14 +507,14 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDetermin
 }
 
 void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDeterministic) {
-	if (hasBattery(memptrs_.romdata()[0x147])) {
+	if (hasBattery(romHeader[0x147])) {
 		int length = memptrs_.rambankdataend() - memptrs_.rambankdata();
 		std::memcpy(memptrs_.rambankdata(), data, length);
 		data += length;
 		enforce8bit(memptrs_.rambankdata(), length);
 	}
 
-	if (hasRtc(memptrs_.romdata()[0x147]) && !isDeterministic) {
+	if (hasRtc(romHeader[0x147]) && !isDeterministic) {
 		timeval baseTime;
 		baseTime.tv_sec = (*data++ & 0xFF);
 		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);

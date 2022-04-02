@@ -45,8 +45,7 @@ int serialCntFrom(unsigned long cyclesUntilDone, bool cgbFast) {
 } // unnamed namespace.
 
 Memory::Memory(Interrupter const &interrupter)
-: biosSize_(0)
-, getInput_(0)
+: getInput_(0)
 , divLastUpdate_(0)
 , lastOamDmaUpdate_(disabled_time)
 , lastCartBusUpdate_(0)
@@ -1398,10 +1397,10 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 		ioamhram_[p - mm_oam_begin] = data;
 }
 
-LoadRes Memory::loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, unsigned flags, std::string const &filepath) {
+LoadRes Memory::loadROM(Array<unsigned char> &buffer, unsigned flags, std::string const &filepath) {
 	bool const cgbMode = flags & GB::LoadFlag::CGB_MODE;
 
-	if (LoadRes const fail = cart_.loadROM(buffer, size, cgbMode, filepath))
+	if (LoadRes const fail = cart_.loadROM(buffer, cgbMode, filepath))
 		return fail;
 
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;
@@ -1411,7 +1410,7 @@ LoadRes Memory::loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, un
 	lcd_.reset(ioamhram_, cart_.vramdata(), cart_.isCgb(), agbFlag_);
 	interrupter_.setGameShark(std::string());
 
-	if (!filepath.empty() && agbFlag_ && (crc32(0, bios_.get(), biosSize_) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal 
+	if (!filepath.empty() && agbFlag_ && (crc32(0, bios_.get(), bios_.size()) == 0x41884E46)) { // patch cgb bios to re'd agb bios equal
 		bios_.get()[0xF3] ^= 0x03;
 		for (unsigned i = 0xF5; i < 0xFB; i++)
 			bios_.get()[i] = bios_.get()[i + 1];

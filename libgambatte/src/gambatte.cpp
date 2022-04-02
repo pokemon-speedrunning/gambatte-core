@@ -198,10 +198,10 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 		return LOADRES_IO_ERROR;
 
 	std::size_t sz = rom->size();
-	transfer_ptr<unsigned char> romBuffer(new unsigned char[sz]);
+	Array<unsigned char> romBuffer(sz);
 	rom->read(reinterpret_cast<char *>(romBuffer.get()), sz);
 
-	LoadRes const loadres = p_->cpu.load(romBuffer, sz, flags, romfile);
+	LoadRes const loadres = p_->cpu.load(romBuffer, flags, romfile);
 
 	if (loadres == LOADRES_OK) {
 		p_->loadflags = flags;
@@ -216,10 +216,10 @@ LoadRes GB::load(std::string const &romfile, unsigned const flags) {
 }
 
 LoadRes GB::load(char const *romfiledata, std::size_t size, unsigned const flags) {
-	transfer_ptr<unsigned char> romBuffer(new unsigned char[size]);
+	Array<unsigned char> romBuffer(size);
 	std::memcpy(romBuffer.get(), romfiledata, size);
 
-	LoadRes const loadres = p_->cpu.load(romBuffer, size, flags, std::string());
+	LoadRes const loadres = p_->cpu.load(romBuffer, flags, std::string());
 
 	if (loadres == LOADRES_OK) {
 		std::size_t samplesToStall = 0;
@@ -249,7 +249,7 @@ int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 	if (size != 0 && sz != size)
 		return -2;
 
-	transfer_ptr<unsigned char> biosBuffer(new unsigned char[sz]);
+	Array<unsigned char> biosBuffer(sz);
 	bios->read(reinterpret_cast<char *>(biosBuffer.get()), sz);
 
 	if (bios->fail())
@@ -273,14 +273,14 @@ int GB::loadBios(std::string const &biosfile, std::size_t size, unsigned crc) {
 		biosBuffer.get()[0xFB] ^= 0x74;
 	}
 
-	p_->cpu.setBios(biosBuffer, sz);
+	p_->cpu.setBios(biosBuffer);
 	return 0;
 }
 
 int GB::loadBios(char const *biosfiledata, std::size_t size) {
-	transfer_ptr<unsigned char> biosBuffer(new unsigned char[size]);
+	Array<unsigned char> biosBuffer(size);
 	std::memcpy(biosBuffer.get(), biosfiledata, size);
-	p_->cpu.setBios(biosBuffer, size);
+	p_->cpu.setBios(biosBuffer);
 	return 0;
 }
 

@@ -23,6 +23,7 @@
 #include "loadres.h"
 #include "savestate.h"
 #include "scoped_ptr.h"
+#include "array.h"
 #include "newstate.h"
 
 #include <string>
@@ -83,7 +84,7 @@ public:
 	bool getMemoryArea(int which, unsigned char **data, int *length) const;
 	std::string const saveBasePath() const;
 	void setSaveDir(std::string const &dir);
-	LoadRes loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, bool cgbMode, std::string const &filepath);
+	LoadRes loadROM(Array<unsigned char> &buffer, bool cgbMode, std::string const &filepath);
 	char const * romTitle() const { return reinterpret_cast<char const *>(memptrs_.romdata() + 0x134); }
 	class PakInfo const pakInfo() const;
 	void setGameGenie(std::string const &codes);
@@ -108,6 +109,7 @@ public:
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
+	unsigned char romHeader[0x150];
 	bool mbc2_;
 	bool huc1_;
 	bool pocketCamera_;

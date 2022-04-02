@@ -149,7 +149,7 @@ public:
 		else if (!peek && callbacksActive && execute && opcode && execCallback_)
 			execCallback_(p, callbackCycleOffset(cc));
 
-		if (biosMode_ && p < biosSize_ && !(p >= 0x100 && p < 0x200))
+		if (biosMode_ && p < bios_.size() && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
 		else if (!peek && callbacksActive && cdCallback_) {
 			CDMapResult map = CDMap(p);
@@ -251,7 +251,7 @@ public:
 
 	unsigned long event(unsigned long cycleCounter);
 	unsigned long resetCounters(unsigned long cycleCounter);
-	LoadRes loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, unsigned flags, std::string const &filepath);
+	LoadRes loadROM(Array<unsigned char> &buffer, unsigned flags, std::string const &filepath);
 	void setSaveDir(std::string const &dir) { cart_.setSaveDir(dir); }
 
 	void setInputGetter(InputGetter *getInput, void *p) {
@@ -354,9 +354,9 @@ public:
 	void setGameShark(std::string const &codes) { interrupter_.setGameShark(codes); }
 	void updateInput();
 
-	void setBios(transfer_ptr<unsigned char> buffer, std::size_t size) {
-		bios_ = buffer;
-		biosSize_ = size;
+	void setBios(Array<unsigned char> &buffer) {
+		bios_.reset(buffer.size());
+		std::memcpy(bios_.get(), buffer.get(), buffer.size());
 	}
 
 	unsigned timeNow() const { return cart_.timeNow(); }
@@ -375,8 +375,7 @@ private:
 	Cartridge cart_;
 	Sgb sgb_;
 	unsigned char ioamhram_[0x200];
-	scoped_ptr<unsigned char> bios_;
-	std::size_t biosSize_;
+	Array<unsigned char> bios_;
 	InputGetter *getInput_;
 	void *getInputP_;
 	unsigned long divLastUpdate_;

@@ -108,8 +108,8 @@ public:
 		mem_.setOsdElement(osdElement);
 	}
 
-	LoadRes load(transfer_ptr<unsigned char> buffer, std::size_t size, unsigned flags, std::string const &filepath) {
-		return mem_.loadROM(buffer, size, flags, filepath);
+	LoadRes load(Array<unsigned char> &buffer, unsigned flags, std::string const &filepath) {
+		return mem_.loadROM(buffer, flags, filepath);
 	}
 
 	bool loaded() const { return mem_.loaded(); }
@@ -134,7 +134,7 @@ public:
 
 	void setGameGenie(std::string const &codes) { mem_.setGameGenie(codes); }
 	void setGameShark(std::string const &codes) { mem_.setGameShark(codes); }
-	void setBios(transfer_ptr<unsigned char> buffer, std::size_t size) { mem_.setBios(buffer, size); }
+	void setBios(Array<unsigned char> &buffer) { mem_.setBios(buffer); }
 
 	unsigned char externalRead(unsigned short addr) {
 		return mem_.read<true, false, false, false>(addr, cycleCounter_);
