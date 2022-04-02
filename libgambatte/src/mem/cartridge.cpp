@@ -77,7 +77,7 @@ bool presumedMmm01(unsigned char const header[], unsigned size) {
 		unsigned char maybeMmm01 = header[size + -2 * rombank_size() + 0x147];
 		if (maybeMmm01 >= 0x0B && maybeMmm01 <= 0x0D)
 			return true;
-		else if (maybeMmm01 == 0x13) // kind of a hack
+		else if (header[0x147] == 0x01 && maybeMmm01 == 0x11) // hack to account for some bootleg mmm01 games
 			return true;
 	}
 
