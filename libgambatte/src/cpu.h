@@ -114,7 +114,7 @@ public:
 
 	bool loaded() const { return mem_.loaded(); }
 	char const * romTitle() const { return mem_.romTitle(); }
-	PakInfo const pakInfo(bool multicartCompat) const { return mem_.pakInfo(multicartCompat); }
+	PakInfo const pakInfo() const { return mem_.pakInfo(); }
 	void setSoundBuffer(uint_least32_t *buf) { mem_.setSoundBuffer(buf); }
 	std::size_t fillSoundBuffer() { return mem_.fillSoundBuffer(cycleCounter_); }
 	void stall(unsigned long cycles) { mem_.stall(cycleCounter_, cycles); }

@@ -79,8 +79,6 @@ void Mbc1::loadState(SaveState::Mem const &ss) {
 	enableRam_ = ss.enableRam;
 	rambankMode_ = ss.rambankMode;
 	updateBanking();
-	setRambank();
-	setRombank();
 }
 
 void Mbc1::SyncState(NewState *ns, bool isReader) {
@@ -99,7 +97,7 @@ bool Mbc1::isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank)
 
 void Mbc1::setRambank() const {
 	memptrs_.setRambank(enableRam_ ? MemPtrs::read_en | MemPtrs::write_en : MemPtrs::disabled,
-						rambank_ & (rambanks(memptrs_) - 1));
+	                    rambank_ & (rambanks(memptrs_) - 1));
 }
 
 void Mbc1::setRombank() const {

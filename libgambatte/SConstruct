@@ -43,6 +43,7 @@ sourceFiles = Split('''
 			src/mem/mbc/mbc2.cpp
 			src/mem/mbc/mbc3.cpp
 			src/mem/mbc/mbc5.cpp
+			src/mem/mbc/mmm01.cpp
 			src/mem/mbc/pocket_camera.cpp
 			src/mem/mbc/wisdom_tree.cpp
 			src/mem/snes_spc/dsp.cpp

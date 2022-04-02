@@ -45,7 +45,7 @@ public:
 	void setBank(unsigned type, unsigned bank) { cart_.setBank(type, bank); }
 	void setAddrBank(unsigned short addr, unsigned bank) { cart_.setAddrBank(addr, bank); }
 	char const * romTitle() const { return cart_.romTitle(); }
-	PakInfo const pakInfo(bool multicartCompat) const { return cart_.pakInfo(multicartCompat); }
+	PakInfo const pakInfo() const { return cart_.pakInfo(); }
 	void setStatePtrs(SaveState &state);
 	unsigned long saveState(SaveState &state, unsigned long cc);
 	void loadState(SaveState const &state);

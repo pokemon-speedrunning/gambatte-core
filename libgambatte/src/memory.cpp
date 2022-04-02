@@ -1400,9 +1400,8 @@ void Memory::nontrivial_write(unsigned const p, unsigned const data, unsigned lo
 
 LoadRes Memory::loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, unsigned flags, std::string const &filepath) {
 	bool const cgbMode = flags & GB::LoadFlag::CGB_MODE;
-	bool const multicartCompat = flags & GB::LoadFlag::MULTICART_COMPAT;
 
-	if (LoadRes const fail = cart_.loadROM(buffer, size, cgbMode, multicartCompat, filepath))
+	if (LoadRes const fail = cart_.loadROM(buffer, size, cgbMode, filepath))
 		return fail;
 
 	agbFlag_ = flags & GB::LoadFlag::GBA_FLAG;

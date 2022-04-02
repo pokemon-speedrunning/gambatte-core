@@ -436,7 +436,7 @@ std::string const GB::romTitle() const {
 	return std::string();
 }
 
-PakInfo const GB::pakInfo() const { return p_->cpu.pakInfo(p_->loadflags & MULTICART_COMPAT); }
+PakInfo const GB::pakInfo() const { return p_->cpu.pakInfo(); }
 
 void GB::setGameGenie(std::string const &codes) {
 	p_->cpu.setGameGenie(codes);

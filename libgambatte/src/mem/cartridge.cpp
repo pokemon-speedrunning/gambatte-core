@@ -66,7 +66,22 @@ unsigned pow2ceil(unsigned n) {
 }
 
 bool presumedMulti64Mbc1(unsigned char const header[], unsigned rombanks) {
-	return header[0x147] == 1 && header[0x149] == 0 && rombanks == 64;
+	return rombanks >= 64 && !std::memcmp(&header[0x104], &header[(64 - 1) * rombank_size() + 0x104], 0x134 - 0x104);
+}
+
+bool presumedMmm01(unsigned char const header[], unsigned size) {
+	if ((size / rombank_size()) != std::max(pow2ceil(size / rombank_size()), 2u))
+		return false;
+
+	if (!std::memcmp(&header[0x104], &header[size + -2 * rombank_size() + 0x104], 0x134 - 0x104)) {
+		unsigned char maybeMmm01 = header[size + -2 * rombank_size() + 0x147];
+		if (maybeMmm01 >= 0x0B && maybeMmm01 <= 0x0D)
+			return true;
+		else if (maybeMmm01 == 0x13) // kind of a hack
+			return true;
+	}
+
+	return false;
 }
 
 bool hasBattery(unsigned char headerByte0x147) {
@@ -74,6 +89,7 @@ bool hasBattery(unsigned char headerByte0x147) {
 	case 0x03:
 	case 0x06:
 	case 0x09:
+	case 0x0D:
 	case 0x0F:
 	case 0x10:
 	case 0x13:
@@ -160,7 +176,6 @@ void Cartridge::setSaveDir(std::string const &dir) {
 LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
                            std::size_t const size,
 						   bool const cgbMode,
-						   bool const multicartCompat,
                            std::string const &filepath)
 {
 	enum Cartridgetype { type_plain,
@@ -168,6 +183,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 	                     type_mbc2,
 	                     type_mbc3,
 	                     type_mbc5,
+	                     type_mmm01,
 	                     type_huc1,
 	                     type_huc3,
 	                     type_pocketcamera,
@@ -184,7 +200,14 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 		else
 			return LOADRES_IO_ERROR;
 
-		switch (header[0x0147]) {
+		if (header[0x147] == 0x1B && header[0x14A] == 0xE1)
+			return LOADRES_UNSUPPORTED_MBC_EMS_MULTICART;
+		else if (header[0x147] == 0xC0 && header[0x14A] == 0xD1)
+			type = type_wisdomtree;
+		else if (presumedMmm01(buffer.get(), size)) {
+			type = type_mmm01;
+			std::memcpy(header, buffer.get() + size + -2 * rombank_size(), sizeof header);
+		} else switch (header[0x147]) {
 		case 0x00: type = type_plain; break;
 		case 0x01:
 		case 0x02:
@@ -195,41 +218,25 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 		case 0x09: type = type_plain; break;
 		case 0x0B:
 		case 0x0C:
-		case 0x0D: return LOADRES_UNSUPPORTED_MBC_MMM01;
+		case 0x0D: type = type_mmm01; break; // probably wrong ???
 		case 0x0F:
 		case 0x10:
 		case 0x11:
 		case 0x12:
 		case 0x13: type = type_mbc3; break;
-		case 0x1B:
-			if (multicartCompat && header[0x014A] == 0xE1)
-				return LOADRES_UNSUPPORTED_MBC_EMS_MULTICART;
-			else {
-				type = type_mbc5;
-				break;
-			}
 		case 0x19:
 		case 0x1A:
+		case 0x1B:
 		case 0x1C:
 		case 0x1D:
 		case 0x1E: type = type_mbc5; break;
 		case 0x20: return LOADRES_UNSUPPORTED_MBC_MBC6;
 		case 0x22: return LOADRES_UNSUPPORTED_MBC_MBC7;
-		case 0xBE:
-			if (multicartCompat)
-				return LOADRES_UNSUPPORTED_MBC_BUNG_MULTICART;
-			else
-				return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
+		case 0xBE: return LOADRES_UNSUPPORTED_MBC_BUNG_MULTICART;
 		case 0xFC: type = type_pocketcamera; break;
 		case 0xFD: return LOADRES_UNSUPPORTED_MBC_TAMA5;
 		case 0xFE: type = type_huc3; break;
 		case 0xFF: type = type_huc1; break;
-		case 0xC0:
-			if (header[0x014A] == 0xD1) {
-				type = type_wisdomtree;
-				break;
-			}
-			// fallthrough
 		default:   return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
 		}
 
@@ -255,7 +262,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 
 	rombanks = std::max(pow2ceil(size / rombank_size()), 2u);
 
-	if (multicartCompat && type == type_plain && rombanks > 2)
+	if (type == type_plain && rombanks > 2)
 		type = type_wisdomtree; // todo: better hack than this (probably should just use crc32s?)
 
 	defaultSaveBasePath_.clear();
@@ -281,7 +288,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 	switch (type) {
 	case type_plain: mbc_.reset(new Mbc0(memptrs_)); break;
 	case type_mbc1:
-		if (multicartCompat && presumedMulti64Mbc1(memptrs_.romdata(), rombanks)) {
+		if (presumedMulti64Mbc1(memptrs_.romdata(), rombanks)) {
 			mbc_.reset(new Mbc1Multi64(memptrs_));
 		} else
 			mbc_.reset(new Mbc1(memptrs_));
@@ -301,6 +308,7 @@ LoadRes Cartridge::loadROM(transfer_ptr<unsigned char> buffer,
 		}
 		break;
 	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
+	case type_mmm01: mbc_.reset(new Mmm01(memptrs_)); break;
 	case type_huc1: mbc_.reset(new HuC1(memptrs_, &ir_)); huc1_ = true; break;
 	case type_huc3:
 		huc3_.set(true);
@@ -604,12 +612,12 @@ void Cartridge::setGameGenie(std::string const &codes) {
 	}
 }
 
-PakInfo const Cartridge::pakInfo(bool const multipakCompat) const {
+PakInfo const Cartridge::pakInfo() const {
 	if (loaded()) {
 		unsigned crc = 0L;
 		unsigned const rombs = rombanks(memptrs_);
 		crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
-		return PakInfo(multipakCompat && presumedMulti64Mbc1(memptrs_.romdata(), rombs),
+		return PakInfo(presumedMulti64Mbc1(memptrs_.romdata(), rombs),
 		               rombs,
 		               crc,
 		               memptrs_.romdata());

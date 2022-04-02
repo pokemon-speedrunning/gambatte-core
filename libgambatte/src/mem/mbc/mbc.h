@@ -180,6 +180,36 @@ private:
 	void setRombank() const;
 };
 
+class Mmm01 : public Mbc {
+public:
+	explicit Mmm01(MemPtrs &memptrs);
+	virtual bool disabledRam() const;
+	virtual void romWrite(unsigned const p, unsigned const data, unsigned long const /*cc*/);
+	virtual void saveState(SaveState::Mem &ss) const;
+	virtual void loadState(SaveState::Mem const &ss);
+	virtual bool isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank) const;
+	virtual void SyncState(NewState *ns, bool isReader);
+
+private:
+	MemPtrs &memptrs_;
+	unsigned char bankReg0_;
+	unsigned char bankReg1_;
+	unsigned char bankReg2_;
+	unsigned char bankReg3_;
+
+	bool isMapped() const;
+	bool enableRam() const;
+	unsigned char rombankLow(bool upper) const;
+	unsigned char rombankMid() const;
+	unsigned char rombankHigh() const;
+	unsigned char rombankMask() const;
+	unsigned char rambankLow() const;
+	unsigned char rambankHigh() const;
+	unsigned char rambankMask() const;
+	bool isMuxed() const;
+	void updateBanking() const;
+};
+
 class HuC1 : public DefaultMbc {
 public:
 	explicit HuC1(MemPtrs &memptrs, Infrared *const ir_);

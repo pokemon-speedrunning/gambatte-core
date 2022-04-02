@@ -83,9 +83,9 @@ public:
 	bool getMemoryArea(int which, unsigned char **data, int *length) const;
 	std::string const saveBasePath() const;
 	void setSaveDir(std::string const &dir);
-	LoadRes loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, bool cgbMode, bool multicartCompat, std::string const &filepath);
+	LoadRes loadROM(transfer_ptr<unsigned char> buffer, std::size_t size, bool cgbMode, std::string const &filepath);
 	char const * romTitle() const { return reinterpret_cast<char const *>(memptrs_.romdata() + 0x134); }
-	class PakInfo const pakInfo(bool multicartCompat) const;
+	class PakInfo const pakInfo() const;
 	void setGameGenie(std::string const &codes);
 	bool isMbc2() const { return mbc2_; }
 	bool isHuC1() const { return huc1_; }
