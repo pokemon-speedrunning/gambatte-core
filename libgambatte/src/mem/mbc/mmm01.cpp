@@ -113,13 +113,8 @@ inline bool Mmm01::enableRam() const {
 
 inline unsigned char Mmm01::rombankLow(bool upper) const {
 	unsigned char bank = (bankReg1_ & 0x1F) & rombankMask();
-	if (upper) {
-		unsigned char zeroCheck = (bankReg1_ & 0x1F) & ~rombankMask();
-		if (!zeroCheck)
-			bank |= 1;
-		else
-			bank |= zeroCheck;
-	}
+	if (upper)
+		bank |= std::max((bankReg1_ & 0x1F) & ~rombankMask(), 1);
 
 	return bank;
 }
@@ -136,8 +131,8 @@ inline unsigned char Mmm01::rombankMask() const {
 	return bankReg3_ >> 1 & 0x1E;
 }
 
-inline unsigned char Mmm01::rambankLow() const {
-	return (bankReg2_ & 3) * (bankReg3_ & 1); // muxable
+inline unsigned char Mmm01::rambankLow(bool noMode) const {
+	return (bankReg2_ & 3) * ((bankReg3_ & 1) | noMode); // muxable
 }
 
 inline unsigned char Mmm01::rambankHigh() const {
@@ -153,20 +148,15 @@ inline bool Mmm01::isMuxed() const {
 }
 
 void Mmm01::updateBanking() const {
-	unsigned rombank0;
-	unsigned rombank;
-	unsigned rambank;
+	unsigned rombank0 = 0x1FE;
+	unsigned rombank = 0x1FF;
 
 	if (isMapped()) {
-		rombank0 = rombank = (isMuxed() ? rambankLow() : rombankMid()) << 5 | rombankHigh() << 7;
-		rombank0 |= rombankLow(false);
-		rombank |= rombankLow(true);
-		rambank = (isMuxed() ? rombankMid() : rambankLow()) | rambankHigh() << 2;
-	} else {
-		rombank0 = 0x1FE;
-		rombank = 0x1FF;
-		rambank = 0;
+		rombank0 = rombankLow(false) | (isMuxed() ? rambankLow(false) : rombankMid()) << 5 | rombankHigh() << 7;
+		rombank = rombankLow(true) | (isMuxed() ? rambankLow(true) : rombankMid()) << 5 | rombankHigh() << 7;
 	}
+
+	unsigned rambank = (isMuxed() ? rombankMid() : rambankLow(false)) | rambankHigh() << 2;
 
 	memptrs_.setRombank0(rombank0 & (rombanks(memptrs_) - 1));
 	memptrs_.setRombank(rombank & (rombanks(memptrs_) - 1));

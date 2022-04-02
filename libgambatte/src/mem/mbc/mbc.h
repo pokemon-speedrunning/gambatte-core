@@ -203,7 +203,7 @@ private:
 	unsigned char rombankMid() const;
 	unsigned char rombankHigh() const;
 	unsigned char rombankMask() const;
-	unsigned char rambankLow() const;
+	unsigned char rambankLow(bool noMode) const;
 	unsigned char rambankHigh() const;
 	unsigned char rambankMask() const;
 	bool isMuxed() const;
