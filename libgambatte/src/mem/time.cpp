@@ -37,15 +37,18 @@ void Time::saveState(SaveState &state, unsigned long const cc) {
 }
 
 void Time::loadState(SaveState const &state, bool cgb) {
-	if (state.time.seconds) {
-		// todo: savestate compatibility hax
-	}
 	if (!useCycles_) {
 		lastTime_.tv_sec = state.time.lastTimeSec;
 		lastTime_.tv_usec = state.time.lastTimeUsec;
 	}
 	lastCycles_ = state.time.lastCycles;
 	ds_ = (cgb && state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
+
+	if (state.time.seconds) {
+		setTime(state.time.seconds * rtcDivisor_ / 2);
+		lastTime_ = now();
+		lastCycles_ = state.cpu.cycleCounter;
+	}
 }
 
 void Time::resetCc(unsigned long const oldCc, unsigned long const newCc) {

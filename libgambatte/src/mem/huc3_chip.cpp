@@ -73,10 +73,24 @@ void HuC3Chip::updateClock(unsigned long const cc) {
 	}
 }
 
-unsigned HuC3Chip::timeNow() const {
+unsigned long long HuC3Chip::timeNow() const {
 	unsigned long const minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
 	unsigned long const days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
 	return ((days * 86400 + minutes * 60) * time_.getRtcDivisor() + rtcCycles_) >> 1;
+}
+
+void HuC3Chip::setTime(unsigned long long const dividers) {
+	unsigned long const cycleDivisor = time_.getRtcDivisor() * 60;
+	rtcCycles_ = dividers * 2 % cycleDivisor;
+	unsigned long const minutes = dividers * 2 / cycleDivisor % 1440;
+	unsigned long const days = dividers * 2 / cycleDivisor / 1440;
+	io_[0x10] = minutes & 0x0F;
+	io_[0x11] = minutes >> 4 & 0x0F;
+	io_[0x12] = minutes >> 8 & 0x0F;
+	io_[0x13] = days & 0x0F;
+	io_[0x14] = days >> 4 & 0x0F;
+	io_[0x15] = days >> 8 & 0x0F;
+	io_[0x16] = 1;
 }
 
 void HuC3Chip::setBaseTime(timeval baseTime, unsigned long const cc) {

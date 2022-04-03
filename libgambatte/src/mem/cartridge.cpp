@@ -355,12 +355,12 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 
 enum { Dh = 0, Dl = 1, H = 2, M = 3, S = 4, C = 5, L = 6 };
 
-int Cartridge::saveSavedataLength(bool isDeterministic) {
-	int ret = 0;
+unsigned Cartridge::getSavedataLength() {
+	unsigned ret = 0;
 	if (hasBattery(romHeader[0x147])) {
 		ret = memptrs_.rambankdataend() - memptrs_.rambankdata();
 	}
-	if (hasRtc(romHeader[0x147]) && !isDeterministic) {
+	if (hasRtc(romHeader[0x147])) {
 		ret += 8 + (isHuC3() ? 0x104 : 14);
 	}
 	return ret;
@@ -408,7 +408,7 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 						break;
 					}
 				}
-				setHuC3Regs(huc3Regs);
+				huc3_.setHuC3Regs(huc3Regs);
 			} else {
 				unsigned long rtcRegs[11] { 0 };
 				rtcRegs[Dh] = file.get() & 0xC1;
@@ -430,7 +430,7 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 				else
 					rtcRegs[Dh] = 0;
 
-				setRtcRegs(rtcRegs);
+				rtc_.setRtcRegs(rtcRegs);
 			}
 
 			time_.setBaseTime(baseTime, cc);
@@ -460,12 +460,12 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 		file.put(baseTime.tv_usec       & 0xFF);
 		if (isHuC3()) {
 			unsigned char huc3Regs[0x100 + 4];
-			getHuC3Regs(huc3Regs, cc);
+			huc3_.getHuC3Regs(huc3Regs, cc);
 			for (unsigned i = 0; i < 0x104; i++)
 				file.put(huc3Regs[i] & 0xFF);
 		} else {
 			unsigned long rtcRegs[11];
-			getRtcRegs(rtcRegs, cc);
+			rtc_.getRtcRegs(rtcRegs, cc);
 			file.put(rtcRegs[Dh]      & 0xC1);
 			file.put(rtcRegs[Dl]      & 0xFF);
 			file.put(rtcRegs[H]       & 0x1F);
@@ -484,14 +484,14 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 	}
 }
 
-void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDeterministic) {
+void Cartridge::saveSavedata(char* dest, unsigned long const cc) {
 	if (hasBattery(romHeader[0x147])) {
 		int length = memptrs_.rambankdataend() - memptrs_.rambankdata();
 		std::memcpy(dest, memptrs_.rambankdata(), length);
 		dest += length;
 	}
 
-	if (hasRtc(romHeader[0x147]) && !isDeterministic) {
+	if (hasRtc(romHeader[0x147])) {
 		timeval baseTime = Time::now();
 		*dest++ = (baseTime.tv_sec  >> 24 & 0xFF);
 		*dest++ = (baseTime.tv_sec  >> 16 & 0xFF);
@@ -503,11 +503,11 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDetermin
 		*dest++ = (baseTime.tv_usec       & 0xFF);
 		if (isHuC3()) {
 			unsigned char huc3Regs[0x100 + 4];
-			getHuC3Regs(huc3Regs, cc);
+			huc3_.getHuC3Regs(huc3Regs, cc);
 			std::memcpy(dest, huc3Regs, sizeof huc3Regs);
 		} else {
 			unsigned long rtcRegs[11];
-			getRtcRegs(rtcRegs, cc);
+			rtc_.getRtcRegs(rtcRegs, cc);
 			*dest++ = (rtcRegs[Dh]      & 0xC1);
 			*dest++ = (rtcRegs[Dl]      & 0xFF);
 			*dest++ = (rtcRegs[H]       & 0x1F);
@@ -526,7 +526,7 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc, bool isDetermin
 	}
 }
 
-void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDeterministic) {
+void Cartridge::loadSavedata(char const *data, unsigned long const cc) {
 	if (hasBattery(romHeader[0x147])) {
 		int length = memptrs_.rambankdataend() - memptrs_.rambankdata();
 		std::memcpy(memptrs_.rambankdata(), data, length);
@@ -534,7 +534,7 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 		enforce8bit(memptrs_.rambankdata(), length);
 	}
 
-	if (hasRtc(romHeader[0x147]) && !isDeterministic) {
+	if (hasRtc(romHeader[0x147])) {
 		timeval baseTime;
 		baseTime.tv_sec = (*data++ & 0xFF);
 		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
@@ -551,7 +551,7 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 		if (isHuC3()) {
 			unsigned char huc3Regs[0x100 + 4];
 			std::memcpy(huc3Regs, data, sizeof huc3Regs);
-			setHuC3Regs(huc3Regs);
+			huc3_.setHuC3Regs(huc3Regs);
 		} else {
 			unsigned long rtcRegs[11];
 			rtcRegs[Dh] = *data++ & 0xC1;
@@ -568,7 +568,7 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc, bool isDe
 			rtcRegs[H+L] = *data++ & 0x1F;
 			rtcRegs[M+L] = *data++ & 0x3F;
 			rtcRegs[S+L] = *data++ & 0x3F;
-			setRtcRegs(rtcRegs);
+			rtc_.setRtcRegs(rtcRegs);
 		}
 
 		time_.setBaseTime(baseTime, cc);

@@ -78,8 +78,23 @@ void Rtc::updateClock(unsigned long const cc) {
 	}
 }
 
-unsigned Rtc::timeNow() const {
+unsigned long long Rtc::timeNow() const {
 	return (((((((dataDh_ & 0x01) << 8) | dataDl_) * 86400) + (dataH_ * 3600) + (dataM_ * 60) + dataS_) * time_.getRtcDivisor()) + dataC_) >> 1;
+}
+
+void Rtc::setTime(unsigned long long const dividers) {
+	unsigned long const cycleDivisor = time_.getRtcDivisor();
+	dataC_ = dividers * 2 % cycleDivisor;
+	dataS_ = dividers * 2 / cycleDivisor % 60;
+	dataM_ = dividers * 2 / cycleDivisor / 60 % 60;
+	dataH_ = dividers * 2 / cycleDivisor / 60 / 60 % 24;
+	unsigned long const days = dividers * 2 / cycleDivisor / 60 / 60 / 24;
+	dataDl_ = days & 0xFF;
+	dataDh_ &= 0xFE;
+	dataDh_ |= (days >> 8) & 0x01;
+	dataDh_ &= ~0x40u;
+	if (days >> 9)
+		dataDh_ |= 0x80;
 }
 
 void Rtc::doLatch(unsigned long const cc) {

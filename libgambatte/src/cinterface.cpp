@@ -173,16 +173,16 @@ GBEXPORT int gambatte_isloaded(GB *g) {
 	return g->isLoaded();
 }
 
-GBEXPORT void gambatte_savesavedata(GB *g, char *dest, bool isDeterministic) {
-	g->saveSavedata(dest, isDeterministic);
+GBEXPORT void gambatte_savesavedata(GB *g, char *dest) {
+	g->saveSavedata(dest);
 }
 
-GBEXPORT void gambatte_loadsavedata(GB *g, char const *data, bool isDeterministic) {
-	g->loadSavedata(data, isDeterministic);
+GBEXPORT void gambatte_loadsavedata(GB *g, char const *data) {
+	g->loadSavedata(data);
 }
 
-GBEXPORT int gambatte_savesavedatalength(GB *g, bool isDeterministic) {
-	return g->saveSavedataLength(isDeterministic);
+GBEXPORT int gambatte_getsavedatalength(GB *g) {
+	return g->getSavedataLength();
 }
 
 GBEXPORT int gambatte_newstatelen(GB *g) {
@@ -274,14 +274,6 @@ GBEXPORT void gambatte_setregs(GB *g, int *src) {
 	g->setRegs(src);
 }
 
-GBEXPORT void gambatte_getrtcregs(GB *g, unsigned long *dest) {
-	g->getRtcRegs(dest);
-}
-
-GBEXPORT void gambatte_setrtcregs(GB *g, unsigned long *src) {
-	g->setRtcRegs(src);
-}
-
 GBEXPORT void gambatte_setinterruptaddresses(GB *g, int *addrs, int numAddrs) {
 	g->setInterruptAddresses(addrs, numAddrs);
 }
@@ -290,8 +282,12 @@ GBEXPORT int gambatte_gethitinterruptaddress(GB *g) {
 	return g->getHitInterruptAddress();
 }
 
-GBEXPORT unsigned gambatte_timenow(GB *g) {
+GBEXPORT unsigned long long gambatte_timenow(GB *g) {
 	return g->timeNow();
+}
+
+GBEXPORT void gambatte_settime(GB *g, unsigned long long dividers) {
+	g->setTime(dividers);
 }
 
 GBEXPORT int gambatte_getdivstate(GB *g) {

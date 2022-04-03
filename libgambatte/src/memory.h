@@ -51,9 +51,9 @@ public:
 	void loadState(SaveState const &state);
 	void loadSavedata(unsigned long const cc) { cart_.loadSavedata(cc); }
 	void saveSavedata(unsigned long const cc) { cart_.saveSavedata(cc); }
-	int saveSavedataLength(bool isDeterministic) { return cart_.saveSavedataLength(isDeterministic); }
-	void loadSavedata(char const *data, unsigned long const cc, bool isDeterministic) { cart_.loadSavedata(data, cc, isDeterministic); }
-	void saveSavedata(char* dest, unsigned long const cc, bool isDeterministic) { cart_.saveSavedata(dest, cc, isDeterministic); }
+	unsigned getSavedataLength() { return cart_.getSavedataLength(); }
+	void loadSavedata(char const *data, unsigned long const cc) { cart_.loadSavedata(data, cc); }
+	void saveSavedata(char *dest, unsigned long const cc) { cart_.saveSavedata(dest, cc); }
 
 	std::string const saveBasePath() const { return cart_.saveBasePath(); }
 
@@ -338,15 +338,10 @@ public:
 			lcd_.setCgbPalette(lut);
 	}
 
-	void setTimeMode(bool useCycles, unsigned long const cc) {
-		cart_.setTimeMode(useCycles, cc);
-	}
+	void setTimeMode(bool useCycles, unsigned long const cc) { cart_.setTimeMode(useCycles, cc); }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { cart_.setRtcDivisorOffset(rtcDivisorOffset); }
-	
+
 	void setCartBusPullUpTime(unsigned long const cartBusPullUpTime) { cartBusPullUpTime_ = cartBusPullUpTime; }
-	
-	void getRtcRegs(unsigned long *dest, unsigned long cc) { cart_.getRtcRegs(dest, cc); }
-	void setRtcRegs(unsigned long *src) { cart_.setRtcRegs(src); }
 
 	int linkStatus(int which);
 
@@ -359,7 +354,8 @@ public:
 		std::memcpy(bios_.get(), buffer.get(), buffer.size());
 	}
 
-	unsigned timeNow() const { return cart_.timeNow(); }
+	unsigned long long timeNow() const { return cart_.timeNow(); }
+	void setTime(unsigned long long dividers) { cart_.setTime(dividers); }
 
 	unsigned long getDivLastUpdate() { return divLastUpdate_; }
 	unsigned char getRawIOAMHRAM(int offset) { return ioamhram_[offset]; }

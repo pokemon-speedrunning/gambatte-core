@@ -32,9 +32,9 @@ public:
 	void saveState(SaveState &state);
 	void loadState(SaveState const &state);
 	void setLayers(unsigned mask) { mem_.setLayers(mask); }
-	int saveSavedataLength(bool isDeterministic) { return mem_.saveSavedataLength(isDeterministic); }
-	void loadSavedata(char const *data, bool isDeterministic) { mem_.loadSavedata(data, cycleCounter_, isDeterministic); }
-	void saveSavedata(char* dest, bool isDeterministic) { mem_.saveSavedata(dest, cycleCounter_, isDeterministic); }
+	unsigned getSavedataLength() { return mem_.getSavedataLength(); }
+	void loadSavedata(char const *data) { mem_.loadSavedata(data, cycleCounter_); }
+	void saveSavedata(char *dest) { mem_.saveSavedata(dest, cycleCounter_); }
 	void loadSavedata() { mem_.loadSavedata(cycleCounter_); }
 	void saveSavedata() { mem_.saveSavedata(cycleCounter_); }
 
@@ -154,12 +154,11 @@ public:
 
 	void getRegs(int *dest);
 	void setRegs(int *src);
-	void getRtcRegs(unsigned long *dest) { mem_.getRtcRegs(dest, cycleCounter_); }
-	void setRtcRegs(unsigned long *src) { mem_.setRtcRegs(src); }
 	void setInterruptAddresses(int *addrs, int numAddrs);
 	int getHitInterruptAddress();
 
-	unsigned timeNow() const { return mem_.timeNow(); }
+	unsigned long long timeNow() const { return mem_.timeNow(); }
+	void setTime(unsigned long long dividers) { mem_.setTime(dividers); }
 
 	unsigned long getCycleCounter() { return cycleCounter_; }
 	unsigned long getDivLastUpdate() { return mem_.getDivLastUpdate(); }

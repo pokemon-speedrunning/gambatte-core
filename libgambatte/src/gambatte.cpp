@@ -305,21 +305,21 @@ void GB::saveSavedata() {
 		p_->cpu.saveSavedata();
 }
 
-int GB::saveSavedataLength(bool isDeterministic) {
+unsigned GB::getSavedataLength() {
 	if (p_->cpu.loaded())
-		return p_->cpu.saveSavedataLength(isDeterministic);
+		return p_->cpu.getSavedataLength();
 	else
 		return -1;
 }
 
-void GB::loadSavedata(char const *data, bool isDeterministic) {
+void GB::loadSavedata(char const *data) {
 	if (p_->cpu.loaded())
-		p_->cpu.loadSavedata(data, isDeterministic);
+		p_->cpu.loadSavedata(data);
 }
 
-void GB::saveSavedata(char *dest, bool isDeterministic) {
+void GB::saveSavedata(char *dest) {
 	if (p_->cpu.loaded())
-		p_->cpu.saveSavedata(dest, isDeterministic);
+		p_->cpu.saveSavedata(dest);
 }
 
 bool GB::getMemoryArea(int which, unsigned char **data, int *length) {
@@ -497,14 +497,6 @@ void GB::setRegs(int *src) {
 	p_->cpu.setRegs(src);
 }
 
-void GB::getRtcRegs(unsigned long *dest) {
-	p_->cpu.getRtcRegs(dest);
-}
-
-void GB::setRtcRegs(unsigned long *src) {
-	p_->cpu.setRtcRegs(src);
-}
-
 void GB::setInterruptAddresses(int *addrs, int numAddrs) {
 	p_->cpu.setInterruptAddresses(addrs, numAddrs);
 }
@@ -513,8 +505,12 @@ int GB::getHitInterruptAddress() {
 	return p_->cpu.getHitInterruptAddress();
 }
 
-unsigned GB::timeNow() const {
+unsigned long long GB::timeNow() const {
 	return p_->cpu.timeNow();
+}
+
+void GB::setTime(unsigned long long dividers) const {
+	p_->cpu.setTime(dividers);
 }
 
 int GB::getDivState() {

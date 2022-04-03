@@ -256,20 +256,14 @@ public:
 	/** Writes persistent cartridge data to disk. Done implicitly on ROM close. */
 	void saveSavedata();
 
-	/** Writes persistent cartridge data to buffer.
-	  * Deterministic emulation will ignore RTC data, if any.
-	  */
-	void saveSavedata(char* dest, bool isDeterministic);
+	/** Writes persistent cartridge data to buffer. */
+	void saveSavedata(char *dest);
 
-	/** Loads persistent cartridge data from buffer. 
-	  * Deterministic emulation will ignore RTC data, if any.
-	  */
-	void loadSavedata(char const *data, bool isDeterministic);
+	/** Loads persistent cartridge data from buffer. */
+	void loadSavedata(char const *data);
 
-	/** Returns save data length expected.
-	  * Deterministic emulation will ignore RTC data, if any.
-	  */
-	int saveSavedataLength(bool isDeterministic);
+	/** Returns save data length expected. */
+	unsigned getSavedataLength();
 
 	/** 0 = vram, 1 = rom, 2 = wram, 3 = cartram, 4 = oam, 5 = hram */
 	bool getMemoryArea(int which, unsigned char **data, int *length);
@@ -415,20 +409,6 @@ public:
 	void setRegs(int *src);
 
 	/**
-	  * Get MBC3 RTC reg values.
-	  * @param dest length of at least 11, please
-	  *             [dh, dl, h, m, s, c, dhl, dll, hl, ml, sl]
-	  */
-	void getRtcRegs(unsigned long *dest);
-
-	/**
-	  * Set MBC3 RTC reg values.
-	  * @param src length of at least 11, please
-	  *            [dh, dl, h, m, s, c, dhl, dll, hl, ml, sl]
-	  */
-	void setRtcRegs(unsigned long *src);
-
-	/**
 	  * Sets addresses the CPU will interrupt processing at before the instruction.
 	  * Format is 0xBBAAAA where AAAA is an address and BB is an optional ROM bank.
 	  */
@@ -438,7 +418,10 @@ public:
 	int getHitInterruptAddress();
 
 	/** Returns the current cycle-based time counter as dividers. (2^21/sec) */
-	unsigned timeNow() const;
+	unsigned long long timeNow() const;
+
+	/** Sets the current cycle-based time counter as dividers. (2^21/sec) */
+	void setTime(unsigned long long dividers) const;
 
 	/** Return a value in range 0-3FFF representing current "position" of internal divider */
 	int getDivState();

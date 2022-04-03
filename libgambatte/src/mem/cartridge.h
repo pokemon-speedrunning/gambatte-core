@@ -71,16 +71,15 @@ public:
 	}
 	void setTimeMode(bool useCycles, unsigned long const cc) { time_.setTimeMode(useCycles, cc); }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { time_.setRtcDivisorOffset(rtcDivisorOffset); }
-	unsigned timeNow() const { return time_.timeNow(); }
-	void getRtcRegs(unsigned long *dest, unsigned long cc) { rtc_.getRtcRegs(dest, cc); }
-	void setRtcRegs(unsigned long *src) { rtc_.setRtcRegs(src); }
+	unsigned long long timeNow() const { return time_.timeNow(); }
+	void setTime(unsigned long long dividers) { time_.setTime(dividers); }
 	void rtcWrite(unsigned data, unsigned long const cc) { rtc_.write(data, cc); }
 	unsigned char rtcRead() const { return rtc_.activeLatch() ? *rtc_.activeLatch() : 0xFF; }
 	void loadSavedata(unsigned long cycleCounter);
 	void saveSavedata(unsigned long cycleCounter);
-	int saveSavedataLength(bool isDeterministic);
-	void loadSavedata(char const *data, unsigned long cycleCounter, bool isDeterministic);
-	void saveSavedata(char *dest, unsigned long cycleCounter, bool isDeterministic);
+	unsigned getSavedataLength();
+	void loadSavedata(char const *data, unsigned long cycleCounter);
+	void saveSavedata(char *dest, unsigned long cycleCounter);
 	bool getMemoryArea(int which, unsigned char **data, int *length) const;
 	std::string const saveBasePath() const;
 	void setSaveDir(std::string const &dir);
@@ -97,8 +96,6 @@ public:
 	bool isHuC3() const { return huc3_.isHuC3(); }
 	void accumulateSamples(unsigned long const cc) { huc3_.accumulateSamples(cc); }
 	unsigned generateSamples(short *soundbuf) { return huc3_.generateSamples(soundbuf); }
-	void getHuC3Regs(unsigned char *dest, unsigned long cc) { huc3_.getHuC3Regs(dest, cc); }
-	void setHuC3Regs(unsigned char *src) { huc3_.setHuC3Regs(src); }
 	unsigned char HuC3Read(unsigned p, unsigned long const cc) { return huc3_.read(p, cc); }
 	void HuC3Write(unsigned p, unsigned data, unsigned long const cc) { huc3_.write(p, data, cc); }
 	bool isPocketCamera() const { return pocketCamera_; }

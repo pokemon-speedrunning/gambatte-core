@@ -53,7 +53,8 @@ public:
 	}
 
 	virtual void updateClock(unsigned long const cc);
-	virtual unsigned timeNow() const;
+	virtual unsigned long long timeNow() const;
+	virtual void setTime(unsigned long long const dividers);
 	virtual void setBaseTime(timeval baseTime, unsigned long const cc);
 
 	template<bool isReader>void SyncState(NewState *ns);
