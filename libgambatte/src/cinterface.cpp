@@ -217,6 +217,15 @@ GBEXPORT void gambatte_romtitle(GB *g, char *dest) {
 	std::strcpy(dest, g->romTitle().c_str());
 }
 
+GBEXPORT void gambatte_pakinfo(GB *g, char *mbc, unsigned *rambanks, unsigned *rombanks, unsigned *crc, unsigned *headerChecksumOk) {
+	PakInfo pakInfo = g->pakInfo();
+	std::strcpy(mbc, pakInfo.mbc().c_str());
+	*rambanks = pakInfo.rambanks();
+	*rombanks = pakInfo.rombanks();
+	*crc = pakInfo.crc();
+	*headerChecksumOk = pakInfo.headerChecksumOk();
+}
+
 GBEXPORT int gambatte_getmemoryarea(GB *g, int which, unsigned char **data, int *length) {
 	return g->getMemoryArea(which, data, length);
 }

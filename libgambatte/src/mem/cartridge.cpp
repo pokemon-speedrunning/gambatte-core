@@ -20,11 +20,10 @@
 #include "file/file.h"
 #include "../savestate.h"
 #include "pakinfo_internal.h"
+#include "file/crc32.h"
 
 #include <cstring>
 #include <fstream>
-#include <zlib.h>
-//#include <stdio.h>
 
 using namespace gambatte;
 
@@ -65,20 +64,42 @@ unsigned pow2ceil(unsigned n) {
 	return n;
 }
 
-bool presumedMulti64Mbc1(unsigned char const header[], unsigned rombanks) {
-	return rombanks >= 64 && !std::memcmp(&header[0x104], &header[(64 - 1) * rombank_size() + 0x104], 0x134 - 0x104);
+bool presumedMbc1m(unsigned char const romdata[], unsigned rombanks) {
+	return rombanks >= 64 && isHeaderChecksumOk(romdata) && isHeaderChecksumOk(&romdata[(64 - 1) * rombank_size()])
+	&& !std::memcmp(&romdata[0x104], &romdata[(64 - 1) * rombank_size() + 0x104], 0x134 - 0x104);
 }
 
-bool presumedMmm01(unsigned char const header[], unsigned size) {
-	if ((size / rombank_size()) != std::max(pow2ceil(size / rombank_size()), 2u))
+bool presumedMmm01(unsigned char const romdata[], unsigned size) {
+	if (!isHeaderChecksumOk(romdata) || (size / rombank_size()) != std::max(pow2ceil(size / rombank_size()), 2u))
 		return false;
 
-	if (!std::memcmp(&header[0x104], &header[size + -2 * rombank_size() + 0x104], 0x134 - 0x104)) {
-		unsigned char maybeMmm01 = header[size + -2 * rombank_size() + 0x147];
+	if (isHeaderChecksumOk(&romdata[size + -2 * rombank_size()])
+		&& !std::memcmp(&romdata[0x104], &romdata[size + -2 * rombank_size() + 0x104], 0x134 - 0x104)) {
+		unsigned char maybeMmm01 = romdata[size + -2 * rombank_size() + 0x147];
 		if (maybeMmm01 >= 0x0B && maybeMmm01 <= 0x0D)
 			return true;
-		else if (header[0x147] == 0x01 && maybeMmm01 == 0x11) // hack to account for some bootleg mmm01 games
+		else if (romdata[0x147] == 0x01 && maybeMmm01 == 0x11) // hack to account for some bootleg mmm01 games
 			return true;
+	}
+
+	return false;
+}
+
+bool presumedWisdomTree(unsigned char const romdata[], unsigned size) {
+	if (!isHeaderChecksumOk(romdata) || (size / rombank_size()) != std::max(pow2ceil(size / rombank_size()), 2u))
+		return false;
+
+	if (romdata[0x147] == 0x00 && romdata[0x148] == 0x00 && (size / rombank_size()) > 2 && isHeaderChecksumOk(&romdata[2 * rombank_size()])
+		&& !std::memcmp(&romdata[0x104], &romdata[2 * rombank_size() + 0x104], 0x134 - 0x104)) {
+		static char const wisdomTreeStr20[11] { 0x57, 0x49, 0x53, 0x44, 0x4F, 0x4D, 0x20, 0x54, 0x52, 0x45, 0x45 };
+		static char const wisdomTreeStr00[11] { 0x57, 0x49, 0x53, 0x44, 0x4F, 0x4D, 0x00, 0x54, 0x52, 0x45, 0x45 };
+		for (unsigned i = 0; i < size; i++) {
+			if (reinterpret_cast<char const *>(romdata)[i] == wisdomTreeStr20[0] && (size - i) >= sizeof wisdomTreeStr20) {
+				if (!std::memcmp(&romdata[i], wisdomTreeStr20, sizeof wisdomTreeStr20)
+					|| !std::memcmp(&romdata[i], wisdomTreeStr00, sizeof wisdomTreeStr00))
+					return true;
+			}
+		}
 	}
 
 	return false;
@@ -204,6 +225,8 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 			return LOADRES_UNSUPPORTED_MBC_EMS_MULTICART;
 		else if (romHeader[0x147] == 0xC0 && romHeader[0x14A] == 0xD1)
 			type = type_wisdomtree;
+		else if (presumedWisdomTree(buffer.get(), buffer.size()))
+			type = type_wisdomtree;
 		else if (presumedMmm01(buffer.get(), buffer.size())) {
 			type = type_mmm01;
 			std::memcpy(romHeader, buffer.get() + buffer.size() + -2 * rombank_size(), sizeof romHeader);
@@ -262,9 +285,6 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 
 	rombanks = std::max(pow2ceil(buffer.size() / rombank_size()), 2u);
 
-	if (type == type_plain && rombanks > 2)
-		type = type_wisdomtree; // todo: better hack than this (probably should just use crc32s?)
-
 	if (badMmm01) {
 		if (rombanks != (buffer.size() / rombank_size())) // probably just bad
 			return LOADRES_BAD_FILE_OR_UNKNOWN_MBC;
@@ -299,7 +319,7 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 	switch (type) {
 	case type_plain: mbc_.reset(new Mbc0(memptrs_)); break;
 	case type_mbc1:
-		if (presumedMulti64Mbc1(memptrs_.romdata(), rombanks)) {
+		if (presumedMbc1m(memptrs_.romdata(), rombanks)) {
 			mbc_.reset(new Mbc1Multi64(memptrs_));
 		} else
 			mbc_.reset(new Mbc1(memptrs_));
@@ -628,10 +648,12 @@ PakInfo const Cartridge::pakInfo() const {
 		unsigned crc = 0L;
 		unsigned const rombs = rombanks(memptrs_);
 		crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
-		return PakInfo(presumedMulti64Mbc1(memptrs_.romdata(), rombs),
+		return PakInfo(presumedMbc1m(memptrs_.romdata(), rombs),
+		               presumedMmm01(memptrs_.romdata(), rombs*0x4000ul),
+		               presumedWisdomTree(memptrs_.romdata(), rombs*0x4000ul),
 		               rombs,
 		               crc,
-		               memptrs_.romdata());
+		               romHeader);
 	}
 
 	return PakInfo();

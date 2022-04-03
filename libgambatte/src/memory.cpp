@@ -22,10 +22,10 @@
 #include "savestate.h"
 #include "sound.h"
 #include "video.h"
+#include "file/crc32.h"
 
 #include <algorithm>
 #include <cstring>
-#include <zlib.h>
 
 using namespace gambatte;
 

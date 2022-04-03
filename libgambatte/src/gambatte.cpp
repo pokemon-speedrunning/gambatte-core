@@ -23,10 +23,10 @@
 #include "state_osd_elements.h"
 #include "statesaver.h"
 #include "file/file.h"
+#include "file/crc32.h"
 
 #include <cstring>
 #include <sstream>
-#include <zlib.h>
 
 using namespace gambatte;
 

@@ -85,7 +85,7 @@ public:
 	std::string const saveBasePath() const;
 	void setSaveDir(std::string const &dir);
 	LoadRes loadROM(Array<unsigned char> &buffer, bool cgbMode, std::string const &filepath);
-	char const * romTitle() const { return reinterpret_cast<char const *>(memptrs_.romdata() + 0x134); }
+	char const * romTitle() const { return reinterpret_cast<char const *>(romHeader + 0x134); }
 	class PakInfo const pakInfo() const;
 	void setGameGenie(std::string const &codes);
 	bool isMbc2() const { return mbc2_; }

@@ -4,9 +4,9 @@
 
 namespace gambatte {
 
-enum { flag_multipak = 1, flag_header_checksum_ok = 2, };
+enum { flag_mbc1m = 1, flag_header_checksum_ok = 2, flag_mmm01 = 4, flag_wisdom_tree = 8 };
 
-static bool isHeaderChecksumOk(unsigned const char header[]) {
+bool isHeaderChecksumOk(unsigned const char header[]) {
 	unsigned csum = 0;
 	for (int i = 0x134; i < 0x14D; ++i)
 		csum -= header[i] + 1;
@@ -35,9 +35,11 @@ PakInfo::PakInfo()
 	std::memset(h144x_, 0 , sizeof h144x_);
 }
 
-PakInfo::PakInfo(bool multipak, unsigned rombanks, unsigned crc, unsigned char const romheader[])
-: flags_(  multipak * flag_multipak
-         + isHeaderChecksumOk(romheader) * flag_header_checksum_ok),
+PakInfo::PakInfo(bool mbc1m, bool mmm01, bool wisdomtree, unsigned rombanks, unsigned crc, unsigned char const romheader[])
+: flags_(  mbc1m * flag_mbc1m
+         + isHeaderChecksumOk(romheader) * flag_header_checksum_ok
+         + mmm01 * flag_mmm01
+         + wisdomtree * flag_wisdom_tree),
   rombanks_(rombanks), crc_(crc)
 {
 	std::memcpy(h144x_, romheader + 0x144, sizeof h144x_);
@@ -45,12 +47,12 @@ PakInfo::PakInfo(bool multipak, unsigned rombanks, unsigned crc, unsigned char c
 
 bool PakInfo::headerChecksumOk() const { return flags_ & flag_header_checksum_ok; }
 
-static char const * h147ToCstr(unsigned char const h147) {
+static char const * h147ToCstr(unsigned char const h147, bool const mbc1m, bool const wisdomtree, bool const mmm01) {
 	switch (h147) {
-	case 0x00: return "NULL";
-	case 0x01: return "MBC1";
-	case 0x02: return "MBC1 [RAM]";
-	case 0x03: return "MBC1 [RAM,battery]";
+	case 0x00: return wisdomtree ? "Wisdom Tree" : "NULL";
+	case 0x01: return mbc1m ? "MBC1M" : "MBC1";
+	case 0x02: return mbc1m ? "MBC1M [RAM]" : "MBC1 [RAM]";
+	case 0x03: return mbc1m ? "MBC1M [RAM,battery]" : "MBC1 [RAM,battery]";
 	case 0x05: return "MBC2";
 	case 0x06: return "MBC2 [battery]";
 	case 0x08: return "NULL [RAM]";
@@ -60,12 +62,9 @@ static char const * h147ToCstr(unsigned char const h147) {
 	case 0x0D: return "MMM01 [RAM,battery]";
 	case 0x0F: return "MBC3 [RTC,battery]";
 	case 0x10: return "MBC3 [RAM,RTC,battery]";
-	case 0x11: return "MBC3";
+	case 0x11: return mmm01 ? "MMM01" : "MBC3";
 	case 0x12: return "MBC3 [RAM]";
 	case 0x13: return "MBC3 [RAM,battery]";
-	case 0x15: return "MBC4";
-	case 0x16: return "MBC4 [RAM]";
-	case 0x17: return "MBC4 [RAM,battery]";
 	case 0x19: return "MBC5";
 	case 0x1A: return "MBC5 [RAM]";
 	case 0x1B: return "MBC5 [RAM,battery]";
@@ -81,15 +80,7 @@ static char const * h147ToCstr(unsigned char const h147) {
 	return "Unknown";
 }
 
-std::string const PakInfo::mbc() const {
-	std::string h147str = h147ToCstr(h144x_[3]);
-
-	if (flags_ & flag_multipak)
-		h147str += " (Custom MultiPak)";
-
-	return h147str;
-}
-
+std::string const PakInfo::mbc() const { return h147ToCstr(h144x_[3], flags_ & flag_mbc1m, flags_ & flag_wisdom_tree, flags_ & flag_mmm01); }
 unsigned PakInfo::rambanks() const { return numRambanksFromH14x(h144x_[3], h144x_[5]); }
 unsigned PakInfo::rombanks() const { return rombanks_; }
 unsigned PakInfo::crc() const { return crc_; }
