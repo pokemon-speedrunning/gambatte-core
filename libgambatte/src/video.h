@@ -148,7 +148,7 @@ public:
 	void lcdcChange(unsigned data, unsigned long cycleCounter);
 	void lcdstatChange(unsigned data, unsigned long cycleCounter);
 	void lycRegChange(unsigned data, unsigned long cycleCounter);
-	void enableHdma(unsigned long cycleCounter, bool lcdEnabled);
+	void enableHdma(unsigned long cycleCounter);
 	void disableHdma(unsigned long cycleCounter);
 	bool isHdmaPeriod(unsigned long cycleCounter);
 	bool hdmaIsEnabled() const { return eventTimes_(memevent_hdma) != disabled_time; }

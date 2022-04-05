@@ -106,6 +106,7 @@ struct PPUPriv {
 	bool agb;
 	bool cgbDmg;
 	bool weMaster;
+	bool tileIndexIsTd;
 	unsigned speedupFlags;
 
 	PPUPriv(NextM0Time &nextM0Time, unsigned char const *oamram, unsigned char const *vram);

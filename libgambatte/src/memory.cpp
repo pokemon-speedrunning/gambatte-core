@@ -1259,7 +1259,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 				}
 			} else {
 				if (data & 0x80) {
-					lcd_.enableHdma(cc, ioamhram_[0x140] & lcdc_en);
+					lcd_.enableHdma(cc);
 				} else
 					flagGdmaReq(intreq_);
 			}

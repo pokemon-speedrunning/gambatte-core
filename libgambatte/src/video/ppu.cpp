@@ -232,6 +232,9 @@ namespace M2 {
 */
 
 int loadTileDataByte0(PPUPriv const &p) {
+	if (p.tileIndexIsTd)
+		return p.reg1;
+
 	unsigned const yoffset = p.winDrawState & win_draw_started
 		? p.winYPos
 		: p.scy + p.lyCounter.ly();
@@ -245,6 +248,9 @@ int loadTileDataByte0(PPUPriv const &p) {
 }
 
 int loadTileDataByte1(PPUPriv const &p) {
+	if (p.tileIndexIsTd)
+		return p.reg1;
+
 	unsigned const yoffset = p.winDrawState & win_draw_started
 		? p.winYPos
 		: p.scy + p.lyCounter.ly();
@@ -1590,6 +1596,7 @@ PPUPriv::PPUPriv(NextM0Time &nextM0Time, unsigned char const *const oamram, unsi
 , endx(0)
 , cgb(false)
 , weMaster(false)
+, tileIndexIsTd(false)
 , speedupFlags(0)
 {
 }
@@ -1851,6 +1858,8 @@ void PPU::setLcdc(unsigned const lcdc, unsigned long const cc) {
 
 		p_.spriteMapper.setLargeSpritesSource(lcdc & lcdc_obj2x);
 	}
+
+	p_.tileIndexIsTd = p_.cgb && (p_.lcdc & lcdc_tdsel) && !(lcdc & lcdc_tdsel) && (p_.lcdc & lcdc & lcdc_en);
 
 	p_.lcdc = lcdc;
 }

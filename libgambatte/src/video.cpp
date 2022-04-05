@@ -349,8 +349,8 @@ unsigned long LCD::m0TimeOfCurrentLine(unsigned long const cc) {
 		nextM0Time_.predictedNextM0Time());
 }
 
-void LCD::enableHdma(unsigned long const cc, bool lcden) {
-	if (lcden) {
+void LCD::enableHdma(unsigned long const cc) {
+	if (ppu_.lcdc() & lcdc_en) {
 		if (cc >= eventTimes_.nextEventTime())
 			update(cc);
 
