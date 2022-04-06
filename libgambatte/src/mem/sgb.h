@@ -32,7 +32,7 @@ struct SaveState;
 class Sgb {
 public:
 	Sgb();
-	void setStatePtrs(SaveState &state);
+	void setStatePtrs(SaveState &state, bool sgb);
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state);
 

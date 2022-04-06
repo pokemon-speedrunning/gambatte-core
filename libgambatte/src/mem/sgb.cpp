@@ -65,24 +65,41 @@ unsigned long Sgb::gbcToRgb32(unsigned const bgr15, unsigned const fade) {
 	return cgbColorsRgb32_[(std::max(r, 0) | (std::max(g, 0) << 5) | (std::max(b, 0) << 10)) & 0x7FFF];
 }
 
-void Sgb::setStatePtrs(SaveState &state) {
-	state.mem.sgb.packet.set(packet, sizeof packet);
-	state.mem.sgb.command.set(command, sizeof command);
-	state.mem.sgb.frameBuf.set(frameBuf_, sizeof frameBuf_);
-	state.mem.sgb.systemColors.set(systemColors, sizeof systemColors / sizeof systemColors[0]);
-	state.mem.sgb.colors.set(colors, sizeof colors / sizeof colors[0]);
-	state.mem.sgb.systemAttributes.set(systemAttributes, sizeof systemAttributes);
-	state.mem.sgb.attributes.set(attributes, sizeof attributes);
-	state.mem.sgb.systemTiles.set(systemTiles, sizeof systemTiles);
-	state.mem.sgb.tiles.set(tiles, sizeof tiles);
-	state.mem.sgb.systemTilemap.set(systemTilemap, sizeof systemTilemap / sizeof systemTilemap[0]);
-	state.mem.sgb.tilemap.set(tilemap, sizeof tilemap / sizeof tilemap[0]);
-	state.mem.sgb.systemTileColors.set(systemTileColors, sizeof systemTileColors / sizeof systemTileColors[0]);
-	state.mem.sgb.tileColors.set(tileColors, sizeof tileColors / sizeof tileColors[0]);
-	state.mem.sgb.spcState.set(spcState, sizeof spcState);
-	state.mem.sgb.soundControl.set(soundControl, sizeof soundControl);
-
-	saveSpcState();
+void Sgb::setStatePtrs(SaveState &state, bool sgb) {
+	if (sgb) {
+		state.mem.sgb.packet.set(packet, sizeof packet);
+		state.mem.sgb.command.set(command, sizeof command);
+		state.mem.sgb.frameBuf.set(frameBuf_, sizeof frameBuf_);
+		state.mem.sgb.systemColors.set(systemColors, sizeof systemColors / sizeof systemColors[0]);
+		state.mem.sgb.colors.set(colors, sizeof colors / sizeof colors[0]);
+		state.mem.sgb.systemAttributes.set(systemAttributes, sizeof systemAttributes);
+		state.mem.sgb.attributes.set(attributes, sizeof attributes);
+		state.mem.sgb.systemTiles.set(systemTiles, sizeof systemTiles);
+		state.mem.sgb.tiles.set(tiles, sizeof tiles);
+		state.mem.sgb.systemTilemap.set(systemTilemap, sizeof systemTilemap / sizeof systemTilemap[0]);
+		state.mem.sgb.tilemap.set(tilemap, sizeof tilemap / sizeof tilemap[0]);
+		state.mem.sgb.systemTileColors.set(systemTileColors, sizeof systemTileColors / sizeof systemTileColors[0]);
+		state.mem.sgb.tileColors.set(tileColors, sizeof tileColors / sizeof tileColors[0]);
+		state.mem.sgb.spcState.set(spcState, sizeof spcState);
+		state.mem.sgb.soundControl.set(soundControl, sizeof soundControl);
+		saveSpcState();
+	} else {
+		state.mem.sgb.packet.set(packet, 1);
+		state.mem.sgb.command.set(command, 1);
+		state.mem.sgb.frameBuf.set(frameBuf_, 1);
+		state.mem.sgb.systemColors.set(systemColors, 1);
+		state.mem.sgb.colors.set(colors, 1);
+		state.mem.sgb.systemAttributes.set(systemAttributes, 1);
+		state.mem.sgb.attributes.set(attributes, 1);
+		state.mem.sgb.systemTiles.set(systemTiles, 1);
+		state.mem.sgb.tiles.set(tiles, 1);
+		state.mem.sgb.systemTilemap.set(systemTilemap, 1);
+		state.mem.sgb.tilemap.set(tilemap, 1);
+		state.mem.sgb.systemTileColors.set(systemTileColors, 1);
+		state.mem.sgb.tileColors.set(tileColors, 1);
+		state.mem.sgb.spcState.set(spcState, 1);
+		state.mem.sgb.soundControl.set(soundControl, 1);
+	}
 }
 
 void Sgb::saveState(SaveState &state) const {

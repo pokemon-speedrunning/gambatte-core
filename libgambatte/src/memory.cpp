@@ -76,7 +76,7 @@ void Memory::setStatePtrs(SaveState &state) {
 	state.mem.ioamhram.set(ioamhram_, sizeof ioamhram_);
 
 	cart_.setStatePtrs(state);
-	sgb_.setStatePtrs(state);
+	sgb_.setStatePtrs(state, isSgb());
 	lcd_.setStatePtrs(state);
 	psg_.setStatePtrs(state);
 }
