@@ -422,9 +422,8 @@ private:
 	void updateIrqs(unsigned long cc);
 	bool isDoubleSpeed() const { return lcd_.isDoubleSpeed(); }
 	unsigned char cartBus(unsigned long const cc) const {
-		return (lastCartBusUpdate_ + (cartBusPullUpTime_ << isDoubleSpeed()) >= cc)
-		? cartBus_
-		: 0xFF;
+		unsigned long const diff = cc - lastCartBusUpdate_;
+		return diff >= (cartBusPullUpTime_ << isDoubleSpeed()) ? 0xFF : cartBus_;
 	}
 };
 
