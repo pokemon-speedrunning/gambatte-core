@@ -99,7 +99,7 @@ void HuC3::setRambank(bool setRamflag) const {
 }
 
 void HuC3::setRombank() const {
-	memptrs_.setRombank(std::max(rombank_ & (rombanks(memptrs_) - 1), 1u));
+	memptrs_.setRombank(rombank_ & (rombanks(memptrs_) - 1));
 }
 
 }

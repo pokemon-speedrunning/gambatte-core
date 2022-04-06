@@ -65,8 +65,8 @@ unsigned pow2ceil(unsigned n) {
 }
 
 bool presumedMbc1m(unsigned char const romdata[], unsigned rombanks) {
-	return rombanks >= 64 && isHeaderChecksumOk(romdata) && isHeaderChecksumOk(&romdata[(64 - 1) * rombank_size()])
-	&& !std::memcmp(&romdata[0x104], &romdata[(64 - 1) * rombank_size() + 0x104], 0x134 - 0x104);
+	return rombanks >= 32 && isHeaderChecksumOk(romdata) && isHeaderChecksumOk(&romdata[16 * rombank_size()])
+	&& !std::memcmp(&romdata[0x104], &romdata[16 * rombank_size() + 0x104], 0x134 - 0x104);
 }
 
 bool presumedMmm01(unsigned char const romdata[], unsigned size) {

@@ -48,29 +48,27 @@ HuC3Chip::HuC3Chip(Time &time)
 void HuC3Chip::updateClock(unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor() * 60;
 	unsigned long diff = time_.diff(cc);
-	if (io_[0x16] & 1) {
-		unsigned long minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
-		unsigned long days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
-		rtcCycles_ += diff % cycleDivisor;
-		if (rtcCycles_ >= cycleDivisor) {
-			minutes++;
-			rtcCycles_ -= cycleDivisor;
-		}
-		diff /= cycleDivisor;
-		minutes += diff % 1440;
-		if (minutes >= 1440) {
-			days++;
-			minutes -= 1440;
-		}
-		diff /= 1440;
-		days += diff;
-		io_[0x10] = minutes & 0x0F;
-		io_[0x11] = (minutes >> 4) & 0x0F;
-		io_[0x12] = (minutes >> 8) & 0x0F;
-		io_[0x13] = days & 0x0F;
-		io_[0x14] = (days >> 4) & 0x0F;
-		io_[0x15] = (days >> 8) & 0x0F;
+	unsigned long minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
+	unsigned long days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
+	rtcCycles_ += diff % cycleDivisor;
+	if (rtcCycles_ >= cycleDivisor) {
+		minutes++;
+		rtcCycles_ -= cycleDivisor;
 	}
+	diff /= cycleDivisor;
+	minutes += diff % 1440;
+	if (minutes >= 1440) {
+		days++;
+		minutes -= 1440;
+	}
+	diff /= 1440;
+	days += diff;
+	io_[0x10] = minutes & 0x0F;
+	io_[0x11] = (minutes >> 4) & 0x0F;
+	io_[0x12] = (minutes >> 8) & 0x0F;
+	io_[0x13] = days & 0x0F;
+	io_[0x14] = (days >> 4) & 0x0F;
+	io_[0x15] = (days >> 8) & 0x0F;
 }
 
 unsigned long long HuC3Chip::timeNow() const {
@@ -90,7 +88,6 @@ void HuC3Chip::setTime(unsigned long long const dividers) {
 	io_[0x13] = days & 0x0F;
 	io_[0x14] = days >> 4 & 0x0F;
 	io_[0x15] = days >> 8 & 0x0F;
-	io_[0x16] = 1;
 }
 
 void HuC3Chip::setBaseTime(timeval baseTime, unsigned long const cc) {
@@ -99,29 +96,27 @@ void HuC3Chip::setBaseTime(timeval baseTime, unsigned long const cc) {
 	unsigned long long diff = ((now_.tv_sec - baseTime.tv_sec) * cycleDivisor / 60)
 	+ (((now_.tv_usec - baseTime.tv_usec) * cycleDivisor) / 1000000.0f)
 	+ cc;
-	if (io_[0x16] & 1) {
-		unsigned long minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
-		unsigned long days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
-		rtcCycles_ += diff % cycleDivisor;
-		if (rtcCycles_ >= cycleDivisor) {
-			minutes++;
-			rtcCycles_ -= cycleDivisor;
-		}
-		diff /= cycleDivisor;
-		minutes += diff % 1440;
-		if (minutes >= 1440) {
-			days++;
-			minutes -= 1440;
-		}
-		diff /= 1440;
-		days += diff;
-		io_[0x10] = minutes & 0x0F;
-		io_[0x11] = (minutes >> 4) & 0x0F;
-		io_[0x12] = (minutes >> 8) & 0x0F;
-		io_[0x13] = days & 0x0F;
-		io_[0x14] = (days >> 4) & 0x0F;
-		io_[0x15] = (days >> 8) & 0x0F;
+	unsigned long minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
+	unsigned long days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
+	rtcCycles_ += diff % cycleDivisor;
+	if (rtcCycles_ >= cycleDivisor) {
+		minutes++;
+		rtcCycles_ -= cycleDivisor;
 	}
+	diff /= cycleDivisor;
+	minutes += diff % 1440;
+	if (minutes >= 1440) {
+		days++;
+		minutes -= 1440;
+	}
+	diff /= 1440;
+	days += diff;
+	io_[0x10] = minutes & 0x0F;
+	io_[0x11] = (minutes >> 4) & 0x0F;
+	io_[0x12] = (minutes >> 8) & 0x0F;
+	io_[0x13] = days & 0x0F;
+	io_[0x14] = (days >> 4) & 0x0F;
+	io_[0x15] = (days >> 8) & 0x0F;
 }
 
 void HuC3Chip::getHuC3Regs(unsigned char *dest, unsigned long const cc) {
@@ -321,6 +316,7 @@ void HuC3Chip::write(unsigned /*p*/, unsigned data, unsigned long const cc) {
 							case 0x1: // set rtc
 								updateClock(cc);
 								std::memcpy(&io_[0x10], &io_[0x00], 0x07);
+								rtcCycles_ = 0;
 								highIoReadOnly_ = false;
 								break;
 							case 0x2: // set high io (0x20-0xFF) to read-only
