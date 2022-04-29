@@ -329,6 +329,7 @@ namespace M3Start {
 			int const ly = p.lyCounter.ly();
 			int const numSprites = p.spriteMapper.numSprites(ly);
 			unsigned char const *const sprites = p.spriteMapper.sprites(ly);
+			bool sprite0Active = false;
 			for (int i = 0; i < numSprites; ++i) {
 				int const pos = sprites[i];
 				int const spy = p.spriteMapper.posbuf()[pos];
@@ -338,10 +339,15 @@ namespace M3Start {
 				p.spriteList[i].line = ly + 2 * tile_len - spy;
 				p.spriteList[i].oampos = pos * 2;
 				p.spwordList[i] = 0;
+
+				sprite0Active |= spx == 0;
 			}
 
 			p.spriteList[numSprites].spx = 0xFF;
 			p.nextSprite = 0;
+
+			if (sprite0Active && (lcdcObjEn(p) | p.cgb))
+				p.cycles -= std::min(p.scx % (1u * tile_len), 5u);
 		}
 
 		p.xpos = 0;
@@ -1354,7 +1360,7 @@ namespace Tile {
 				unsigned prevSpriteTileNo = (xpos - firstTileXpos) & -tile_len; // this tile. all sprites on this
 				                                                                // tile will now add 6 cycles.
 				// except this one.
-				if (fno + spx - xpos < 5 && spx <= nwx) {
+				if (fno + spx - xpos < 5 && spx <= nwx && spx <= targetx) {
 					cycles += 11 - (fno + spx - xpos);
 					sprite += 1;
 				}
