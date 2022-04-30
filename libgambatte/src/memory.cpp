@@ -677,7 +677,7 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 
 		break;
 	case 0x50:
-		return 0xFE | biosMode_;
+		return 0xFE | !biosMode_;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
 			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
