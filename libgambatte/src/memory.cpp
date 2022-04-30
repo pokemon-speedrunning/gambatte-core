@@ -1310,7 +1310,7 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 
 		return;
 	case 0x6C:
-		if (isCgb()) {
+		if (isCgb() && !isCgbDmg()) {
 			if (biosMode_)
 				lcd_.setSpPriority(data & 1, cc);
 
