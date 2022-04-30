@@ -313,6 +313,7 @@ SaverList::SaverList()
 	{ static char const label[] = { p,p,u,s,t,a,t, NUL }; ADD(ppu.state); }
 	{ static char const label[] = { n,s,p,r,i,t,e, NUL }; ADD(ppu.nextSprite); }
 	{ static char const label[] = { c,s,p,r,i,t,e, NUL }; ADD(ppu.currentSprite); }
+	{ static char const label[] = { s,p,p,r,i,o,r, NUL }; ADD(ppu.spPriority); }
 	{ static char const label[] = { l,y,c,         NUL }; ADD(ppu.lyc); }
 	{ static char const label[] = { m,NO0,l,y,c,   NUL }; ADD(ppu.m0lyc); }
 	{ static char const label[] = { o,l,d,w,y,     NUL }; ADD(ppu.oldWy); }

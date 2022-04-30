@@ -298,6 +298,7 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.ppu.state = 0;
 	state.ppu.nextSprite = 0;
 	state.ppu.currentSprite = 0;
+	state.ppu.spPriority = (state.mem.ioamhram.get()[0x16C] & 1) | 2;
 	state.ppu.lyc   = state.mem.ioamhram.get()[0x145];
 	state.ppu.m0lyc = state.mem.ioamhram.get()[0x145];
 	state.ppu.weMaster = false;
@@ -455,6 +456,7 @@ void gambatte::setPostBiosState(SaveState &state, bool const cgb, bool const agb
 	state.mem.ioamhram.ptr[0x126] = 0xF1;
 	state.mem.ioamhram.ptr[0x140] = 0x91;
 
+	state.mem.ioamhram.ptr[0x16C] |= !(cgb && notCgbDmg);
 	state.mem.ioamhram.ptr[0x1FC] -= agb;
 
 	state.mem.divLastUpdate = -0x1C00;
@@ -462,6 +464,7 @@ void gambatte::setPostBiosState(SaveState &state, bool const cgb, bool const agb
 	state.ppu.videoCycles = cgb ? 144*456ul + 164 + (agb * 4) : 153*456ul + 396;
 	state.ppu.enableDisplayM0Time = state.cpu.cycleCounter;
 	state.ppu.notCgbDmg = cgb && notCgbDmg;
+	state.ppu.spPriority = 2 | !(cgb && notCgbDmg);
 
 	state.spu.cycleCounter = (cgb ? 0x1E00 : 0x2400) | (state.cpu.cycleCounter >> 1 & 0x1FF);
 

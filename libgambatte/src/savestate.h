@@ -151,6 +151,7 @@ struct SaveState {
 		unsigned char /*bool*/ weMaster;
 		unsigned char /*bool*/ pendingLcdstatIrq;
 		unsigned char /*bool*/ notCgbDmg;
+		unsigned char /*bool*/ spPriority; // bit 1 is abused for state compat
 	} ppu;
 
 	struct SPU {

@@ -53,6 +53,7 @@ public:
 	    VideoInterruptRequester memEventRequester);
 	void reset(unsigned char const *oamram, unsigned char const *vram, bool cgb, bool agb);
 	void setCgbDmg(bool enabled) { ppu_.setCgbDmg(enabled); }
+	void setSpPriority(bool xSpPriority, unsigned long cc) { update(cc); ppu_.setSpPriority(xSpPriority); }
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state, unsigned char const *oamram);

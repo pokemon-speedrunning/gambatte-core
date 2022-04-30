@@ -70,6 +70,7 @@ struct PPUPriv {
 	unsigned short spwordList[lcd_max_num_sprites_per_line + 1];
 	unsigned char nextSprite;
 	unsigned char currentSprite;
+	unsigned char spPriority;
 	unsigned layersMask;
 
 	unsigned char const *vram;
@@ -141,6 +142,7 @@ public:
 	unsigned long predictedNextXposTime(unsigned xpos) const;
 	void reset(unsigned char const *oamram, unsigned char const *vram, bool cgb, bool agb);
 	void setCgbDmg(bool enabled) { p_.cgbDmg = enabled; }
+	void setSpPriority(bool xSpPriority) { p_.spPriority = 2 | xSpPriority; }
 	void resetCc(unsigned long oldCc, unsigned long newCc);
 	void saveState(SaveState &ss) const;
 	void setFrameBuf(uint_least32_t *buf, std::ptrdiff_t pitch) { p_.framebuf.setBuf(buf, pitch); }

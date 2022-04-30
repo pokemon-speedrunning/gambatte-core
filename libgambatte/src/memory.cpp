@@ -1303,8 +1303,12 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 
 		return;
 	case 0x6C:
-		if (isCgb() && !isCgbDmg())
+		if (isCgb()) {
+			if (biosMode_)
+				lcd_.setSpPriority(data & 1, cc);
+
 			ioamhram_[0x16C] = data | 0xFE;
+		}
 
 		return;
 	case 0x70:
