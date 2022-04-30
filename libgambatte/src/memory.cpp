@@ -676,6 +676,8 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 			return 0xFF;
 
 		break;
+	case 0x50:
+		return 0xFE | biosMode_;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
 			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
@@ -807,6 +809,8 @@ unsigned Memory::nontrivial_ff_peek(unsigned const p, unsigned long const cc) {
 			return 0xFF;
 
 		break;
+	case 0x50:
+		return 0xFE | !biosMode_;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
 			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
@@ -1222,18 +1226,21 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		if (!biosMode_)
 			return;
 
-		if (isCgb() && (ioamhram_[0x14C] & 0x04)) {
-			lcd_.copyCgbPalettesToDmg();
-			lcd_.setCgbDmg(true);
-			ioamhram_[0x102] |= 0x02;
-			ioamhram_[0x14D] |= 0x81;
-			ioamhram_[0x156] |= 0xC1;
-			ioamhram_[0x16B] |= 0xFF;
-			ioamhram_[0x170] |= 0x07;
-			ioamhram_[0x174] |= 0xFF;
+		if (data & 1) {
+			if (isCgb() && (ioamhram_[0x14C] & 0x04)) {
+				lcd_.copyCgbPalettesToDmg();
+				lcd_.setCgbDmg(true);
+				ioamhram_[0x102] |= 0x02;
+				ioamhram_[0x14D] |= 0x81;
+				ioamhram_[0x156] |= 0xC1;
+				ioamhram_[0x16B] |= 0xFF;
+				ioamhram_[0x170] |= 0x07;
+				ioamhram_[0x174] |= 0xFF;
+			}
+
+			biosMode_ = false;
 		}
 
-		biosMode_ = false;
 		return;
 	case 0x51:
 		dmaSource_ = data << 8 | (dmaSource_ & 0xFF);
