@@ -901,7 +901,7 @@ void plotPixel(PPUPriv &p) {
 			unsigned spdata = 0;
 			unsigned attrib = 0;
 
-			if (p.cgb) {
+			if (!(p.spPriority & 1)) {
 				unsigned minId = 0xFF;
 
 				do {
