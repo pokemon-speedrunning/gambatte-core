@@ -72,10 +72,10 @@ struct GB::Priv {
 		if (initialLoad)
 			setInitStateCart(state, loadflags & CGB_MODE, loadflags & GBA_FLAG);
 
+		cpu.loadState(state);
+
 		if (samplesToStall > 0)
 			cpu.stall(samplesToStall << 1);
-
-		cpu.loadState(state);
 	}
 };
 
