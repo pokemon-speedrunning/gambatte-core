@@ -8,7 +8,7 @@ namespace gambatte {
 class PakInfo {
 public:
 	PakInfo();
-	PakInfo(bool mbc1m, bool mmm01, bool wisdomtree, unsigned rombanks, unsigned crc, unsigned char const romheader[]);
+	PakInfo(bool mbc1m, bool m161, bool mmm01, bool wisdomtree, unsigned rombanks, unsigned crc, unsigned char const romheader[]);
 	bool headerChecksumOk() const;
 	std::string const mbc() const;
 	unsigned rambanks() const;

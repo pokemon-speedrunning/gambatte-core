@@ -20,39 +20,46 @@
 
 namespace gambatte {
 
-WisdomTree::WisdomTree(MemPtrs &memptrs)
+M161::M161(MemPtrs& memptrs)
 : memptrs_(memptrs)
 , rombank_(0)
+, mapped_(false)
 {
 }
 
-bool WisdomTree::disabledRam() const {
+bool M161::disabledRam() const {
 	return true;
 }
 
-void WisdomTree::romWrite(unsigned const p, unsigned const /*data*/, unsigned long const /*cc*/) {
-	rombank_ = (p & 0xFF) << 1;
-	setRombank();
+void M161::romWrite(unsigned const /*p*/, unsigned const data, unsigned long const /*cc*/) {
+	if (!mapped_) {
+		rombank_ = (data & 7) << 1;
+		mapped_ = true;
+		setRombank();
+	}
 }
 
-void WisdomTree::saveState(SaveState::Mem &ss) const {
+void M161::saveState(SaveState::Mem &ss) const {
 	ss.rombank = rombank_;
+	ss.enableRam = mapped_;
 }
 
-void WisdomTree::loadState(SaveState::Mem const &ss) {
+void M161::loadState(SaveState::Mem const& ss) {
 	rombank_ = ss.rombank;
+	mapped_ = ss.enableRam;
 	setRombank();
 }
 
-bool WisdomTree::isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank) const {
+bool M161::isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank) const {
 	return ((addr < rombank_size()) == !(bank & 1)) == ((addr >= rombank_size()) == (bank & 1));
 }
 
-void WisdomTree::SyncState(NewState* ns, bool isReader) {
+void M161::SyncState(NewState* ns, bool isReader) {
 	NSS(rombank_);
+	NSS(mapped_);
 }
 
-void WisdomTree::setRombank() const {
+void M161::setRombank() const {
 	memptrs_.setRombank0(rombank_ & (rombanks(memptrs_) - 2));
 	memptrs_.setRombank((rombank_ | 1) & (rombanks(memptrs_) - 1));
 }

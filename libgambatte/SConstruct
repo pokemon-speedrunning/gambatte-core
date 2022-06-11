@@ -38,6 +38,7 @@ sourceFiles = Split('''
 			src/mem/time.cpp
 			src/mem/mbc/huc1.cpp
 			src/mem/mbc/huc3.cpp
+			src/mem/mbc/m161.cpp
 			src/mem/mbc/mbc0.cpp
 			src/mem/mbc/mbc1.cpp
 			src/mem/mbc/mbc2.cpp

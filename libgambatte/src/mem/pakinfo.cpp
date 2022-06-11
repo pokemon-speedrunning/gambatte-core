@@ -4,7 +4,7 @@
 
 namespace gambatte {
 
-enum { flag_mbc1m = 1, flag_header_checksum_ok = 2, flag_mmm01 = 4, flag_wisdom_tree = 8 };
+enum { flag_mbc1m = 1, flag_header_checksum_ok = 2, flag_m161 = 4, flag_mmm01 = 8, flag_wisdom_tree = 16 };
 
 bool isHeaderChecksumOk(unsigned const char header[]) {
 	unsigned csum = 0;
@@ -35,9 +35,10 @@ PakInfo::PakInfo()
 	std::memset(h144x_, 0 , sizeof h144x_);
 }
 
-PakInfo::PakInfo(bool mbc1m, bool mmm01, bool wisdomtree, unsigned rombanks, unsigned crc, unsigned char const romheader[])
+PakInfo::PakInfo(bool mbc1m, bool m161, bool mmm01, bool wisdomtree, unsigned rombanks, unsigned crc, unsigned char const romheader[])
 : flags_(  mbc1m * flag_mbc1m
          + isHeaderChecksumOk(romheader) * flag_header_checksum_ok
+         + m161 * flag_m161
          + mmm01 * flag_mmm01
          + wisdomtree * flag_wisdom_tree),
   rombanks_(rombanks), crc_(crc)
@@ -47,9 +48,9 @@ PakInfo::PakInfo(bool mbc1m, bool mmm01, bool wisdomtree, unsigned rombanks, uns
 
 bool PakInfo::headerChecksumOk() const { return flags_ & flag_header_checksum_ok; }
 
-static char const * h147ToCstr(unsigned char const h147, bool const mbc1m, bool const wisdomtree, bool const mmm01) {
+static char const * h147ToCstr(unsigned char const h147, bool const mbc1m, bool const m161, bool const mmm01, bool const wisdomtree) {
 	switch (h147) {
-	case 0x00: return wisdomtree ? "Wisdom Tree" : "NULL";
+	case 0x00: return wisdomtree ? "Wisdom Tree" : (m161 ? "M161" : "NULL");
 	case 0x01: return mbc1m ? "MBC1M" : "MBC1";
 	case 0x02: return mbc1m ? "MBC1M [RAM]" : "MBC1 [RAM]";
 	case 0x03: return mbc1m ? "MBC1M [RAM,battery]" : "MBC1 [RAM,battery]";
@@ -80,7 +81,7 @@ static char const * h147ToCstr(unsigned char const h147, bool const mbc1m, bool 
 	return "Unknown";
 }
 
-std::string const PakInfo::mbc() const { return h147ToCstr(h144x_[3], flags_ & flag_mbc1m, flags_ & flag_wisdom_tree, flags_ & flag_mmm01); }
+std::string const PakInfo::mbc() const { return h147ToCstr(h144x_[3], flags_ & flag_mbc1m, flags_ & flag_m161, flags_ & flag_mmm01, flags_ & flag_wisdom_tree); }
 unsigned PakInfo::rambanks() const { return numRambanksFromH14x(h144x_[3], h144x_[5]); }
 unsigned PakInfo::rombanks() const { return rombanks_; }
 unsigned PakInfo::crc() const { return crc_; }

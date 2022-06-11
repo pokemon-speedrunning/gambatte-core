@@ -180,6 +180,24 @@ private:
 	void setRombank() const;
 };
 
+class M161 : public Mbc {
+public:
+	explicit M161(MemPtrs &memptrs);
+	virtual bool disabledRam() const;
+	virtual void romWrite(unsigned const /*p*/, unsigned const data, unsigned long const /*cc*/);
+	virtual void saveState(SaveState::Mem &ss) const;
+	virtual void loadState(SaveState::Mem const &ss);
+	virtual bool isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank) const;
+	virtual void SyncState(NewState* ns, bool isReader);
+
+private:
+	MemPtrs &memptrs_;
+	unsigned char rombank_;
+	bool mapped_;
+
+	void setRombank() const;
+};
+
 class Mmm01 : public Mbc {
 public:
 	explicit Mmm01(MemPtrs &memptrs);
@@ -272,16 +290,16 @@ private:
 
 class WisdomTree : public Mbc {
 public:
-	explicit WisdomTree(MemPtrs& memptrs);
+	explicit WisdomTree(MemPtrs &memptrs);
 	virtual bool disabledRam() const;
 	virtual void romWrite(unsigned const p, unsigned const /*data*/, unsigned long const /*cc*/);
 	virtual void saveState(SaveState::Mem &ss) const;
-	virtual void loadState(SaveState::Mem const& ss);
+	virtual void loadState(SaveState::Mem const &ss);
 	virtual bool isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank) const;
 	virtual void SyncState(NewState* ns, bool isReader);
 
 private:
-	MemPtrs& memptrs_;
+	MemPtrs &memptrs_;
 	unsigned char rombank_;
 
 	void setRombank() const;

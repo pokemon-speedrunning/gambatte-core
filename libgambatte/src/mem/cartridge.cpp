@@ -69,6 +69,14 @@ bool presumedMbc1m(unsigned char const romdata[], unsigned rombanks) {
 	&& !std::memcmp(&romdata[0x104], &romdata[16 * rombank_size() + 0x104], 0x134 - 0x104);
 }
 
+bool presumedM161(unsigned char const romdata[], unsigned size) {
+	if (size != rombank_size() * 16u || romdata[0x147] != 0x10)
+		return false;
+
+	static char const tetrisSetStr[10] { 0x54, 0x45, 0x54, 0x52, 0x49, 0x53, 0x20, 0x53, 0x45, 0x54, };
+	return !std::memcmp(&romdata[0x134], tetrisSetStr, sizeof tetrisSetStr);
+}
+
 bool presumedMmm01(unsigned char const romdata[], unsigned size) {
 	if (!isHeaderChecksumOk(romdata) || (size / rombank_size()) != std::max(pow2ceil(size / rombank_size()), 2u))
 		return false;
@@ -204,6 +212,7 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 	                     type_mbc2,
 	                     type_mbc3,
 	                     type_mbc5,
+	                     type_m161,
 	                     type_mmm01,
 	                     type_huc1,
 	                     type_huc3,
@@ -227,7 +236,11 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 			type = type_wisdomtree;
 		else if (presumedWisdomTree(buffer.get(), buffer.size()))
 			type = type_wisdomtree;
-		else if (presumedMmm01(buffer.get(), buffer.size())) {
+		else if (presumedM161(buffer.get(), buffer.size())) {
+			type = type_m161;
+			romHeader[0x147] = 0; // hack to ensure no savedata (note: actual rom won't be touched)
+			romHeader[0x14D] += 0x10; // also "fix" the header checksum (so PakInfo won't report it as bad)
+		} else if (presumedMmm01(buffer.get(), buffer.size())) {
 			type = type_mmm01;
 			std::memcpy(romHeader, buffer.get() + buffer.size() + -2 * rombank_size(), sizeof romHeader);
 		} else switch (romHeader[0x147]) {
@@ -339,6 +352,7 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 		}
 		break;
 	case type_mbc5: mbc_.reset(new Mbc5(memptrs_)); break;
+	case type_m161: mbc_.reset(new M161(memptrs_)); break;
 	case type_mmm01: mbc_.reset(new Mmm01(memptrs_)); break;
 	case type_huc1: mbc_.reset(new HuC1(memptrs_, &ir_)); huc1_ = true; break;
 	case type_huc3:
@@ -649,6 +663,7 @@ PakInfo const Cartridge::pakInfo() const {
 		unsigned const rombs = rombanks(memptrs_);
 		crc = crc32(crc, memptrs_.romdata(), rombs*0x4000ul);
 		return PakInfo(presumedMbc1m(memptrs_.romdata(), rombs),
+		               presumedM161(memptrs_.romdata(), rombs*0x4000ul),
 		               presumedMmm01(memptrs_.romdata(), rombs*0x4000ul),
 		               presumedWisdomTree(memptrs_.romdata(), rombs*0x4000ul),
 		               rombs,
