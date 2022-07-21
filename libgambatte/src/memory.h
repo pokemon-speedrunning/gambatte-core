@@ -287,7 +287,7 @@ public:
 		linkCallback_ = callback;
 	}
 
-	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
+	void setCameraCallback(void(*callback)(uint32_t *cameraBuf)) {
 		if (cart_.isPocketCamera())
 			cart_.setCameraCallback(callback);
 	}

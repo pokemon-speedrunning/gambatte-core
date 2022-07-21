@@ -169,7 +169,7 @@ void GB::setLinkCallback(void(*callback)()) {
 	p_->cpu.setLinkCallback(callback);
 }
 
-void GB::setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
+void GB::setCameraCallback(void(*callback)(uint32_t *cameraBuf)) {
 	p_->cpu.setCameraCallback(callback);
 }
 

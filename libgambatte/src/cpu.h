@@ -92,7 +92,7 @@ public:
 		mem_.setLinkCallback(callback);
 	}
 
-	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) {
+	void setCameraCallback(void(*callback)(uint32_t *cameraBuf)) {
 		mem_.setCameraCallback(callback);
 	}
 

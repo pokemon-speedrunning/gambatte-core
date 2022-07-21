@@ -375,26 +375,17 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.huc3.highIoReadOnly = true; // ???
 	state.huc3.irReceivingPulse = false;
 
-	std::memset(   state.camera.matrix.ptr, 0,    state.camera.matrix.size());
-	std::memset(state.camera.oldMatrix.ptr, 0, state.camera.oldMatrix.size());
+	std::memset(state.camera.matrix.ptr, 0, state.camera.matrix.size());
 
 	state.camera.trigger = 0;
 	state.camera.n = false;
 	state.camera.vh = 0;
 	state.camera.exposure = 0;
-	state.camera.edgeAlpha = 0.50 * 4;
+	state.camera.edgeAlpha = 2;
 	state.camera.blank = false;
 	state.camera.invert = false;
-	state.camera.oldTrigger = 0;
-	state.camera.oldN = false;
-	state.camera.oldVh = 0;
-	state.camera.oldExposure = 0;
-	state.camera.oldEdgeAlpha = 0.50 * 4;
-	state.camera.oldBlank = false;
-	state.camera.oldInvert = false;
 	state.camera.lastCycles = state.cpu.cycleCounter;
 	state.camera.cameraCyclesLeft = 0;
-	state.camera.cancelled = false;
 }
 
 void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb) {
@@ -460,6 +451,12 @@ void gambatte::setPostBiosState(SaveState &state, bool const cgb, bool const agb
 	state.mem.ioamhram.ptr[0x1FC] -= agb;
 
 	state.mem.divLastUpdate = -0x1C00;
+
+	if (!notCgbDmg) {
+		state.ppu.bgpData.ptr[0] = state.mem.ioamhram.get()[0x147];
+		state.ppu.objpData.ptr[0] = state.mem.ioamhram.get()[0x148];
+		state.ppu.objpData.ptr[1] = state.mem.ioamhram.get()[0x149];
+	}
 
 	state.ppu.videoCycles = cgb ? 144*456ul + 164 + (agb * 4) : 153*456ul + 396;
 	state.ppu.enableDisplayM0Time = state.cpu.cycleCounter;

@@ -63,14 +63,12 @@ void PocketCamera::loadState(SaveState::Mem const &ss) {
 	enableRam_ = ss.enableRam;
 	setRambank();
 	setRombank();
-	camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : 0);
 }
 
 void PocketCamera::SyncState(NewState *ns, bool isReader) {
 	NSS(rombank_);
 	NSS(rambank_);
 	NSS(enableRam_);
-	camera_->set(rambanks(memptrs_) ? &memptrs_.rambankdata()[0x100] : 0);
 }
 
 void PocketCamera::setRambank() const {

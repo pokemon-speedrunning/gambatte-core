@@ -296,7 +296,7 @@ public:
 	virtual void saveState(SaveState::Mem &ss) const;
 	virtual void loadState(SaveState::Mem const &ss);
 	virtual bool isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned bank) const;
-	virtual void SyncState(NewState* ns, bool isReader);
+	virtual void SyncState(NewState *ns, bool isReader);
 
 private:
 	MemPtrs &memptrs_;

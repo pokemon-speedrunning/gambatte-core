@@ -102,7 +102,7 @@ public:
 	bool cameraIsActive(unsigned long cc) { return camera_.cameraIsActive(cc); }
 	unsigned char cameraRead(unsigned p, unsigned long const cc) { return camera_.read(p, cc); }
 	void cameraWrite(unsigned p, unsigned data, unsigned long const cc) { camera_.write(p, data, cc); }
-	void setCameraCallback(bool(*callback)(int32_t *cameraBuf)) { camera_.setCameraCallback(callback); }
+	void setCameraCallback(void(*callback)(uint32_t *cameraBuf)) { camera_.setCameraCallback(callback); }
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:

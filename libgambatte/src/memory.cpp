@@ -1229,6 +1229,9 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		if (data & 1) {
 			if (isCgb() && (ioamhram_[0x14C] & 0x04)) {
 				lcd_.copyCgbPalettesToDmg();
+				lcd_.dmgBgPaletteChange(ioamhram_[0x147], cc);
+				lcd_.dmgSpPalette1Change(ioamhram_[0x148], cc);
+				lcd_.dmgSpPalette2Change(ioamhram_[0x149], cc);
 				lcd_.setCgbDmg(true);
 				ioamhram_[0x102] |= 0x02;
 				ioamhram_[0x14D] |= 0x81;

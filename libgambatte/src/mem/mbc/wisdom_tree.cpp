@@ -48,7 +48,7 @@ bool WisdomTree::isAddressWithinAreaRombankCanBeMappedTo(unsigned addr, unsigned
 	return ((addr < rombank_size()) == !(bank & 1)) == ((addr >= rombank_size()) == (bank & 1));
 }
 
-void WisdomTree::SyncState(NewState* ns, bool isReader) {
+void WisdomTree::SyncState(NewState *ns, bool isReader) {
 	NSS(rombank_);
 }
 

@@ -225,9 +225,9 @@ public:
 
 	/** Sets the camera data request callback.
 	  * The callback will receive the pointer to the buffer.
-	  * A 128x112 rgb32 image should be copied to the buffer, with success returned.
+	  * A 128x112 native endian rgb32 image should be copied to the buffer.
 	  */
-	void setCameraCallback(bool(*callback)(int32_t *cameraBuf));
+	void setCameraCallback(void(*callback)(uint32_t *cameraBuf));
 
 	/** adjust the assumed clock speed of the CPU compared to the RTC */
 	void setRtcDivisorOffset(long const rtcDivisorOffset);
