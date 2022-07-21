@@ -46,13 +46,13 @@ public:
 	unsigned char read(unsigned p, unsigned long cycleCounter);
 	void write(unsigned p, unsigned data, unsigned long cycleCounter);
 
-	void setCameraCallback(void(*callback)(uint32_t *cameraBuf)) { cameraCallback_ = callback; }
+	void setCameraCallback(void (*callback)(int *cameraBuf)) { cameraCallback_ = callback; }
 
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
 	unsigned char * cameraRam_;
-	uint32_t cameraBuf_[128 * 112];
+	int cameraBuf_[128 * 112];
 
 	unsigned char trigger_;
 	bool n_;
@@ -69,7 +69,7 @@ private:
 
 	void update(unsigned long cycleCounter);
 	void process();
-	void (*cameraCallback_)(uint32_t *cameraBuf);
+	void (*cameraCallback_)(int *cameraBuf);
 };
 
 }

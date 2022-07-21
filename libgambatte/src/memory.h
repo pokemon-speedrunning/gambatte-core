@@ -283,11 +283,11 @@ public:
 		lcd_.setScanlineCallback(callback, sl);
 	}
 
-	void setLinkCallback(void(*callback)()) {
+	void setLinkCallback(void (*callback)()) {
 		linkCallback_ = callback;
 	}
 
-	void setCameraCallback(void(*callback)(uint32_t *cameraBuf)) {
+	void setCameraCallback(void (*callback)(int *cameraBuf)) {
 		if (cart_.isPocketCamera())
 			cart_.setCameraCallback(callback);
 	}
@@ -400,7 +400,7 @@ private:
 	MemoryCallback writeCallback_;
 	MemoryCallback execCallback_;
 	CDCallback cdCallback_;
-	void(*linkCallback_)();
+	void (*linkCallback_)();
 	bool linked_;
 	bool linkClockTrigger_;
 

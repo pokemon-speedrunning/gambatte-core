@@ -149,11 +149,11 @@ GBEXPORT void gambatte_setscanlinecallback(GB *g, void (*callback)(), int sl) {
 	g->setScanlineCallback(callback, sl);
 }
 
-GBEXPORT void gambatte_setlinkcallback(GB *g, void(*callback)()) {
+GBEXPORT void gambatte_setlinkcallback(GB *g, void (*callback)()) {
 	g->setLinkCallback(callback);
 }
 
-GBEXPORT void gambatte_setcameracallback(GB *g, void(*callback)(uint32_t *cameraBuf)) {
+GBEXPORT void gambatte_setcameracallback(GB *g, void (*callback)(int *cameraBuf)) {
 	g->setCameraCallback(callback);
 }
 

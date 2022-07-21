@@ -88,11 +88,11 @@ public:
 		mem_.setScanlineCallback(callback, sl);
 	}
 
-	void setLinkCallback(void(*callback)()) {
+	void setLinkCallback(void (*callback)()) {
 		mem_.setLinkCallback(callback);
 	}
 
-	void setCameraCallback(void(*callback)(uint32_t *cameraBuf)) {
+	void setCameraCallback(void (*callback)(int *cameraBuf)) {
 		mem_.setCameraCallback(callback);
 	}
 

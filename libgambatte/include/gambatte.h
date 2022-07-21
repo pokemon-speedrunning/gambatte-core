@@ -221,13 +221,13 @@ public:
 	void setScanlineCallback(void (*callback)(), int sl);
 
 	/** Sets the link data sent callback. */
-	void setLinkCallback(void(*callback)());
+	void setLinkCallback(void (*callback)());
 
 	/** Sets the camera data request callback.
 	  * The callback will receive the pointer to the buffer.
 	  * A 128x112 native endian rgb32 image should be copied to the buffer.
 	  */
-	void setCameraCallback(void(*callback)(uint32_t *cameraBuf));
+	void setCameraCallback(void (*callback)(int *cameraBuf));
 
 	/** adjust the assumed clock speed of the CPU compared to the RTC */
 	void setRtcDivisorOffset(long const rtcDivisorOffset);

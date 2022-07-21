@@ -165,11 +165,11 @@ void GB::setScanlineCallback(void (*callback)(), int sl) {
 	p_->cpu.setScanlineCallback(callback, sl);
 }
 
-void GB::setLinkCallback(void(*callback)()) {
+void GB::setLinkCallback(void (*callback)()) {
 	p_->cpu.setLinkCallback(callback);
 }
 
-void GB::setCameraCallback(void(*callback)(uint32_t *cameraBuf)) {
+void GB::setCameraCallback(void (*callback)(int *cameraBuf)) {
 	p_->cpu.setCameraCallback(callback);
 }
 
