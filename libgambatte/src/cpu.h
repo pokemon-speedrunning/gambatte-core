@@ -96,6 +96,10 @@ public:
 		mem_.setCameraCallback(callback);
 	}
 
+	void setRemoteCallback(unsigned char (*callback)()) {
+		mem_.setRemoteCallback(callback);
+	}
+
 	void setSaveDir(std::string const &sdir) {
 		mem_.setSaveDir(sdir);
 	}

@@ -16,40 +16,48 @@
 //   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#ifndef INFRARED_H
-#define INFRARED_H
+#ifndef REMOTE_H
+#define REMOTE_H
 
-#include "remote.h"
 #include "savestate.h"
 #include "newstate.h"
+#include "../counterdef.h"
 
 namespace gambatte {
 
-class Infrared {
+class Remote {
 public:
-	enum WhichIrGb { this_gb = 0, linked_gb = 1, remote = 2 };
+	Remote();
+	bool getRemoteSignal(unsigned long const cc);
 
-	Infrared();
-	bool getIrTrigger() const { return irTrigger_; };
-	void ackIrTrigger() { irTrigger_ = false; };
+	void setRemoteActive(bool active) {
+		if (isActive_ ^ active) {
+			isActive_ = active;
+			if (active) {
+				lastUpdate_ = disabled_time;
+				command_ = (remoteCallback_ ? remoteCallback_() : 0xFF) & 0x7F;
+			}
+		}
+	}
 
-	bool getIrSignal(WhichIrGb which, unsigned long const cc);
-	void setIrSignal(WhichIrGb which, bool signal);
+	void setRemoteCallback(unsigned char (*callback)()) { remoteCallback_ = callback; }
 
-	void setRemoteCallback(unsigned char (*callback)()) { remote_.setRemoteCallback(callback); }
-	void setRemoteActive(bool active) { remote_.setRemoteActive(active); }
-	void resetCc(unsigned long const oldCc, unsigned long const newCc) { remote_.resetCc(oldCc, newCc); }
-	void speedChange(unsigned long const cc) { remote_.speedChange(cc); }
+	void resetCc(unsigned long const oldCc, unsigned long const newCc);
+	void speedChange(unsigned long const cc);
 
-	void saveState(SaveState &state) const;
-	void loadState(SaveState const &state, bool const ds);
+	void saveState(SaveState::Infrared &state) const;
+	void loadState(SaveState::Infrared const &state, bool const ds);
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
-	bool irTrigger_;
-	bool thisGbIrSignal_;
-	bool linkedGbIrSignal_;
-	Remote remote_;
+	bool isActive_;
+	unsigned long lastUpdate_;
+	unsigned long cyclesElapsed_;
+	unsigned char command_;
+	bool ds_;
+
+	unsigned char (*remoteCallback_)();
+	void update(unsigned long const cc);
 };
 
 }

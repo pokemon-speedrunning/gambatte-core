@@ -247,6 +247,13 @@ struct SaveState {
 		unsigned char /*bool*/ irTrigger;
 		unsigned char /*bool*/ thisGbIrSignal;
 		unsigned char /*bool*/ linkedGbIrSignal;
+
+		struct {
+			unsigned char /*bool*/ isActive;
+			unsigned long lastUpdate;
+			unsigned long cyclesElapsed;
+			unsigned char command;
+		} remote;
 	} ir;
 
 	struct HuC3 {
@@ -255,7 +262,6 @@ struct SaveState {
 		unsigned char ioIndex;
 		unsigned char transferValue;
 		unsigned char ramflag;
-		unsigned long irBaseCycle;
 		unsigned long rtcCycles;
 		unsigned short /*signed*/ currentSample;
 		unsigned long toneLastUpdate;
@@ -263,7 +269,6 @@ struct SaveState {
 		unsigned long /*signed*/ remainingToneSamples;
 		unsigned char /*bool*/ committing;
 		unsigned char /*bool*/ highIoReadOnly;
-		unsigned char /*bool*/ irReceivingPulse;
 	} huc3;
 
 	struct Camera {

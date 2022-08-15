@@ -292,6 +292,10 @@ public:
 			cart_.setCameraCallback(callback);
 	}
 
+	void setRemoteCallback(unsigned char (*callback)()) {
+		cart_.setRemoteCallback(callback);
+	}
+
 	inline bool slowCallbacksActive() { return readCallback_ || writeCallback_ || execCallback_ || cdCallback_; }
 
 	void setEndtime(unsigned long cc, unsigned long inc);

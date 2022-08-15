@@ -62,7 +62,7 @@ void HuC3::loadState(SaveState::Mem const &ss) {
 	rombank_ = ss.rombank;
 	rambank_ = ss.rambank;
 	ramflag_ = ss.ramflag;
-	setRambank(false);
+	setRambank(true);
 	setRombank();
 }
 
@@ -72,8 +72,8 @@ void HuC3::SyncState(NewState *ns, bool isReader) {
 	NSS(ramflag_);
 }
 
-void HuC3::setRambank(bool setRamflag) const {
-	if (setRamflag)
+void HuC3::setRambank(bool loadingState) const {
+	if (!loadingState)
 		huc3_->setRamflag(ramflag_);
 
 	unsigned flags;

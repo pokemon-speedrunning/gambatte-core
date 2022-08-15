@@ -62,7 +62,7 @@ void HuC1::loadState(SaveState::Mem const &ss) {
 	rombank_ = ss.rombank;
 	rambank_ = ss.rambank;
 	ramflag_ = ss.ramflag;
-	setRambank();
+	setRambank(true);
 	setRombank();
 }
 
@@ -72,7 +72,7 @@ void HuC1::SyncState(NewState *ns, bool isReader) {
 	NSS(ramflag_);
 }
 
-void HuC1::setRambank() const {
+void HuC1::setRambank(bool loadingState) const {
 	unsigned flags;
 	switch (ramflag_) {
 		case 0x0: // read-only mode
@@ -91,6 +91,9 @@ void HuC1::setRambank() const {
 			ir_->setIrSignal(Infrared::this_gb, false);
 			break;
 	}
+
+	if (!loadingState)
+		ir_->setRemoteActive(ramflag_ == 0xE);
 
 	memptrs_.setRambank(flags, rambank_ & (rambanks(memptrs_) - 1));
 }

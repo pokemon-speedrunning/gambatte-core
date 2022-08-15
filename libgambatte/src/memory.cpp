@@ -680,7 +680,7 @@ unsigned Memory::nontrivial_ff_read(unsigned const p, unsigned long const cc) {
 		return 0xFE | !biosMode_;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
+			if (!agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(linked_ ? Infrared::linked_gb : Infrared::remote, cc))
 				return ioamhram_[0x156] & ~0x02;
 		}
 
@@ -752,11 +752,11 @@ unsigned Memory::nontrivial_read(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | (linked_ && cart_.getIrSignal(Infrared::linked_gb));
+				return 0xC0 | cart_.getIrSignal(linked_ ? Infrared::linked_gb : Infrared::remote, cc);
 
 			if (cart_.isHuC3())
 				return cart_.HuC3Read(p, cc);
-			
+
 			if (cart_.isPocketCamera())
 				return cart_.cameraRead(p, cc);
 
@@ -813,7 +813,7 @@ unsigned Memory::nontrivial_ff_peek(unsigned const p, unsigned long const cc) {
 		return 0xFE | !biosMode_;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb))
+			if (linked_ && !agbFlag_ && ((ioamhram_[0x156] & 0xC0) == 0xC0) && cart_.getIrSignal(Infrared::linked_gb, cc))
 				return ioamhram_[0x156] & ~0x02;
 		}
 
@@ -851,7 +851,7 @@ unsigned Memory::nontrivial_peek(unsigned const p, unsigned long const cc) {
 				return cartBus_;
 
 			if (cart_.isHuC1())
-				return 0xC0 | (linked_ && cart_.getIrSignal(Infrared::linked_gb));
+				return 0xC0 | (linked_ && cart_.getIrSignal(Infrared::linked_gb, cc));
 
 			if (cart_.isHuC3() || cart_.isPocketCamera())
 				return 0xFF; // unsafe to peek
@@ -1277,8 +1277,10 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 		return;
 	case 0x56:
 		if (isCgb() && !isCgbDmg()) {
-			if (!agbFlag_)
+			if (!agbFlag_) {
 				cart_.setIrSignal(Infrared::this_gb, data & 1);
+				cart_.setRemoteActive((data & 0xC0) == 0xC0);
+			}
 
 			ioamhram_[0x156] = (data & 0xC1) | (ioamhram_[0x156] & 0x3E);
 		}
@@ -1487,7 +1489,7 @@ int Memory::linkStatus(int which) {
 		cart_.ackIrTrigger();
 		return 0;
 	case 261: // GetInfraredOut
-		return cart_.getIrSignal(Infrared::this_gb);
+		return cart_.getIrSignal(Infrared::this_gb, 0);
 	case 262: // ShiftInOn
 		cart_.setIrSignal(Infrared::linked_gb, true);
 		return 0;

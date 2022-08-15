@@ -33,6 +33,7 @@ sourceFiles = Split('''
 			src/mem/infrared.cpp
 			src/mem/memptrs.cpp
 			src/mem/pakinfo.cpp
+			src/mem/remote.cpp
 			src/mem/rtc.cpp
 			src/mem/sgb.cpp
 			src/mem/time.cpp

@@ -244,7 +244,7 @@ private:
 	unsigned char rambank_;
 	unsigned char ramflag_;
 
-	void setRambank() const;
+	void setRambank(bool loadingState = false) const;
 	void setRombank() const;
 };
 
@@ -264,7 +264,7 @@ private:
 	unsigned char rambank_;
 	unsigned char ramflag_;
 
-	void setRambank(bool setRamflag = true) const;
+	void setRambank(bool loadingState = false) const;
 	void setRombank() const;
 };
 

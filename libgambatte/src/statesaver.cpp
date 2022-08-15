@@ -387,6 +387,10 @@ SaverList::SaverList()
 	{ static char const label[] = { i,r,t,r,i,g,   NUL }; ADD(ir.irTrigger); }
 	{ static char const label[] = { i,r,t,s,i,g,   NUL }; ADD(ir.thisGbIrSignal); }
 	{ static char const label[] = { i,r,l,s,i,g,   NUL }; ADD(ir.linkedGbIrSignal); }
+	{ static char const label[] = { r,m,a,c,t,v,   NUL }; ADD(ir.remote.isActive); }
+	{ static char const label[] = { r,m,l,u,       NUL }; ADD(ir.remote.lastUpdate); }
+	{ static char const label[] = { r,m,c,l,k,e,   NUL }; ADD(ir.remote.cyclesElapsed); }
+	{ static char const label[] = { r,m,c,m,d,     NUL }; ADD(ir.remote.command); }
 	{ static char const label[] = { h,NO3,i,o,       NUL }; ADDPTR(huc3.io); }
 	{ static char const label[] = { h,NO3,i,d,x,     NUL }; ADD(huc3.ioIndex); }
 	{ static char const label[] = { h,NO3,x,f,e,r,   NUL }; ADD(huc3.transferValue); }
@@ -398,8 +402,6 @@ SaverList::SaverList()
 	{ static char const label[] = { h,NO3,r,s,a,m,p, NUL }; ADD(huc3.remainingToneSamples); }
 	{ static char const label[] = { h,NO3,c,o,m,     NUL }; ADD(huc3.committing); }
 	{ static char const label[] = { h,NO3,h,i,o,r,o, NUL }; ADD(huc3.highIoReadOnly); }
-	{ static char const label[] = { h,NO3,i,r,c,y, NUL }; ADD(huc3.irBaseCycle); }
-	{ static char const label[] = { h,NO3,i,r,a,c, NUL }; ADD(huc3.irReceivingPulse); }
 	{ static char const label[] = { c,a,m,m,t,x,   NUL }; ADDPTR(camera.matrix); }
 	{ static char const label[] = { c,a,m,t,r,g,   NUL }; ADD(camera.trigger); }
 	{ static char const label[] = { c,a,m,n,       NUL }; ADD(camera.n); }

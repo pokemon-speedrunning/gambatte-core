@@ -363,17 +363,20 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.ir.irTrigger = true;
 	state.ir.thisGbIrSignal = false;
 
+	state.ir.remote.isActive = false;
+	state.ir.remote.lastUpdate = 0;
+	state.ir.remote.cyclesElapsed = 0;
+	state.ir.remote.command = 0;
+
 	state.huc3.ioIndex = 0;
 	state.huc3.transferValue = 0;
 	state.huc3.ramflag = 0;
-	state.huc3.irBaseCycle = 0;
 	state.huc3.currentSample = 0;
 	state.huc3.toneLastUpdate = 0;
 	state.huc3.nextPhaseChangeTime = 0;
 	state.huc3.remainingToneSamples = 0;
 	state.huc3.committing = false;
 	state.huc3.highIoReadOnly = true; // ???
-	state.huc3.irReceivingPulse = false;
 
 	std::memset(state.camera.matrix.ptr, 0, state.camera.matrix.size());
 

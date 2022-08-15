@@ -173,6 +173,10 @@ void GB::setCameraCallback(void (*callback)(int *cameraBuf)) {
 	p_->cpu.setCameraCallback(callback);
 }
 
+void GB::setRemoteCallback(unsigned char (*callback)()) {
+	p_->cpu.setRemoteCallback(callback);
+}
+
 void GB::setCartBusPullUpTime(unsigned long const cartBusPullUpTime) {
 	p_->cpu.setCartBusPullUpTime(cartBusPullUpTime);
 }

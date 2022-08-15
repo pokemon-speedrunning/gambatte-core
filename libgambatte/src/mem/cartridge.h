@@ -62,11 +62,13 @@ public:
 	void resetCc(unsigned long const oldCc, unsigned long const newCc) {
 		time_.resetCc(oldCc, newCc);
 		huc3_.resetCc(oldCc, newCc);
+		ir_.resetCc(oldCc, newCc);
 		camera_.resetCc(oldCc, newCc);
 	}
 	void speedChange(unsigned long const cc) {
 		time_.speedChange(cc);
 		huc3_.speedChange(cc);
+		ir_.speedChange(cc);
 		camera_.speedChange(cc);
 	}
 	void setTimeMode(bool useCycles, unsigned long const cc) { time_.setTimeMode(useCycles, cc); }
@@ -91,8 +93,10 @@ public:
 	bool isHuC1() const { return huc1_; }
 	bool getIrTrigger() const { return ir_.getIrTrigger(); }
 	void ackIrTrigger() { ir_.ackIrTrigger(); }
-	bool getIrSignal(Infrared::WhichIrGb which) const { return ir_.getIrSignal(which); }
+	bool getIrSignal(Infrared::WhichIrGb which, unsigned long const cc) { return ir_.getIrSignal(which, cc); }
 	void setIrSignal(Infrared::WhichIrGb which, bool signal) { ir_.setIrSignal(which, signal); }
+	void setRemoteCallback(unsigned char (*callback)()) { ir_.setRemoteCallback(callback); }
+	void setRemoteActive(bool active) { ir_.setRemoteActive(active); }
 	bool isHuC3() const { return huc3_.isHuC3(); }
 	void accumulateSamples(unsigned long const cc) { huc3_.accumulateSamples(cc); }
 	unsigned generateSamples(short *soundbuf) { return huc3_.generateSamples(soundbuf); }

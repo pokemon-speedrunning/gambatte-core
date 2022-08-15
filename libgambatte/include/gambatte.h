@@ -229,6 +229,12 @@ public:
 	  */
 	void setCameraCallback(void (*callback)(int *cameraBuf));
 
+	/** Sets the remote input callback.
+	  * The callback will return a value from 0 to 127.
+	  * This value represents a remote command.
+	  */
+	void setRemoteCallback(unsigned char (*callback)());
+
 	/** adjust the assumed clock speed of the CPU compared to the RTC */
 	void setRtcDivisorOffset(long const rtcDivisorOffset);
 

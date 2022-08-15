@@ -159,7 +159,8 @@ Cartridge::Cartridge()
 , huc1_(false)
 , pocketCamera_(false)
 , rtc_(time_)
-, huc3_(time_)
+, ir_()
+, huc3_(time_, ir_)
 {
 	std::memset(romHeader, 0, sizeof romHeader);
 }
@@ -183,11 +184,12 @@ void Cartridge::saveState(SaveState &state, unsigned long const cc) {
 }
 
 void Cartridge::loadState(SaveState const &state) {
-	camera_.loadState(state, isCgb());
-	huc3_.loadState(state, isCgb());
-	ir_.loadState(state);
+	bool const ds = (isCgb() && state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
+	camera_.loadState(state, ds);
+	huc3_.loadState(state, ds);
+	ir_.loadState(state, ds);
 	rtc_.loadState(state);
-	time_.loadState(state, isCgb());
+	time_.loadState(state, ds);
 	mbc_->loadState(state.mem);
 }
 

@@ -36,7 +36,7 @@ public:
 
 	void setStatePtrs(SaveState &);
 	void saveState(SaveState &state) const;
-	void loadState(SaveState const &state, bool cgb);
+	void loadState(SaveState const &state, bool const ds);
 
 	void resetCc(unsigned long oldCc, unsigned long newCc);
 	void speedChange(unsigned long cycleCounter);

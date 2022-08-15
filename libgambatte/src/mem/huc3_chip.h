@@ -20,6 +20,7 @@
 #define HuC3Chip_H
 
 #include "time.h"
+#include "infrared.h"
 
 namespace gambatte {
 
@@ -27,16 +28,16 @@ struct SaveState;
 
 class HuC3Chip : public Clock {
 public:
-	HuC3Chip(Time &time);
+	HuC3Chip(Time &time, Infrared &ir);
 
 	void setStatePtrs(SaveState &state);
 	void saveState(SaveState &state) const;
-	void loadState(SaveState const &state, bool cgb);
+	void loadState(SaveState const &state, bool const ds);
 
 	void setRamflag(unsigned char ramflag) {
 		ramflag_ = ramflag;
 		committing_ = ramflag == 0xD;
-		irReceivingPulse_ = false;
+		ir_.setRemoteActive(ramflag_ == 0xE);
 	}
 
 	bool isHuC3() const { return enabled_; }
@@ -64,11 +65,11 @@ private:
 	enum { max_samples = 35112 + 2064 };
 
 	Time &time_;
+	Infrared &ir_;
 	unsigned char io_[0x100];
 	unsigned char ioIndex_;
 	unsigned char transferValue_;
 	unsigned char ramflag_;
-	unsigned long irBaseCycle_;
 	unsigned long rtcCycles_;
 	short toneBuf_[max_samples * 2];
 	short currentSample_;
@@ -79,7 +80,6 @@ private:
 	bool enabled_;
 	bool committing_;
 	bool highIoReadOnly_;
-	bool irReceivingPulse_;
 	bool ds_;
 };
 

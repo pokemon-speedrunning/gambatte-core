@@ -157,6 +157,10 @@ GBEXPORT void gambatte_setcameracallback(GB *g, void (*callback)(int *cameraBuf)
 	g->setCameraCallback(callback);
 }
 
+GBEXPORT void gambatte_setremotecallback(GB *g, unsigned char (*callback)()) {
+	g->setRemoteCallback(callback);
+}
+
 GBEXPORT void gambatte_setcartbuspulluptime(GB *g, unsigned cartBusPullUpTime) {
 	g->setCartBusPullUpTime(cartBusPullUpTime);
 }

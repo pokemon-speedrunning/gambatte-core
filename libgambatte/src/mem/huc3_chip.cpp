@@ -23,12 +23,12 @@
 
 namespace gambatte {
 
-HuC3Chip::HuC3Chip(Time &time)
+HuC3Chip::HuC3Chip(Time &time, Infrared &ir)
 : time_(time)
+, ir_(ir)
 , ioIndex_(0)
 , transferValue_(0)
 , ramflag_(0)
-, irBaseCycle_(0)
 , rtcCycles_(0)
 , currentSample_(0)
 , toneBufPos_(0)
@@ -38,7 +38,6 @@ HuC3Chip::HuC3Chip(Time &time)
 , enabled_(false)
 , committing_(false)
 , highIoReadOnly_(true)
-, irReceivingPulse_(false)
 , ds_(false)
 {
 	std::memset(io_, 0, sizeof io_);
@@ -202,7 +201,6 @@ void HuC3Chip::saveState(SaveState &state) const {
 	state.huc3.ioIndex = ioIndex_;
 	state.huc3.transferValue = transferValue_;
 	state.huc3.ramflag = ramflag_;
-	state.huc3.irBaseCycle = irBaseCycle_;
 	state.huc3.rtcCycles = rtcCycles_;
 	state.huc3.currentSample = currentSample_;
 	state.huc3.toneLastUpdate = toneLastUpdate_;
@@ -210,14 +208,12 @@ void HuC3Chip::saveState(SaveState &state) const {
 	state.huc3.remainingToneSamples = remainingToneSamples_;
 	state.huc3.committing = committing_;
 	state.huc3.highIoReadOnly = highIoReadOnly_;
-	state.huc3.irReceivingPulse = irReceivingPulse_;
 }
 
-void HuC3Chip::loadState(SaveState const &state, bool cgb) {
+void HuC3Chip::loadState(SaveState const &state, bool const ds) {
 	ioIndex_ = state.huc3.ioIndex;
 	transferValue_ = state.huc3.transferValue;
 	ramflag_ = state.huc3.ramflag;
-	irBaseCycle_ = state.huc3.irBaseCycle;
 	rtcCycles_ = state.huc3.rtcCycles;
 	currentSample_ = state.huc3.currentSample;
 	toneLastUpdate_ = state.huc3.toneLastUpdate;
@@ -225,8 +221,7 @@ void HuC3Chip::loadState(SaveState const &state, bool cgb) {
 	remainingToneSamples_ = state.huc3.remainingToneSamples;
 	committing_ = state.huc3.committing;
 	highIoReadOnly_ = state.huc3.highIoReadOnly;
-	irReceivingPulse_ = state.huc3.irReceivingPulse;
-	ds_ = (cgb && state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
+	ds_ = ds;
 }
 
 unsigned char HuC3Chip::read(unsigned /*p*/, unsigned long const cc) {
@@ -238,39 +233,7 @@ unsigned char HuC3Chip::read(unsigned /*p*/, unsigned long const cc) {
 		case 0xD: // commit mode
 			return 0xFE | committing_;
 		case 0xE: // IR mode
-		{
-			if (!irReceivingPulse_) {
-				irReceivingPulse_ = true;
-				irBaseCycle_ = cc;
-			}
-			unsigned long cyclesSinceStart = cc - irBaseCycle_;
-			unsigned char modulation = (cyclesSinceStart / 105) & 1; // 4194304 Hz CPU, 40000 Hz remote signal
-			unsigned long timeUs = cyclesSinceStart * 36 / 151; // actually *1000000/4194304
-			// sony protocol
-			if (timeUs < 10000) // initialization allowance
-				return 0;
-			else if (timeUs < 10000 + 2400) // initial mark
-				return modulation;
-			else if (timeUs < 10000 + 2400 + 600) // initial space
-				return 0;
-			else { // send data
-				timeUs -= 13000;
-				unsigned int data = 0xFFFFF; // write 20 bits (any 20 seem to do)
-				for (unsigned long mask = 1ul << (20 - 1); mask; mask >>= 1) {
-					unsigned int markTime = (data & mask) ? 1200 : 600;
-					if (timeUs < markTime)
-						return modulation;
-
-					timeUs -= markTime;
-					if (timeUs < 600)
-						return 0;
-
-					timeUs -= 600;
-				}
-
-				return 0;
-			}
-		}
+			return ir_.getIrSignal(Infrared::remote, cc);
 	}
 
 	return 0xFF;
@@ -352,7 +315,6 @@ SYNCFUNC(HuC3Chip) {
 	NSS(ioIndex_);
 	NSS(transferValue_);
 	NSS(ramflag_);
-	NSS(irBaseCycle_);
 	NSS(rtcCycles_);
 	NSS(currentSample_);
 	NSS(toneLastUpdate_);
@@ -361,7 +323,6 @@ SYNCFUNC(HuC3Chip) {
 	NSS(enabled_);
 	NSS(committing_);
 	NSS(highIoReadOnly_);
-	NSS(irReceivingPulse_);
 }
 
 }

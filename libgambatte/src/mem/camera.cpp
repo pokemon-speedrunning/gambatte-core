@@ -56,7 +56,7 @@ void Camera::saveState(SaveState &state) const {
 	state.camera.cameraCyclesLeft = cameraCyclesLeft_;
 }
 
-void Camera::loadState(SaveState const &state, bool cgb) {
+void Camera::loadState(SaveState const &state, bool const ds) {
 	trigger_ = state.camera.trigger;
 	n_ = state.camera.n;
 	vh_ = state.camera.vh;
@@ -66,7 +66,7 @@ void Camera::loadState(SaveState const &state, bool cgb) {
 	invert_ = state.camera.invert;
 	lastCycles_ = state.camera.lastCycles;
 	cameraCyclesLeft_ = state.camera.cameraCyclesLeft;
-	ds_ = (cgb && state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
+	ds_ = ds;
 }
 
 void Camera::resetCc(unsigned long const newCc, unsigned long const oldCc) {

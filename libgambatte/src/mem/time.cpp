@@ -36,13 +36,13 @@ void Time::saveState(SaveState &state, unsigned long const cc) {
 	state.time.lastCycles = lastCycles_;
 }
 
-void Time::loadState(SaveState const &state, bool cgb) {
+void Time::loadState(SaveState const &state, bool const ds) {
 	if (!useCycles_) {
 		lastTime_.tv_sec = state.time.lastTimeSec;
 		lastTime_.tv_usec = state.time.lastTimeUsec;
 	}
 	lastCycles_ = state.time.lastCycles;
-	ds_ = (cgb && state.ppu.notCgbDmg) & state.mem.ioamhram.get()[0x14D] >> 7;
+	ds_ = ds;
 
 	if (state.time.seconds) {
 		setTime(state.time.seconds * rtcDivisor_ / 2);
