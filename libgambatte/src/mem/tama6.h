@@ -33,8 +33,8 @@ public:
 	void saveState(SaveState &state) const;
 	void loadState(SaveState const &state, bool const ds);
 
-	void getHuC3Regs(unsigned char *dest, unsigned long cycleCounter);
-	void setHuC3Regs(unsigned char *src);
+	void getRam(unsigned char *dest, unsigned long cycleCounter);
+	void setRam(unsigned char *src);
 
 	void resetCc(unsigned long oldCc, unsigned long newCc);
 	void speedChange(unsigned long cycleCounter);

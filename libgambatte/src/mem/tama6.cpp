@@ -218,8 +218,8 @@ void Tama6::runFor(unsigned long const cycles) {
 			}
 			// subrc a,[hl]
 			case 0x14:
-				cf = zf = ram_[hl() & 0x7F] - a - (~cf >> 4 & 1);
-				sf = zf & 0x10;
+				zf = ram_[hl() & 0x7F] - a - (~cf >> 4 & 1);
+				sf = cf = ~zf & 0x10;
 				a = zf & 0xF;
 				break;
 			// addc a,[hl]
@@ -228,9 +228,10 @@ void Tama6::runFor(unsigned long const cycles) {
 				sf = ~zf & 0x10;
 				a = zf & 0xF;
 				break;
-			// cp a,[hl]
+			// cp [hl],a
 			case 0x16:
-				cf = zf = a - ram_[hl() & 0x7F];
+				zf = ram_[hl() & 0x7F] - a;
+				cf = ~zf & 0x10;
 				sf = zf & 0xF;
 				break;
 			// add a,[hl]
@@ -262,7 +263,7 @@ void Tama6::runFor(unsigned long const cycles) {
 			case 0x1B:
 				ram_[hl() & 0x7F] = a;
 				zf = l - 1;
-				sf = zf & 0x10;
+				sf = ~zf & 0x10;
 				l = zf & 0xF;
 				break;
 			// invalid (???)
@@ -366,12 +367,13 @@ void Tama6::runFor(unsigned long const cycles) {
 				sf = 1;
 				break;
 			}
-			// cp [y], k
+			// cp k, [y]
 			case 0x2E:
 			{
 				unsigned imm;
 				PC_READ(imm);
-				cf = zf = ram_[imm & 0xF] - (imm >> 4);
+				zf = (imm >> 4) - ram_[imm & 0xF];
+				cf = ~zf & 0x10;
 				sf = zf & 0xF;
 				break;
 			}
@@ -505,7 +507,7 @@ void Tama6::runFor(unsigned long const cycles) {
 					{
 						unsigned addr = hl() & 0x7F;
 						zf = (opcode & 0xF) - ram_[addr];
-						sf = zf & 0x10;
+						sf = ~zf & 0x10;
 						ram_[addr] = zf & 0xF;
 						break;
 					}
@@ -529,10 +531,10 @@ void Tama6::runFor(unsigned long const cycles) {
 						sf = ~zf & 0x10;
 						l = zf & 0xF;
 						break;
-					// cp l, k
+					// cp k, l
 					case 0x9:
-						zf = l - (opcode & 0xF);
-						sf = zf & 0x10;
+						zf = (opcode & 0xF) - l;
+						sf = ~zf & 0x10;
 						break;
 					// add h, k
 					case 0xC:
@@ -540,10 +542,10 @@ void Tama6::runFor(unsigned long const cycles) {
 						sf = ~zf & 0x10;
 						h = zf & 0xF;
 						break;
-					// cp h, k
+					// cp k, h
 					case 0xD:
-						zf = h - (opcode & 0xF);
-						sf = zf & 0x10;
+						zf = (opcode & 0xF) - h;
+						sf = ~zf & 0x10;
 						break;
 					// invalid (???)
 					default:
@@ -661,12 +663,13 @@ void Tama6::runFor(unsigned long const cycles) {
 				sf = 1;
 				break;
 			}
-			// cp a, [x]
+			// cp [x], a
 			case 0x3E:
 			{
 				unsigned imm;
 				PC_READ(imm);
-				cf = zf = a - ram_[imm & 0x7F];
+				zf = ram_[imm & 0x7F] - a;
+				cf = ~zf & 0x10;
 				sf = zf & 0xF;
 				break;
 			}
@@ -766,12 +769,13 @@ void Tama6::runFor(unsigned long const cycles) {
 				h = opcode & 0xF;
 				sf = 1;
 				break;
-			// cp a, k
+			// cp k, a
 			case 0xD0: case 0xD1: case 0xD2: case 0xD3:
 			case 0xD4: case 0xD5: case 0xD6: case 0xD7:
 			case 0xD8: case 0xD9: case 0xDA: case 0xDB:
 			case 0xDC: case 0xDD: case 0xDE: case 0xDF:
-				cf = zf = a - (opcode & 0xF);
+				zf = (opcode & 0xF) - a;
+				cf = ~zf & 0x10;
 				sf = zf & 0xF;
 				break;
 			// ld l, k
