@@ -553,30 +553,30 @@ void Tama6::runFor(unsigned long const cycles) {
 						break;
 				}
 				break;
-		// 0x39 prefix
-		case 0x39:
-			PC_READ(opcode);
-			switch (opcode >> 6) {
-				// set y, b
-				case 0:
-					ram_[opcode & 0xF] |= (1 << (opcode >> 4 & 3));
-					sf = 1;
-					break;
-				// clr y, b
-				case 1:
-					ram_[opcode & 0xF] &= ~(1 << (opcode >> 4 & 3));
-					sf = 1;
-					break;
-				// test y, b
-				case 2:
-					sf = ~ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
-					break;
-				// testp y, b
-				case 3:
-					sf = ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
-					break;
-			}
-			break;
+			// 0x39 prefix
+			case 0x39:
+				PC_READ(opcode);
+				switch (opcode >> 6) {
+					// set y, b
+					case 0:
+						ram_[opcode & 0xF] |= (1 << (opcode >> 4 & 3));
+						sf = 1;
+						break;
+					// clr y, b
+					case 1:
+						ram_[opcode & 0xF] &= ~(1 << (opcode >> 4 & 3));
+						sf = 1;
+						break;
+					// test y, b
+					case 2:
+						sf = ~ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
+						break;
+					// testp y, b
+					case 3:
+						sf = ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
+						break;
+				}
+				break;
 			// 0x3A prefix
 			case 0x3A:
 				PC_READ(opcode);
