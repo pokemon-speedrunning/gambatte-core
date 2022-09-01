@@ -77,10 +77,8 @@ static inline unsigned cfFromF(unsigned f) { return f << 1 & 0x10; }
 static inline unsigned sfFromF(unsigned f) { return f & 2; }
 
 #define hl() ( h * 0x10u | l )
-#define dc() ( ram_[0x7E] * 0x100u | ram_[0x7D] * 0x10u | ram_[0x7C] )
 
 #define PC_READ(dest) do { dest = rom_[pc & 0x7FF]; pc = (pc + 1) & 0xFFF; cycleCounter += 4; } while (0)
-#define DC_WRITE(dc) do { ram_[0x7C] = dc & 0xF; ram_[0x7D] = dc >> 4 & 0xF; ram_[0x7E] = dc >> 8;  } while (0)
 
 void Tama6::runFor(unsigned long const cycles) {
 	unsigned long cycleCounter = cycleCounter_;
@@ -404,17 +402,19 @@ void Tama6::runFor(unsigned long const cycles) {
 			// ldh a, [dc+]
 			case 0x32:
 			{
-				unsigned dc = dc();
+				unsigned dc = ram_[0x7E] * 0x100u | ram_[0x7D] * 0x10u | ram_[0x7C];
 				a = zf = rom_[dc & 0x7FF] >> 4;
 				sf = 1;
 				cycleCounter += 4;
-				dc = (dc + 1) & 0xFFF;
-				DC_WRITE(dc);
+				dc = dc + 1;
+				ram_[0x7C] = dc >> 0 & 0xF;
+				ram_[0x7D] = dc >> 4 & 0xF;
+				ram_[0x7E] = dc >> 8 & 0xF;
 				break;
 			}
 			// ldl a, [dc]
 			case 0x33:
-				a = zf = rom_[dc() & 0x7FF] & 0xF;
+				a = zf = rom_[(ram_[0x7E] * 0x100u | ram_[0x7D] * 0x10u | ram_[0x7C]) & 0x7FF] & 0xF;
 				sf = 1;
 				cycleCounter += 4;
 				break;
@@ -438,7 +438,7 @@ void Tama6::runFor(unsigned long const cycles) {
 			}
 			// 0x36 prefix
 			case 0x36:
-				READ_PC(opcode);
+				PC_READ(opcode);
 				switch (opcode >> 6) {
 					// invalid (???)
 					// probably fair assumption this is just clr il
@@ -553,33 +553,33 @@ void Tama6::runFor(unsigned long const cycles) {
 						break;
 				}
 				break;
-			// 0x39 prefix
-			case 0x39:
-				READ_PC(opcode);
-				switch (opcode >> 6) {
-					// set y, b
-					case 0:
-						ram_[opcode & 0xF] |= (1 << (opcode >> 4 & 3));
-						sf = 1;
-						break;
-					// clr y, b
-					case 1:
-						ram_[opcode & 0xF] &= ~(1 << (opcode >> 4 & 3));
-						sf = 1;
-						break;
-					// test y, b
-					case 2:
-						sf = ~ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
-						break;
-					// testp y, b
-					case 3:
-						sf = ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
-						break;
-				}
-				break;
+		// 0x39 prefix
+		case 0x39:
+			PC_READ(opcode);
+			switch (opcode >> 6) {
+				// set y, b
+				case 0:
+					ram_[opcode & 0xF] |= (1 << (opcode >> 4 & 3));
+					sf = 1;
+					break;
+				// clr y, b
+				case 1:
+					ram_[opcode & 0xF] &= ~(1 << (opcode >> 4 & 3));
+					sf = 1;
+					break;
+				// test y, b
+				case 2:
+					sf = ~ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
+					break;
+				// testp y, b
+				case 3:
+					sf = ram_[opcode & 0xF] & (1 << (opcode >> 4 & 3));
+					break;
+			}
+			break;
 			// 0x3A prefix
 			case 0x3A:
-				READ_PC(opcode);
+				PC_READ(opcode);
 				switch (opcode >> 4) {
 					// in a, [p]
 					case 0x2:
@@ -609,7 +609,7 @@ void Tama6::runFor(unsigned long const cycles) {
 				break;
 			// 0x3B prefix
 			case 0x3B:
-				READ_PC(opcode);
+				PC_READ(opcode);
 				switch (opcode >> 6) {
 					// set [p], b
 					case 0:
@@ -734,7 +734,7 @@ void Tama6::runFor(unsigned long const cycles) {
 				ram_[0x40 + spw + 2] = pc >> 8 & 0xF;
 				ram_[0x40 + spw + 3] = 0;
 				ram_[0x7F] = (ram_[0x7F] - 1) & 0xF;
-				pc = (opcode & 0xF ? opcode & 0xF : 0x10) << 3 | 6;
+				pc = (opcode & 0xF ? opcode & 0xF : 0x10) << 3 | 0x6;
 				break;
 			}
 			// bss a
