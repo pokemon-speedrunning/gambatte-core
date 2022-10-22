@@ -129,7 +129,7 @@ void Channel2::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 		while (dutyUnit_.counter() <= nextMajorEvent) {
 			*buf += out - prevOut_;
 			prevOut_ = out;
-			buf += dutyUnit_.counter() - cc;
+			buf += std::ptrdiff_t(dutyUnit_.counter()) - cc;
 			cc = dutyUnit_.counter();
 			dutyUnit_.event();
 			out = dutyUnit_.isHighState() ? outHigh : outLow;

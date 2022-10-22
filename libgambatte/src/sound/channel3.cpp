@@ -174,7 +174,7 @@ void Channel3::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 			while (cnt <= nextMajorEvent) {
 				*buf += out - prevOut;
 				prevOut = out;
-				buf += cnt - cc;
+				buf += std::ptrdiff_t(cnt) - cc;
 				cc = cnt;
 				cnt += period;
 				++pos;

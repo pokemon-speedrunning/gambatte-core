@@ -256,7 +256,7 @@ void Channel4::update(uint_least32_t *buf, unsigned long const soBaseVol, unsign
 			while (lfsr.counter() <= nextMajorEvent) {
 				*buf += out - prevOut_;
 				prevOut_ = out;
-				buf += lfsr.counter() - cc;
+				buf += std::ptrdiff_t(lfsr.counter()) - cc;
 				cc = lfsr.counter();
 				lfsr.event();
 				out = lfsr.isHighState() ? outHigh : outLow;
