@@ -405,9 +405,6 @@ void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb
 	std::memset(state.mem.sram.ptr, 0xFF, state.mem.sram.size());
 
 	state.time.seconds = 0;
-	state.time.lastTimeSec = Time::now().tv_sec;
-	state.time.lastTimeUsec = Time::now().tv_usec;
-	state.time.lastCycles = state.cpu.cycleCounter;
 
 	std::memset(state.huc3.io.ptr, 0, state.huc3.io.size());
 

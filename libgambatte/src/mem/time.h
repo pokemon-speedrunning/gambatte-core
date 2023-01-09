@@ -22,7 +22,6 @@
 #include "newstate.h"
 
 #include <ctime>
-#include <sys/time.h>
 
 namespace gambatte {
 
@@ -30,20 +29,14 @@ struct SaveState;
 
 class Clock {
 public:
-	virtual void updateClock(unsigned long const cc);
-	virtual unsigned long long timeNow() const;
-	virtual void setTime(unsigned long long const dividers);
-	virtual void setBaseTime(timeval baseTime, unsigned long const cc);
+	virtual void updateClock(unsigned long const cc) = 0;
+	virtual unsigned long long timeNow() const = 0;
+	virtual void setTime(unsigned long long const dividers) = 0;
+	virtual void setBaseTime(unsigned long long baseTime, unsigned long const cc) = 0;
 };
 
 class Time {
 public:
-	static timeval now() {
-		timeval t;
-		gettimeofday(&t, 0);
-		return t;
-	}
-
 	Time();
 	void saveState(SaveState &state, unsigned long cycleCounter);
 	void loadState(SaveState const &state, bool const ds);
@@ -56,7 +49,7 @@ public:
 	void set(Clock *clock) { clock_ = clock; }
 	unsigned long long timeNow() const { return clock_ ? clock_->timeNow() : 0; }
 	void setTime(unsigned long long const dividers) { if (clock_) clock_->setTime(dividers); }
-	void setBaseTime(timeval baseTime, unsigned long const cc) { if (clock_) clock_->setBaseTime(baseTime, cc); }
+	void setBaseTime(unsigned long long baseTime, unsigned long const cc) { if (clock_) clock_->setBaseTime(baseTime, cc); }
 
 	unsigned long getRtcDivisor() { return rtcDivisor_; }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { rtcDivisor_ = 0x400000L + rtcDivisorOffset; }	
@@ -66,7 +59,7 @@ public:
 	template<bool isReader>void SyncState(NewState *ns);
 
 private:
-	timeval lastTime_;
+	std::time_t lastTime_;
 	unsigned long lastCycles_;
 	bool useCycles_;
 	unsigned long rtcDivisor_;

@@ -30,25 +30,19 @@ Time::Time()
 
 void Time::saveState(SaveState &state, unsigned long const cc) {
 	update(cc);
-	state.time.seconds = 0;
-	state.time.lastTimeSec = !useCycles_ ? lastTime_.tv_sec : 0;
-	state.time.lastTimeUsec = !useCycles_ ? lastTime_.tv_usec : 0;
-	state.time.lastCycles = lastCycles_;
+	state.time.seconds = 0; // old total seconds field, 0 indicates new time system
+
+	// other fields used to be saved, but they no longer need to be saved
 }
 
 void Time::loadState(SaveState const &state, bool const ds) {
-	if (!useCycles_) {
-		lastTime_.tv_sec = state.time.lastTimeSec;
-		lastTime_.tv_usec = state.time.lastTimeUsec;
-	}
-	lastCycles_ = state.time.lastCycles;
+	lastTime_ = !useCycles_ ? std::time_t(0) : 0; // avoid a relatively expensive time call if we are not using real time
+	lastCycles_ = state.cpu.cycleCounter;
 	ds_ = ds;
 
-	if (state.time.seconds) {
+	// state backwards compat with old time system
+	if (state.time.seconds)
 		setTime(state.time.seconds * rtcDivisor_ / 2);
-		lastTime_ = now();
-		lastCycles_ = state.cpu.cycleCounter;
-	}
 }
 
 void Time::resetCc(unsigned long const oldCc, unsigned long const newCc) {
@@ -64,29 +58,30 @@ void Time::speedChange(unsigned long const cc) {
 void Time::setTimeMode(bool useCycles, unsigned long const cc) {
 	update(cc);
 	useCycles_ = useCycles;
+	lastCycles_ = cc;
+	lastTime_ = std::time(0);
 }
 
 unsigned long Time::diff(unsigned long const cc) {
-	unsigned long diff_;
-	timeval now_ = now();
+	unsigned long diff;
 	if (useCycles_) {
-		unsigned long diff = (cc - lastCycles_) >> ds_;
-		diff_ = diff;
+		diff = (cc - lastCycles_) >> ds_;
+		lastCycles_ = cc;
 	} else {
-		timeval diff = { now_.tv_sec - lastTime_.tv_sec, 0 };
-		diff_ = diff.tv_sec * rtcDivisor_;
+		std::time_t const now = std::time(0);
+		diff = (now - lastTime_) * rtcDivisor_;
+		lastTime_ = now;
 	}
-	lastCycles_ = cc;
-	lastTime_ = now_;
-	return diff_;
+	return diff;
 }
 
 SYNCFUNC(Time) {
-	NSS(lastTime_.tv_sec);
-	NSS(lastTime_.tv_usec);
 	NSS(lastCycles_);
 	NSS(useCycles_);
 	NSS(ds_);
+
+	if (isReader && !useCycles_)
+		lastTime_ = std::time(0);
 }
 
 }

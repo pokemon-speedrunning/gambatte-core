@@ -370,9 +370,6 @@ SaverList::SaverList()
 	{ static char const label[] = { n,r,NO4,NO4,       NUL }; ADD(spu.ch4.nr4); }
 	{ static char const label[] = { c,NO4,m,a,s,t,r, NUL }; ADD(spu.ch4.master); }
 	{ static char const label[] = { t,i,m,e,s,e,c, NUL }; ADD(time.seconds); }
-	{ static char const label[] = { t,i,m,e,l,t,s, NUL }; ADD(time.lastTimeSec); }
-	{ static char const label[] = { t,i,m,e,l,t,u, NUL }; ADD(time.lastTimeUsec); }
-	{ static char const label[] = { t,i,m,e,l,c,   NUL }; ADD(time.lastCycles); }
 	{ static char const label[] = { r,t,c,d,h,     NUL }; ADD(rtc.dataDh); }
 	{ static char const label[] = { r,t,c,d,l,     NUL }; ADD(rtc.dataDl); }
 	{ static char const label[] = { r,t,c,h,       NUL }; ADD(rtc.dataH); }

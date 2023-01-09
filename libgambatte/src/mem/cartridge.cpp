@@ -148,10 +148,6 @@ int asHex(char c) {
 	return c >= 'A' ? c - 'A' + 0xA : c - '0';
 }
 
-static bool operator>(timeval l, timeval r) {
-	return (l.tv_sec * 1000000 + l.tv_usec) > (r.tv_sec * 1000000 + r.tv_usec);
-}
-
 }
 
 Cartridge::Cartridge()
@@ -369,8 +365,6 @@ LoadRes Cartridge::loadROM(Array<unsigned char> &buffer,
 	return LOADRES_OK;
 }
 
-enum { Dh = 0, Dl = 1, H = 2, M = 3, S = 4, C = 5, L = 6 };
-
 unsigned Cartridge::getSavedataLength() {
 	unsigned ret = 0;
 	if (hasBattery(romHeader[0x147])) {
@@ -398,22 +392,23 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 	if (hasRtc(romHeader[0x147])) {
 		std::ifstream file((sbp + ".rtc").c_str(), std::ios::binary | std::ios::in);
 		if (file) {
-			timeval baseTime;
-			baseTime.tv_sec = file.get() & 0xFF;
-			baseTime.tv_sec = baseTime.tv_sec << 8 | (file.get() & 0xFF);
-			baseTime.tv_sec = baseTime.tv_sec << 8 | (file.get() & 0xFF);
-			baseTime.tv_sec = baseTime.tv_sec << 8 | (file.get() & 0xFF);
-			baseTime.tv_usec = file.get() & 0xFF;
+			unsigned long long baseTime;
+			baseTime = file.get() & 0xFF;
+			baseTime = baseTime << 8 | (file.get() & 0xFF);
+			baseTime = baseTime << 8 | (file.get() & 0xFF);
+			baseTime = baseTime << 8 | (file.get() & 0xFF);
+			baseTime = baseTime << 8 | (file.get() & 0xFF);
 
 			if (!file.eof()) {
-				baseTime.tv_usec = baseTime.tv_usec << 8 | (file.get() & 0xFF);
-				baseTime.tv_usec = baseTime.tv_usec << 8 | (file.get() & 0xFF);
-				baseTime.tv_usec = baseTime.tv_usec << 8 | (file.get() & 0xFF);
+				baseTime = baseTime << 8 | (file.get() & 0xFF);
+				baseTime = baseTime << 8 | (file.get() & 0xFF);
+				baseTime = baseTime << 8 | (file.get() & 0xFF);
 			} else
-				baseTime.tv_usec = 0;
+				baseTime >>= 8;
 
-			if (baseTime > Time::now()) // prevent malformed RTC files from giving negative times
-				baseTime = Time::now();
+			unsigned long long const now = std::time(0);
+			if (baseTime > now) // prevent malformed RTC files from giving negative times
+				baseTime = now;
 
 			if (isHuC3()) {
 				unsigned char huc3Regs[0x100 + 4] { 0 };
@@ -427,24 +422,23 @@ void Cartridge::loadSavedata(unsigned long const cc) {
 				huc3_.setHuC3Regs(huc3Regs);
 			} else {
 				unsigned long rtcRegs[11] { 0 };
-				rtcRegs[Dh] = file.get() & 0xC1;
+				rtcRegs[rtc_dh] = file.get() & 0xC1;
 				if (!file.eof()) {
-					rtcRegs[Dl] = file.get() & 0xFF;
-					rtcRegs[H] = file.get() & 0x1F;
-					rtcRegs[M] = file.get() & 0x3F;
-					rtcRegs[S] = file.get() & 0x3F;
-					rtcRegs[C] = file.get() & 0xFF;
-					rtcRegs[C] = rtcRegs[C] << 8 | (file.get() & 0xFF);
-					rtcRegs[C] = rtcRegs[C] << 8 | (file.get() & 0xFF);
-					rtcRegs[C] = rtcRegs[C] << 8 | (file.get() & 0xFF);
-					rtcRegs[Dh+L] = file.get() & 0xC1;
-					rtcRegs[Dl+L] = file.get() & 0xFF;
-					rtcRegs[H+L] = file.get() & 0x1F;
-					rtcRegs[M+L] = file.get() & 0x3F;
-					rtcRegs[S+L] = file.get() & 0x3F;
-				}
-				else
-					rtcRegs[Dh] = 0;
+					rtcRegs[rtc_dl] = file.get() & 0xFF;
+					rtcRegs[rtc_h] = file.get() & 0x1F;
+					rtcRegs[rtc_m] = file.get() & 0x3F;
+					rtcRegs[rtc_s] = file.get() & 0x3F;
+					rtcRegs[rtc_c] = file.get() & 0xFF;
+					rtcRegs[rtc_c] = rtcRegs[rtc_c] << 8 | (file.get() & 0xFF);
+					rtcRegs[rtc_c] = rtcRegs[rtc_c] << 8 | (file.get() & 0xFF);
+					rtcRegs[rtc_c] = rtcRegs[rtc_c] << 8 | (file.get() & 0xFF);
+					rtcRegs[rtc_dh + rtc_l] = file.get() & 0xC1;
+					rtcRegs[rtc_dl + rtc_l] = file.get() & 0xFF;
+					rtcRegs[rtc_h + rtc_l] = file.get() & 0x1F;
+					rtcRegs[rtc_m + rtc_l] = file.get() & 0x3F;
+					rtcRegs[rtc_s + rtc_l] = file.get() & 0x3F;
+				} else
+					rtcRegs[rtc_dh] = 0;
 
 				rtc_.setRtcRegs(rtcRegs);
 			}
@@ -465,15 +459,15 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 
 	if (hasRtc(romHeader[0x147])) {
 		std::ofstream file((sbp + ".rtc").c_str(), std::ios::binary | std::ios::out);
-		timeval baseTime = Time::now();
-		file.put(baseTime.tv_sec  >> 24 & 0xFF);
-		file.put(baseTime.tv_sec  >> 16 & 0xFF);
-		file.put(baseTime.tv_sec  >>  8 & 0xFF);
-		file.put(baseTime.tv_sec        & 0xFF);
-		file.put(baseTime.tv_usec >> 24 & 0xFF);
-		file.put(baseTime.tv_usec >> 16 & 0xFF);
-		file.put(baseTime.tv_usec >>  8 & 0xFF);
-		file.put(baseTime.tv_usec       & 0xFF);
+		unsigned long long baseTime = std::time(0);
+		file.put(baseTime >> 56 & 0xFF);
+		file.put(baseTime >> 48 & 0xFF);
+		file.put(baseTime >> 40 & 0xFF);
+		file.put(baseTime >> 32 & 0xFF);
+		file.put(baseTime >> 24 & 0xFF);
+		file.put(baseTime >> 16 & 0xFF);
+		file.put(baseTime >>  8 & 0xFF);
+		file.put(baseTime       & 0xFF);
 		if (isHuC3()) {
 			unsigned char huc3Regs[0x100 + 4];
 			huc3_.getHuC3Regs(huc3Regs, cc);
@@ -482,20 +476,20 @@ void Cartridge::saveSavedata(unsigned long const cc) {
 		} else {
 			unsigned long rtcRegs[11];
 			rtc_.getRtcRegs(rtcRegs, cc);
-			file.put(rtcRegs[Dh]      & 0xC1);
-			file.put(rtcRegs[Dl]      & 0xFF);
-			file.put(rtcRegs[H]       & 0x1F);
-			file.put(rtcRegs[M]       & 0x3F);
-			file.put(rtcRegs[S]       & 0x3F);
-			file.put(rtcRegs[C] >> 24 & 0xFF);
-			file.put(rtcRegs[C] >> 16 & 0xFF);
-			file.put(rtcRegs[C] >>  8 & 0xFF);
-			file.put(rtcRegs[C]       & 0xFF);
-			file.put(rtcRegs[Dh+L]    & 0xC1);
-			file.put(rtcRegs[Dl+L]    & 0xFF);
-			file.put(rtcRegs[H+L]     & 0x1F);
-			file.put(rtcRegs[M+L]     & 0x3F);
-			file.put(rtcRegs[S+L]     & 0x3F);
+			file.put(rtcRegs[rtc_dh]         & 0xC1);
+			file.put(rtcRegs[rtc_dl]         & 0xFF);
+			file.put(rtcRegs[rtc_h]          & 0x1F);
+			file.put(rtcRegs[rtc_m]          & 0x3F);
+			file.put(rtcRegs[rtc_s]          & 0x3F);
+			file.put(rtcRegs[rtc_c]    >> 24 & 0xFF);
+			file.put(rtcRegs[rtc_c]    >> 16 & 0xFF);
+			file.put(rtcRegs[rtc_c]    >>  8 & 0xFF);
+			file.put(rtcRegs[rtc_c]          & 0xFF);
+			file.put(rtcRegs[rtc_dh + rtc_l] & 0xC1);
+			file.put(rtcRegs[rtc_dl + rtc_l] & 0xFF);
+			file.put(rtcRegs[rtc_h + rtc_l]  & 0x1F);
+			file.put(rtcRegs[rtc_m + rtc_l]  & 0x3F);
+			file.put(rtcRegs[rtc_s + rtc_l]  & 0x3F);
 		}
 	}
 }
@@ -508,15 +502,15 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc) {
 	}
 
 	if (hasRtc(romHeader[0x147])) {
-		timeval baseTime = Time::now();
-		*dest++ = (baseTime.tv_sec  >> 24 & 0xFF);
-		*dest++ = (baseTime.tv_sec  >> 16 & 0xFF);
-		*dest++ = (baseTime.tv_sec  >>  8 & 0xFF);
-		*dest++ = (baseTime.tv_sec        & 0xFF);
-		*dest++ = (baseTime.tv_usec >> 24 & 0xFF);
-		*dest++ = (baseTime.tv_usec >> 16 & 0xFF);
-		*dest++ = (baseTime.tv_usec >>  8 & 0xFF);
-		*dest++ = (baseTime.tv_usec       & 0xFF);
+		unsigned long long baseTime = std::time(0);
+		*dest++ = baseTime >> 56 & 0xFF;
+		*dest++ = baseTime >> 48 & 0xFF;
+		*dest++ = baseTime >> 40 & 0xFF;
+		*dest++ = baseTime >> 32 & 0xFF;
+		*dest++ = baseTime >> 24 & 0xFF;
+		*dest++ = baseTime >> 16 & 0xFF;
+		*dest++ = baseTime >>  8 & 0xFF;
+		*dest++ = baseTime       & 0xFF;
 		if (isHuC3()) {
 			unsigned char huc3Regs[0x100 + 4];
 			huc3_.getHuC3Regs(huc3Regs, cc);
@@ -524,20 +518,20 @@ void Cartridge::saveSavedata(char* dest, unsigned long const cc) {
 		} else {
 			unsigned long rtcRegs[11];
 			rtc_.getRtcRegs(rtcRegs, cc);
-			*dest++ = (rtcRegs[Dh]      & 0xC1);
-			*dest++ = (rtcRegs[Dl]      & 0xFF);
-			*dest++ = (rtcRegs[H]       & 0x1F);
-			*dest++ = (rtcRegs[M]       & 0x3F);
-			*dest++ = (rtcRegs[S]       & 0x3F);
-			*dest++ = (rtcRegs[C] >> 24 & 0xFF);
-			*dest++ = (rtcRegs[C] >> 16 & 0xFF);
-			*dest++ = (rtcRegs[C] >>  8 & 0xFF);
-			*dest++ = (rtcRegs[C]       & 0xFF);
-			*dest++ = (rtcRegs[Dh+L]    & 0xC1);
-			*dest++ = (rtcRegs[Dl+L]    & 0xFF);
-			*dest++ = (rtcRegs[H+L]     & 0x1F);
-			*dest++ = (rtcRegs[M+L]     & 0x3F);
-			*dest++ = (rtcRegs[S+L]     & 0x3F);
+			*dest++ = rtcRegs[rtc_dh]         & 0xC1;
+			*dest++ = rtcRegs[rtc_dl]         & 0xFF;
+			*dest++ = rtcRegs[rtc_h]          & 0x1F;
+			*dest++ = rtcRegs[rtc_m]          & 0x3F;
+			*dest++ = rtcRegs[rtc_s]          & 0x3F;
+			*dest++ = rtcRegs[rtc_c]    >> 24 & 0xFF;
+			*dest++ = rtcRegs[rtc_c]    >> 16 & 0xFF;
+			*dest++ = rtcRegs[rtc_c]    >>  8 & 0xFF;
+			*dest++ = rtcRegs[rtc_c]          & 0xFF;
+			*dest++ = rtcRegs[rtc_dh + rtc_l] & 0xC1;
+			*dest++ = rtcRegs[rtc_dl + rtc_l] & 0xFF;
+			*dest++ = rtcRegs[rtc_h + rtc_l]  & 0x1F;
+			*dest++ = rtcRegs[rtc_m + rtc_l]  & 0x3F;
+			*dest++ = rtcRegs[rtc_s + rtc_l]  & 0x3F;
 		}
 	}
 }
@@ -551,18 +545,19 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc) {
 	}
 
 	if (hasRtc(romHeader[0x147])) {
-		timeval baseTime;
-		baseTime.tv_sec = (*data++ & 0xFF);
-		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
-		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
-		baseTime.tv_sec = baseTime.tv_sec << 8 | (*data++ & 0xFF);
-		baseTime.tv_usec = (*data++ & 0xFF);
-		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
-		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
-		baseTime.tv_usec = baseTime.tv_usec << 8 | (*data++ & 0xFF);
+		unsigned long long baseTime;
+		baseTime = *data++ & 0xFF;
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
+		baseTime = baseTime << 8 | (*data++ & 0xFF);
 
-		if (baseTime > Time::now()) // prevent malformed save files from giving negative times
-			baseTime = Time::now();
+		unsigned long long const now = std::time(0);
+		if (baseTime > now) // prevent malformed save files from giving negative times
+			baseTime = now;
 
 		if (isHuC3()) {
 			unsigned char huc3Regs[0x100 + 4];
@@ -570,20 +565,20 @@ void Cartridge::loadSavedata(char const *data, unsigned long const cc) {
 			huc3_.setHuC3Regs(huc3Regs);
 		} else {
 			unsigned long rtcRegs[11];
-			rtcRegs[Dh] = *data++ & 0xC1;
-			rtcRegs[Dl] = *data++ & 0xFF;
-			rtcRegs[H] = *data++ & 0x1F;
-			rtcRegs[M] = *data++ & 0x3F;
-			rtcRegs[S] = *data++ & 0x3F;
-			rtcRegs[C] = *data++ & 0xFF;
-			rtcRegs[C] = rtcRegs[C] << 8 | (*data++ & 0xFF);
-			rtcRegs[C] = rtcRegs[C] << 8 | (*data++ & 0xFF);
-			rtcRegs[C] = rtcRegs[C] << 8 | (*data++ & 0xFF);
-			rtcRegs[Dh+L] = *data++ & 0xC1;
-			rtcRegs[Dl+L] = *data++ & 0xFF;
-			rtcRegs[H+L] = *data++ & 0x1F;
-			rtcRegs[M+L] = *data++ & 0x3F;
-			rtcRegs[S+L] = *data++ & 0x3F;
+			rtcRegs[rtc_dh] = *data++ & 0xC1;
+			rtcRegs[rtc_dl] = *data++ & 0xFF;
+			rtcRegs[rtc_h] = *data++ & 0x1F;
+			rtcRegs[rtc_m] = *data++ & 0x3F;
+			rtcRegs[rtc_s] = *data++ & 0x3F;
+			rtcRegs[rtc_c] = *data++ & 0xFF;
+			rtcRegs[rtc_c] = rtcRegs[rtc_c] << 8 | (*data++ & 0xFF);
+			rtcRegs[rtc_c] = rtcRegs[rtc_c] << 8 | (*data++ & 0xFF);
+			rtcRegs[rtc_c] = rtcRegs[rtc_c] << 8 | (*data++ & 0xFF);
+			rtcRegs[rtc_dh + rtc_l] = *data++ & 0xC1;
+			rtcRegs[rtc_dl + rtc_l] = *data++ & 0xFF;
+			rtcRegs[rtc_h + rtc_l] = *data++ & 0x1F;
+			rtcRegs[rtc_m + rtc_l] = *data++ & 0x3F;
+			rtcRegs[rtc_s + rtc_l] = *data++ & 0x3F;
 			rtc_.setRtcRegs(rtcRegs);
 		}
 

@@ -189,61 +189,56 @@ void Rtc::loadState(SaveState const &state) {
 	doSwapActive();
 }
 
-enum { Dh = 0, Dl = 1, H = 2, M = 3, S = 4, C = 5, L = 6 };
-
 void Rtc::getRtcRegs(unsigned long *dest, unsigned long const cc) {
 	updateClock(cc);
-	dest[Dh] = dataDh_;
-	dest[Dl] = dataDl_;
-	dest[H] = dataH_;
+	dest[rtc_dh] = dataDh_;
+	dest[rtc_dl] = dataDl_;
+	dest[rtc_h] = dataH_;
 	if (dataH_ < 0)
-		dest[H] += 0x20;
+		dest[rtc_h] += 0x20;
 
-	dest[M] = dataM_;
+	dest[rtc_m] = dataM_;
 	if (dataM_ < 0)
-		dest[M] += 0x40;
+		dest[rtc_m] += 0x40;
 
-	dest[S] = dataS_;
+	dest[rtc_s] = dataS_;
 	if (dataS_ < 0)
-		dest[S] += 0x40;
+		dest[rtc_s] += 0x40;
 
-	dest[C] = dataC_;
-	dest[Dh+L] = latchDh_;
-	dest[Dl+L] = latchDl_;
-	dest[H+L] = latchH_;
-	dest[M+L] = latchM_;
-	dest[S+L] = latchS_;
+	dest[rtc_c] = dataC_;
+	dest[rtc_dh + rtc_l] = latchDh_;
+	dest[rtc_dl + rtc_l] = latchDl_;
+	dest[rtc_h + rtc_l] = latchH_;
+	dest[rtc_m + rtc_l] = latchM_;
+	dest[rtc_s + rtc_l] = latchS_;
 }
 
 void Rtc::setRtcRegs(unsigned long *src) {
-	dataDh_ = src[Dh];
-	dataDl_ = src[Dl];
-	dataH_ = src[H];
+	dataDh_ = src[rtc_dh];
+	dataDl_ = src[rtc_dl];
+	dataH_ = src[rtc_h];
 	if (dataH_ >= 24)
 		dataH_ -= 0x20;
 
-	dataM_ = src[M];
+	dataM_ = src[rtc_m];
 	if (dataM_ >= 60)
 		dataM_ -= 0x40;
 
-	dataS_ = src[S];
+	dataS_ = src[rtc_s];
 	if (dataS_ >= 60)
 		dataS_ -= 0x40;
 
-	dataC_ = src[C];
-	latchDh_ = src[Dh+L];
-	latchDl_ = src[Dl+L];
-	latchH_ = src[H+L];
-	latchM_ = src[M+L];
-	latchS_ = src[S+L];
+	dataC_ = src[rtc_c];
+	latchDh_ = src[rtc_dh + rtc_l];
+	latchDl_ = src[rtc_dl + rtc_l];
+	latchH_ = src[rtc_h + rtc_l];
+	latchM_ = src[rtc_m + rtc_l];
+	latchS_ = src[rtc_s + rtc_l];
 }
 
-void Rtc::setBaseTime(timeval baseTime, unsigned long const cc) {
+void Rtc::setBaseTime(unsigned long long baseTime, unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor();
-	timeval now_ = Time::now();
-	unsigned long long diff = ((now_.tv_sec - baseTime.tv_sec) * cycleDivisor)
-	+ (((now_.tv_usec - baseTime.tv_usec) * cycleDivisor) / 1000000.0f)
-	+ cc;
+	unsigned long long diff = (std::time(0) - baseTime) * cycleDivisor + cc;
 	if (!(dataDh_ & 0x40)) {
 		dataC_ += diff % cycleDivisor;
 		if (dataC_ >= cycleDivisor) {

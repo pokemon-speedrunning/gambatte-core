@@ -24,6 +24,15 @@
 
 namespace gambatte {
 
+enum {
+	rtc_dh,
+	rtc_dl,
+	rtc_h,
+	rtc_m,
+	rtc_s,
+	rtc_c,
+	rtc_l };
+
 struct SaveState;
 
 class Rtc : public Clock {
@@ -55,7 +64,7 @@ public:
 	virtual void updateClock(unsigned long const cc);
 	virtual unsigned long long timeNow() const;
 	virtual void setTime(unsigned long long const dividers);
-	virtual void setBaseTime(timeval baseTime, unsigned long const cc);
+	virtual void setBaseTime(unsigned long long baseTime, unsigned long const cc);
 
 	template<bool isReader>void SyncState(NewState *ns);
 

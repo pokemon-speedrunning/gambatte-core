@@ -224,9 +224,6 @@ struct SaveState {
 
 	struct Time {
 		unsigned long seconds;
-		unsigned long lastTimeSec;
-		unsigned long lastTimeUsec;
-		unsigned long lastCycles;
 	} time;
 
 	struct RTC {

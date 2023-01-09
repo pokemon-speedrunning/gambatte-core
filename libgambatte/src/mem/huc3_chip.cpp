@@ -89,12 +89,9 @@ void HuC3Chip::setTime(unsigned long long const dividers) {
 	io_[0x15] = days >> 8 & 0x0F;
 }
 
-void HuC3Chip::setBaseTime(timeval baseTime, unsigned long const cc) {
+void HuC3Chip::setBaseTime(unsigned long long baseTime, unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor() * 60;
-	timeval now_ = Time::now();
-	unsigned long long diff = ((now_.tv_sec - baseTime.tv_sec) * cycleDivisor / 60)
-	+ (((now_.tv_usec - baseTime.tv_usec) * cycleDivisor) / 1000000.0f)
-	+ cc;
+	unsigned long long diff = (std::time(0) - baseTime) * cycleDivisor / 60 + cc;
 	unsigned long minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
 	unsigned long days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
 	rtcCycles_ += diff % cycleDivisor;
