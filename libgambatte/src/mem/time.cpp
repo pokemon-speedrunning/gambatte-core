@@ -24,7 +24,7 @@ namespace gambatte {
 Time::Time()
 : lastTime_(std::time(0))
 , lastCycles_(0)
-: useCycles_(true)
+, useCycles_(true)
 , rtcDivisor_(0x400000)
 , ds_(0)
 , clock_(0)
