@@ -62,14 +62,14 @@ void Time::setTimeMode(bool useCycles, unsigned long const cc) {
 	lastTime_ = std::time(0);
 }
 
-unsigned long Time::diff(unsigned long const cc) {
-	unsigned long diff;
+unsigned long long Time::diff(unsigned long const cc) {
+	unsigned long long diff;
 	if (useCycles_) {
 		diff = (cc - lastCycles_) >> ds_;
 		lastCycles_ = cc;
 	} else {
 		std::time_t const now = std::time(0);
-		diff = (now - lastTime_) * rtcDivisor_;
+		diff = (now - lastTime_) * (unsigned long long)rtcDivisor_;
 		lastTime_ = now;
 	}
 	return diff;

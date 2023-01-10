@@ -54,7 +54,7 @@ public:
 	unsigned long getRtcDivisor() { return rtcDivisor_; }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { rtcDivisor_ = 0x400000L + rtcDivisorOffset; }	
 
-	unsigned long diff(unsigned long cycleCounter);
+	unsigned long long diff(unsigned long cycleCounter);
 
 	template<bool isReader>void SyncState(NewState *ns);
 

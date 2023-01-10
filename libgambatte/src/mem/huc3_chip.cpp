@@ -46,7 +46,7 @@ HuC3Chip::HuC3Chip(Time &time, Infrared &ir)
 
 void HuC3Chip::updateClock(unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor() * 60;
-	unsigned long diff = time_.diff(cc);
+	unsigned long long diff = time_.diff(cc);
 	unsigned long minutes = (io_[0x10] & 0x0F) | ((io_[0x11] & 0x0F) << 4) | ((io_[0x12] & 0x0F) << 8);
 	unsigned long days = (io_[0x13] & 0x0F) | ((io_[0x14] & 0x0F) << 4) | ((io_[0x15] & 0x0F) << 8);
 	rtcCycles_ += diff % cycleDivisor;

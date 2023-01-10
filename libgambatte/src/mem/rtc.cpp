@@ -43,7 +43,7 @@ Rtc::Rtc(Time &time)
 
 void Rtc::updateClock(unsigned long const cc) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor();
-	unsigned long diff = time_.diff(cc);
+	unsigned long long diff = time_.diff(cc);
 	if (!(dataDh_ & 0x40)) {
 		dataC_ += diff % cycleDivisor;
 		if (dataC_ >= cycleDivisor) {
