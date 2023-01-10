@@ -368,6 +368,8 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.ir.remote.cyclesElapsed = 0;
 	state.ir.remote.command = 0;
 
+	state.time.seconds = 0;
+
 	state.huc3.ioIndex = 0;
 	state.huc3.transferValue = 0;
 	state.huc3.ramflag = 0;
@@ -403,8 +405,6 @@ void gambatte::setInitStateCart(SaveState &state, const bool cgb, const bool agb
 		setInitialDmgWram(state.mem.wram.ptr);
 
 	std::memset(state.mem.sram.ptr, 0xFF, state.mem.sram.size());
-
-	state.time.seconds = 0;
 
 	std::memset(state.huc3.io.ptr, 0, state.huc3.io.size());
 

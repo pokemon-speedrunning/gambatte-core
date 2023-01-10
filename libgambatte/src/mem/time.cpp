@@ -22,8 +22,11 @@
 namespace gambatte {
 
 Time::Time()
+: lastTime_(std::time(0))
+, lastCycles_(0)
 : useCycles_(true)
 , rtcDivisor_(0x400000)
+, ds_(0)
 , clock_(0)
 {
 }
@@ -31,12 +34,10 @@ Time::Time()
 void Time::saveState(SaveState &state, unsigned long const cc) {
 	update(cc);
 	state.time.seconds = 0; // old total seconds field, 0 indicates new time system
-
 	// other fields used to be saved, but they no longer need to be saved
 }
 
 void Time::loadState(SaveState const &state, bool const ds) {
-	lastTime_ = !useCycles_ ? std::time_t(0) : 0; // avoid a relatively expensive time call if we are not using real time
 	lastCycles_ = state.cpu.cycleCounter;
 	ds_ = ds;
 
@@ -79,9 +80,6 @@ SYNCFUNC(Time) {
 	NSS(lastCycles_);
 	NSS(useCycles_);
 	NSS(ds_);
-
-	if (isReader && !useCycles_)
-		lastTime_ = std::time(0);
 }
 
 }
