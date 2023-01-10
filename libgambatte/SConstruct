@@ -76,9 +76,11 @@ if not bool(ARGUMENTS.get('NO_ZIP', 0)) and conf.CheckHeader('zlib.h'):
 	sourceFiles.append('src/file/unzip/ioapi.c')
 	sourceFiles.append('src/file/file_zip.cpp')
 	env.Append(CCFLAGS = ' -DHAVE_ZLIB_H')
+	sys_libs = ['z']
 else:
 	sourceFiles.append('src/file/file.cpp')
 	sourceFiles.append('src/file/crc32.cpp')
+	sys_libs = []
 
 conf.Finish()
 
@@ -93,7 +95,6 @@ def rev():
 		return ' -DREVISION=-1'
 
 import sys
-sys_libs = ['z']
 if sys.platform == 'darwin':
 	sys_libs.append('System')
 
