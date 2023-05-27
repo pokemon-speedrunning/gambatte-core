@@ -1,0 +1,12 @@
+prefix=${pcfiledir}/@LIBGAMBATTE_PC_TO_PREFIX@
+exec_prefix=${prefix}
+libdir=${prefix}/@LIBGAMBATTE_PC_LIBDIR@
+includedir=${prefix}/@LIBGAMBATTE_PC_INCLUDEDIR@
+
+Name: libgambatte
+Description: The gambatte emulator core library
+Version: @LIBGAMBATTE_REVISION@
+Cflags: -I${includedir}/gambatte
+Libs: -L${libdir} -lgambatte
+Requires: @LIBGAMBATTE_PC_REQUIRES@
+Requires.private: @LIBGAMBATTE_PC_REQUIRES_PRIVATE@
