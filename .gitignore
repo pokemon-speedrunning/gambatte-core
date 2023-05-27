@@ -39,3 +39,6 @@ gambatte_qt/src/platforms.pri
 *.dylib
 
 .DS_Store
+
+build/
+out/
