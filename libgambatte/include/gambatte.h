@@ -23,7 +23,7 @@
 #include "inputgetter.h"
 #include "loadres.h"
 #include "pakinfo.h"
-#include "../src/newstate.h"
+#include "newstate.h"
 
 #include <cstddef>
 #include <string>

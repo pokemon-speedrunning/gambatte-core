@@ -3,7 +3,7 @@
 
 #include "lcddef.h"
 #include "../savestate.h"
-#include "../newstate.h"
+#include "newstate.h"
 
 #include <algorithm>
 
