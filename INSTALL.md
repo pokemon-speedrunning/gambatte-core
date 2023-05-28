@@ -16,14 +16,14 @@ Platform-specific instructions:
 
 ## Windows
 
+### Msys2
+
 **NOTE:** The instructions below assume you're installing 64-bit MSYS2 and using the 32-bit MinGW toolchain (they work with other configurations, but the commands won't be exactly the same).
 
 - Choice of 32-bit vs 64-bit for MSYS2 doesn't really matter; either is fine
 - There's currently no benefit to building a 64-bit version of libgambatte on Windows, so 32-bit is used for the release binaries
 
 **NOTE:** At the end of these steps, to do any build tasks related to libgambatte, open the MSYS2 MinGW 32-bit shell (under the MSYS2 folder in the Start menu; **\*\*must be\*\*** this specific shell in order for building to work).
-
-### Basic steps
 
 Do the following:
 
@@ -49,19 +49,36 @@ pacman -S base-devel \
           mingw-w64-i686-zlib
 ```
 
-### Testrunner-specific steps
-
-- Install the `libpng` and `python3` packages:
+- To build the testrunner, install the `libpng` and `python3` packages:
 
 ```
 pacman -S mingw-w64-i686-libpng mingw-w64-i686-python3
 ```
 
-### Visual Studio users
+### MSVC
 
-As there is no standard package manager for Visual Studio, you will need to either manually build zlib (and libpng for test), or use a package manager such as [vcpkg](https://github.com/microsoft/vcpkg).
+**NOTE:** At the end of these steps, to do any build tasks related to libgambatte, open "Developer PowerShell for VS 2022" (**\*\*must be\*\*** this specific shell in order for building to work).
 
-You will also need to manually install [CMake](https://cmake.org/) and to make sure to add it to your `PATH` during installation.
+The Microsoft VisualC toolchain is distributed with Visual Studio, moreover, it provides options to install CMake and vcpkg.
+
+- Download the Community Edition of [Visual Studio](https://visualstudio.microsoft.com/)
+- In the installer, select the "Desktop development with C++" workflow
+- In the right panel, ensure the "C++ CMake tools for Windows" and "vcpkg package manager" are ticked
+- Proceed with the installation
+
+While Visual Studio has a git integration, you are not able to use it from a terminal. Install it from [git-scm](https://git-scm.com/) and make sure you allow using it from outside of Git Bash.
+
+Lastly, open a Developer PowerShell and run the following command:
+
+```
+vcpkg integrate install
+```
+
+Take note of the following line, you will need to pass this to the CMake configure commands:
+
+```
+CMake projects should use: "-DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake"
+```
 
 ## macOS
 
