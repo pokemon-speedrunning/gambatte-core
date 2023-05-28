@@ -1,120 +1,139 @@
-# Setting up the build environment
+# Setting Up the Build Environment
 
-These instructions explain how to set up an environment for building Gambatte-Speedrun from source on different operating systems. Once you've set up your build environment, see the main [README.md](README.md) for build instructions and information on running the test suite.
+These instructions explain how to set up an environment for building the core libgambatte library from source on different operating systems. Once you've set up your build environment, see the main [README.md](README.md) for build instructions and information on running the test suite.
 
-If all you want to do is build Gambatte-Speedrun's `libgambatte` shared library (for use in scripting, "botting", TASing, and other programmatic use of the emulation core), you do not need to perform the Qt-specific steps or the Testrunner-specific steps. You'll still need to follow the "basic steps" for setting up the build environment.
-
-Running the hwtests suite requires installing an additional dependency (`libpng`); this can be skipped if you have no intention of using the testrunner (we primarily use the test suite to confirm no regressions in accuracy were introduced in our changes). Likewise, the Qt-specific steps can be skipped if you have no intention of building the full Qt UI application.
+Running the hwtests suite requires installing two additional dependencies (`python3`, and `libpng`); this can be skipped if you have no intention of using the testrunner (we primarily use the test suite to confirm no regressions in accuracy were introduced in our changes).
 
 ---
-*Platform-specific instructions:*
-* [Windows](#windows)
-* [macOS](#macos)
-* [Debian/Ubuntu](#debianubuntu)
+
+Platform-specific instructions:
+
+- [Windows](#windows)
+- [macOS](#macos)
+- [Linux](#linux)
 
 ---
+
 ## Windows
 
-***\*NOTE:*** The instructions below assume you're installing 64-bit MSYS2 and using the 32-bit MinGW toolchain (they work with other configurations, but the commands won't be exactly the same).
-* Choice of 32-bit vs 64-bit for MSYS2 doesn't really matter; either is fine
-* There's currently no benefit to building a 64-bit version of Gambatte-Speedrun on Windows, so 32-bit is used for the release binaries
+**NOTE:** The instructions below assume you're installing 64-bit MSYS2 and using the 32-bit MinGW toolchain (they work with other configurations, but the commands won't be exactly the same).
 
-***\*NOTE:*** At the end of these steps, to do any build tasks related to Gambatte-Speedrun, open the MSYS2 MinGW 32-bit shell (under the MSYS2 folder in the Start menu; ***\*must be\**** this specific shell in order for building to work).
+- Choice of 32-bit vs 64-bit for MSYS2 doesn't really matter; either is fine
+- There's currently no benefit to building a 64-bit version of libgambatte on Windows, so 32-bit is used for the release binaries
+
+**NOTE:** At the end of these steps, to do any build tasks related to libgambatte, open the MSYS2 MinGW 32-bit shell (under the MSYS2 folder in the Start menu; **\*\*must be\*\*** this specific shell in order for building to work).
 
 ### Basic steps
 
-*Do the following:*
+Do the following:
 
-\- Install [MSYS2](https://www.msys2.org/) by selecting the one-click installer exe for x86_64
+- Install [MSYS2](https://www.msys2.org/) by selecting the one-click installer exe for x86_64
 
-\- Run MSYS2 shell and update MSYS2 core components and packages *(copied from [here](https://www.msys2.org/wiki/MSYS2-installation/#iii-updating-packages))*:
+- Run MSYS2 shell and update MSYS2 core components and packages _(copied from [here](https://www.msys2.org/wiki/MSYS2-installation/#iii-updating-packages))_:
+
 ```
-$ pacman -Syuu
+pacman -Syuu
+```
 
 Follow the instructions. Repeat this step until it says there are no packages to update.
 See the above link if you have an older installation of MSYS2 and/or pacman.
-```
-\- Install MSYS2 packages for general build development environment:
-```
-$ pacman -S base-devel git mingw-w64-i686-zlib mingw-w64-i686-toolchain
-```
 
-### Qt-specific steps
+- Install MSYS2 packages for general build development environment:
 
-\- Acquire and install the qt5-static library environment:
 ```
-$ pacman -S mingw-w64-i686-qt5-static
-```
-\- Modify `.bash_profile` to add qt5-static binaries to `PATH`:
-```
-$ echo 'if [[ "${MSYSTEM}" == "MINGW"* ]]; then PATH="/${MSYSTEM}/qt5-static/bin:${PATH}"; fi' >> ~/.bash_profile
+pacman -S base-devel \
+          git \
+          mingw-w64-i686-toolchain \
+          mingw-w64-i686-cmake \
+          mingw-w64-i686-ninja \
+          mingw-w64-i686-zlib
 ```
 
 ### Testrunner-specific steps
 
-\- Install the `libpng` package:
+- Install the `libpng` and `python3` packages:
+
 ```
-$ pacman -S mingw-w64-i686-libpng
+pacman -S mingw-w64-i686-libpng mingw-w64-i686-python3
 ```
+
+### Visual Studio users
+
+As there is no standard package manager for Visual Studio, you will need to either manually build zlib (and libpng for test), or use a package manager such as [vcpkg](https://github.com/microsoft/vcpkg).
+
+You will also need to manually install [CMake](https://cmake.org/) and to make sure to add it to your `PATH` during installation.
 
 ## macOS
 
 ### Basic steps
 
-*Open a terminal and do the following:*
+_Open a terminal and do the following:_
 
-\- Install Homebrew if not already installed *(copied from [here](https://brew.sh/))*:
+- Install Xcode Command Line Tools and accept the license (if not already installed):
+
 ```
-$ /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-```
-\- Install the `scons` and `zlib` packages:
-```
-$ brew install scons zlib
+xcode-select --install
+sudo xcodebuild -license accept
 ```
 
-### Qt-specific steps
+- Install Homebrew if not already installed _(copied from [here](https://brew.sh/))_:
 
-\- Install Xcode Command Line Tools (if not already installed; newer Homebrew versions should install them by default):
 ```
-$ xcode-select --install
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
-\- Install Qt5 package through Homebrew *(NOTE: currently tested to work with XCode 11 and Qt 5.14.1, which supports macOS 10.13+; builds for older macOS versions should also be possible, but you would need to dig up the Homebrew formulae for older versions of Qt5)*:
+
+- Install the `cmake`, `ninja`, and `zlib` packages:
+
 ```
-$ brew install qt
-```
-***\*NOTE:*** After building and creating "Gambatte-Speedrun.app", you can run the following command to create a deployable standalone macOS app, which can be used as a release build that other macOS users can run:
-```
-$ macdeployqt gambatte_qt/bin/Gambatte-Speedrun.app -dmg
+brew install cmake ninja zlib
 ```
 
 ### Testrunner-specific steps
 
-\- Install the `libpng` package:
+- Install the `libpng` and `python3` packages:
+
 ```
-$ brew install libpng
+brew install libpng python3
 ```
 
-## Debian/Ubuntu
+## Linux
 
 ### Basic steps
 
-*Open a terminal and do the following:*
+_Open a terminal and do the following:_
 
-\- Install build dependencies:
-```
-$ sudo apt install build-essential git scons zlib1g-dev
-```
+- Install build dependencies:
 
-### Qt-specific steps
-
-\- Install Qt5 development packages, plus Gambatte-Speedrun dependencies that aren't bundled with Qt5:
-```
-$ sudo apt install qt5-default libqt5x11extras5-dev libxrandr-dev libxv-dev libasound2-dev
-```
+- Ubuntu/Debian
+  ```
+  sduo apt update && sudo apt upgrade -y
+  sudo apt install build-essential git cmake ninja-build libz-dev
+  ```
+- Fedora/REHL
+  ```
+  sudo dnf update -y
+  sudo dnf groupinstall 'Development Tools'
+  sudo dnf install git cmake ninja-build zlib-devel
+  ```
+- Arch Linux
+  ```
+  sudo pacman -Syu
+  sudo pacman -S base-devel git cmake ninja zlib
+  ```
 
 ### Testrunner-specific steps
 
-\- Install the `libpng-dev` package:
-```
-$ sudo apt install libpng-dev
-```
+Install the `libpng` and `python3` packages:
+
+- Ubuntu/Debian
+  ```
+  sudo apt install libpng-dev python3
+  ```
+- Fedora/REHL
+  ```
+  sudo dnf install libpng-devel python3
+  ```
+- Arch Linux
+  ```
+  sudo pacman -S libpng python3
+  ```
