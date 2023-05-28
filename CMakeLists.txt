@@ -1,4 +1,18 @@
 cmake_minimum_required(VERSION 3.12)
+
+option(LIBGAMBATTE_BUILD_SHARED "Build the shared version of libgambatte" ON)
+option(LIBGAMBATTE_BUILD_STATIC "Build the static version of libgambatte" ON)
+option(LIBGAMBATTE_ENABLE_ZIP "Build zip support using zlib" ON)
+option(LIBGAMBATTE_ENABLE_TESTING "Build tests" ON)
+
+if(LIBGAMBATTE_ENABLE_ZIP)
+  list(APPEND VCPKG_MANIFEST_FEATURES "zip")
+endif()
+
+if(LIBGAMBATTE_ENABLE_TESTING)
+  list(APPEND VCPKG_MANIFEST_FEATURES "testing")
+endif()
+
 project(libgambatte CXX)
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
@@ -9,14 +23,10 @@ endif()
 
 include(GNUInstallDirs)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
-option(LIBGAMBATTE_BUILD_SHARED "Build the shared version of libgambatte" ON)
-option(LIBGAMBATTE_BUILD_STATIC "Build the static version of libgambatte" ON)
-option(LIBGAMBATTE_ENABLE_ZIP "Build zip support using zlib" ON)
-option(LIBGAMBATTE_ENABLE_TESTING "Build tests" ON)
 set(LIBGAMBATTE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/libgambatte" CACHE STRING "Directory to install the CMake package files to")
 set(LIBGAMBATTE_INSTALL_PKGCONFDIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig" CACHE STRING "Directory to install the pkg-config file to")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(NOT LIBGAMBATTE_BUILD_SHARED AND NOT LIBGAMBATTE_BUILD_STATIC)
   message(FATAL_ERROR "Both shared and static libraries have been disabled. Turn on at least one.")

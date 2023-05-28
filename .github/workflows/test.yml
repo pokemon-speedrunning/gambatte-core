@@ -57,8 +57,6 @@ jobs:
             }
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Install dependencies (MSYS)
         if: matrix.config.shell == 'msys2 {0}'
         uses: msys2/setup-msys2@v2
@@ -109,6 +107,8 @@ jobs:
           echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.config.vcpkg_triplet }}/lib/pkgconfig" >> $GITHUB_ENV
 
+      - uses: actions/checkout@v3
+
       - name: Configure
         run: |
           cmake -S.\
@@ -119,6 +119,7 @@ jobs:
                 -DLIBGAMBATTE_BUILD_STATIC=ON \
                 -DLIBGAMBATTE_ENABLE_ZIP=ON \
                 -DLIBGAMBATTE_ENABLE_TESTING=ON \
+                -DVCPKG_MANIFEST_MODE=OFF \
                 ${{ matrix.config.cmake_flags }}
 
       - name: Build

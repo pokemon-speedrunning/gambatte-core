@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "libgambatte",
+  "features": {
+    "testing": {
+      "description": "Build tests",
+      "dependencies": [
+        "libpng",
+        "python3"
+      ]
+    },
+    "zip": {
+      "description": "Build with zip support",
+      "dependencies": [
+        "zlib"
+      ]
+    }
+  }
+}
