@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.12)
 project(libgambatte CXX)
 
 if(CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
@@ -14,6 +14,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 option(LIBGAMBATTE_BUILD_SHARED "Build the shared version of libgambatte" ON)
 option(LIBGAMBATTE_BUILD_STATIC "Build the static version of libgambatte" ON)
 option(LIBGAMBATTE_ENABLE_ZIP "Build zip support using zlib" ON)
+option(LIBGAMBATTE_ENABLE_TESTING "Build tests" ON)
 set(LIBGAMBATTE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/libgambatte" CACHE STRING "Directory to install the CMake package files to")
 set(LIBGAMBATTE_INSTALL_PKGCONFDIR "${CMAKE_INSTALL_LIBDIR}/pkgconfig" CACHE STRING "Directory to install the pkg-config file to")
 
@@ -296,3 +297,12 @@ configure_file(
 install(FILES "${libgambatte_BINARY_DIR}/libgambatte.pc"
   DESTINATION "${LIBGAMBATTE_INSTALL_PKGCONFDIR}"
 )
+
+if(LIBGAMBATTE_ENABLE_TESTING)
+  if(NOT LIBGAMBATTE_BUILD_STATIC)
+    message(FATAL_ERROR "Building the static library is required to run tests")
+  endif()
+
+  enable_testing()
+  add_subdirectory(test)
+endif()
