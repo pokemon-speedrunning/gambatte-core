@@ -6,6 +6,9 @@ echo "cd libgambatte && scons -c ."
 echo "cd test && scons -c"
 (cd test && scons -c)
 
+echo "rm -f libgambatte/include/config.h"
+rm -f libgambatte/include/config.h
+
 echo "rm -f *gambatte*/config.log"
 rm -f *gambatte*/config.log
 

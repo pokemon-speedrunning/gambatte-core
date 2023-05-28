@@ -16,6 +16,7 @@ gambatte_qt/src/release/
 gambatte_qt/src/debug/
 gambatte_qt/bin/
 test/testrunner
+libgambatte/include/config.h
 
 *.cpp~
 *.h~

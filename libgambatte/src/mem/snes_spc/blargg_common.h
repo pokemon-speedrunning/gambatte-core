@@ -5,6 +5,8 @@
 #ifndef BLARGG_COMMON_H
 #define BLARGG_COMMON_H
 
+#include "config.h"
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>

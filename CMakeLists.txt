@@ -87,6 +87,13 @@ set(LIBGAMBATTE_SOURCES
   "libgambatte/src/video/sprite_mapper.cpp"
 )
 
+file(GLOB LIBGAMBATTE_PUBLIC_HEADERS "libgambatte/include/*.h")
+file(
+  COPY ${LIBGAMBATTE_PUBLIC_HEADERS}
+  DESTINATION "${libgambatte_BINARY_DIR}/include/gambatte"
+  PATTERN "config.h" EXCLUDE
+)
+
 set(LIBGAMBATTE_COMMON_PRIVATE_HEADERS "${CMAKE_CURRENT_LIST_DIR}/common")
 
 set(LIBGAMBATTE_SUPPORT_ZIP FALSE)
@@ -116,10 +123,6 @@ foreach(_header "cstdint" "stdint.h")
   string(TOUPPER "${_header}" _header_upper_name)
   string(MAKE_C_IDENTIFIER "${_header_upper_name}" _header_c_name)
   check_include_file_cxx("${_header}" "HAVE_${_header_c_name}")
-
-  if(HAVE_${_header_c_name})
-    list(APPEND LIBGAMBATTE_DEFINITIONS "HAVE_${_header_c_name}")
-  endif()
 endforeach()
 
 find_package(Git)
@@ -135,6 +138,11 @@ if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
     set(LIBGAMBATTE_REVISION "${GIT_COMMIT_COUNT}")
   endif()
 endif()
+
+configure_file(
+  "${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in"
+  "${libgambatte_BINARY_DIR}/include/gambatte/config.h"
+)
 
 if(LIBGAMBATTE_BUILD_SHARED)
   add_library(libgambatte-shared SHARED ${LIBGAMBATTE_SOURCES} "libgambatte/src/cinterface.cpp")
@@ -162,16 +170,11 @@ if(WIN32 AND NOT MINGW AND LIBGAMBATTE_BUILD_STATIC)
 endif()
 
 foreach(_target IN LISTS LIBGAMBATTE_TARGETS)
-  target_compile_definitions(${_target} PRIVATE
-    "REVISION=${LIBGAMBATTE_REVISION}"
-    ${LIBGAMBATTE_DEFINITIONS}
-  )
-
   target_compile_options(${_target} PRIVATE ${LIBGAMBATTE_COMPILE_FLAGS})
 
   target_include_directories(${_target}
     PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libgambatte/include>
+    $<BUILD_INTERFACE:${libgambatte_BINARY_DIR}/include/gambatte>
     $<INSTALL_INTERFACE:include/gambatte>
     PRIVATE
     "${LIBGAMBATTE_COMMON_PRIVATE_HEADERS}"
@@ -179,7 +182,6 @@ foreach(_target IN LISTS LIBGAMBATTE_TARGETS)
   )
 
   if(LIBGAMBATTE_SUPPORT_ZIP)
-    target_compile_definitions(${_target} PRIVATE "HAVE_ZLIB_H")
     target_link_libraries(${_target} PRIVATE ZLIB::ZLIB)
   endif()
 
@@ -223,8 +225,8 @@ install(FILES
   DESTINATION "${LIBGAMBATTE_INSTALL_CMAKEDIR}"
 )
 
-install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/libgambatte/include/"
-  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/gambatte"
+install(DIRECTORY "${libgambatte_BINARY_DIR}/include/gambatte"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )
 
 # Write a special config for consuming from the build directory

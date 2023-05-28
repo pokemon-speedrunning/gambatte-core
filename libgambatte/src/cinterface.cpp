@@ -44,7 +44,7 @@ namespace {
 using namespace gambatte;
 
 GBEXPORT int gambatte_revision() {
-	return REVISION;
+	return LIBGAMBATTE_REVISION;
 }
 
 GBEXPORT GB * gambatte_create() {

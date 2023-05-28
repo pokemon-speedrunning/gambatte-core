@@ -1,7 +1,9 @@
 #ifndef CRC32_H
 #define CRC32_H
 
-#ifdef HAVE_ZLIB_H
+#include "config.h"
+
+#ifdef LIBGAMBATTE_SUPPORT_ZIP
 #include <zlib.h>
 #else
 
