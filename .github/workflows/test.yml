@@ -154,6 +154,11 @@ jobs:
 
       - name: Test consuming from pkg-config
         run: |
-          set -eo pipefail
-          pkgconf --with-path="$(pwd)/install-prefix/lib/pkgconfig" --cflags --libs --static libgambatte
           pkgconf --with-path="$(pwd)/install-prefix/lib/pkgconfig" --validate libgambatte
+          cmake -Scmake/test \
+                -Bconsumer-from-pkg-config \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_PREFIX_PATH="$(pwd)/install-prefix" \
+                -DUSE_PKG_CONFIG=TRUE \
+                ${{ matrix.config.cmake_flags }}
+          cmake --build consumer-from-pkg-config --config Release
