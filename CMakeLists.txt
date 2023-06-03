@@ -175,6 +175,13 @@ if(LIBGAMBATTE_BUILD_STATIC)
   list(APPEND LIBGAMBATTE_TARGETS libgambatte-static)
 endif()
 
+# Create the same alias as the exported CMake config
+if(LIBGAMBATTE_BUILD_SHARED)
+  add_library(libgambatte::libgambatte ALIAS libgambatte-shared)
+else()
+  add_library(libgambatte::libgambatte ALIAS libgambatte-static)
+endif()
+
 set_target_properties(${LIBGAMBATTE_TARGETS} PROPERTIES
   CXX_STANDARD 11
   CXX_STANDARD_REQUIRED TRUE
