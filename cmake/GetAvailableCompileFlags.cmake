@@ -3,8 +3,15 @@ function(get_available_compile_flags OUT_VAR)
     set(FLAGS_TO_CHECK "/W4" "/GR-")
     set(WARNINGS_AS_ERROR "/WX")
   else()
-    set(FLAGS_TO_CHECK "-Wall" "-Wextra" "-fno-rtti" "-fno-exceptions")
-    set(CXX_ONLY_FLAGS "-fno-rtti" "-fno-exceptions")
+    set(FLAGS_TO_CHECK
+      "-Wall"
+      "-Wextra"
+      "-fno-rtti"
+      "-fno-exceptions"
+      "-fvisibility=hidden"
+      "-fvisibility-inlines-hidden"
+    )
+    set(CXX_ONLY_FLAGS "-fno-rtti" "-fno-exceptions" "-fvisibility-inlines-hidden")
     set(WARNINGS_AS_ERROR "-Werror")
   endif()
 

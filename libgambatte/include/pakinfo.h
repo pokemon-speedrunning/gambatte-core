@@ -1,11 +1,13 @@
 #ifndef GAMBATTE_PAKINFO_H
 #define GAMBATTE_PAKINFO_H
 
+#include "gbexport.h"
+
 #include <string>
 
 namespace gambatte {
 
-class PakInfo {
+class GBEXPORT PakInfo {
 public:
 	PakInfo();
 	PakInfo(bool mbc1m, bool m161, bool mmm01, bool wisdomtree, unsigned rombanks, unsigned crc, unsigned char const romheader[]);

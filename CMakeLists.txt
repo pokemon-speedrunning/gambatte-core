@@ -150,6 +150,14 @@ if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/.git")
   endif()
 endif()
 
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+  "#include <stdlib.h>
+   static void f(void) __attribute__ ((visibility(\"default\")));
+   int main(void) {return 0;}"
+  LIBGAMBATTE_HAVE_ATTRIBUTE_VISIBILITY_DEFAULT
+)
+
 configure_file(
   "${CMAKE_CURRENT_LIST_DIR}/cmake/config.h.in"
   "${libgambatte_BINARY_DIR}/include/gambatte/config.h"
