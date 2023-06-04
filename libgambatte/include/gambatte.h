@@ -19,7 +19,6 @@
 #ifndef GAMBATTE_H
 #define GAMBATTE_H
 
-#include "gbexport.h"
 #include "gbint.h"
 #include "inputgetter.h"
 #include "loadres.h"
@@ -50,7 +49,7 @@ enum eCDLog_Flags {
 	eCDLog_Flags_Data = 4,
 };
 
-class GBEXPORT GB {
+class GB {
 public:
 	GB();
 	~GB();

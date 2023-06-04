@@ -1,8 +1,6 @@
 #ifndef GAMBATTE_LOADRES_H
 #define GAMBATTE_LOADRES_H
 
-#include "gbexport.h"
-
 #include <string>
 
 namespace gambatte {
@@ -18,7 +16,7 @@ enum LoadRes {
 	LOADRES_OK = 0
 };
 
-GBEXPORT std::string const to_string(LoadRes);
+ std::string const to_string(LoadRes);
 
 }
 

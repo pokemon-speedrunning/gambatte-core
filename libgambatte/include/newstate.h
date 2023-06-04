@@ -1,14 +1,12 @@
 #ifndef NEWSTATE_H
 #define NEWSTATE_H
 
-#include "gbexport.h"
-
 #include <cstring>
 #include <cstddef>
 
 namespace gambatte {
 
-class GBEXPORT NewState {
+class  NewState {
 public:
 	virtual void Save(void const *ptr, std::size_t size, char const *name) = 0;
 	virtual void Load(void *ptr, std::size_t size, char const *name) = 0;
@@ -16,7 +14,7 @@ public:
 	virtual void ExitSection(char const */*name*/) { }
 };
 
-class GBEXPORT NewStateDummy : public NewState {
+class  NewStateDummy : public NewState {
 public:
 	NewStateDummy();
 	long GetLength() { return length; }
@@ -28,7 +26,7 @@ private:
 	long length;
 };
 
-class GBEXPORT NewStateExternalBuffer : public NewState {
+class  NewStateExternalBuffer : public NewState {
 public:
 	NewStateExternalBuffer(char *buffer, long maxlength);
 	long GetLength() { return length; }
@@ -43,14 +41,14 @@ private:
 	const long maxlength;
 };
 
-struct GBEXPORT FPtrs {
+struct  FPtrs {
 	void (*Save_)(void const *ptr, std::size_t size, char const *name);
 	void (*Load_)(void *ptr, std::size_t size, char const *name);
 	void (*EnterSection_)(char const *name);
 	void (*ExitSection_)(char const *name);
 };
 
-class GBEXPORT NewStateExternalFunctions : public NewState {
+class  NewStateExternalFunctions : public NewState {
 public:
 	NewStateExternalFunctions(const FPtrs *ff);
 	virtual void Save(void const *ptr, std::size_t size, char const *name);
