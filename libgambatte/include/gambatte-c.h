@@ -23,20 +23,16 @@
 
 #include "config.h"
 
+#include "fptrs.h"
+#include "gbcallback.h"
+#include "inputgetter.h"
+
 #ifndef __cplusplus
-#include <stdint.h>
 #include <stdbool.h>
 
-#include "fptrs.h"
-
 typedef struct GB GB;
-typedef unsigned(InputGetter)(void *);
-typedef void (*MemoryCallback)(int32_t address, int64_t cycleOffset);
-typedef void (*CDCallback)(int32_t addr, int32_t addrtype, int32_t flags);
 #else
-#include "fptrs.h"
 #include "gambatte.h"
-#include "newstate.h"
 
 using GB = gambatte::GB;
 using FPtrs = gambatte::FPtrs;

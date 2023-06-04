@@ -20,6 +20,7 @@
 #define GAMBATTE_H
 
 #include "gbint.h"
+#include "gbcallback.h"
 #include "inputgetter.h"
 #include "loadres.h"
 #include "pakinfo.h"
@@ -31,9 +32,6 @@
 namespace gambatte {
 
 enum { BG_PALETTE = 0, SP1_PALETTE = 1, SP2_PALETTE = 2 };
-
-typedef void (*MemoryCallback)(int32_t address, int64_t cycleOffset);
-typedef void (*CDCallback)(int32_t addr, int32_t addrtype, int32_t flags);
 
 enum eCDLog_AddrType {
 	eCDLog_AddrType_ROM,
