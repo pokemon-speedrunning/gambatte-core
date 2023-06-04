@@ -1,6 +1,6 @@
-#include <gambatte.h>
+#include <gambatte-c.h>
 
 int main(int, char**) {
-  gambatte::GB foo{};
+  (void)gambatte_revision();
   return 0;
 }

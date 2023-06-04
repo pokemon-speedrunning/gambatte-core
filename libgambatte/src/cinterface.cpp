@@ -16,7 +16,7 @@
 //   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#include "gbexport.h"
+#include "gambatte-c.h"
 #include "gambatte.h"
 #include "newstate.h"
 
