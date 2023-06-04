@@ -4,6 +4,7 @@
 #include <cstring>
 #include <cstddef>
 
+#include "fptrs.h"
 namespace gambatte {
 
 class  NewState {
@@ -39,13 +40,6 @@ private:
 	char *const buffer;
 	long length;
 	const long maxlength;
-};
-
-struct  FPtrs {
-	void (*Save_)(void const *ptr, std::size_t size, char const *name);
-	void (*Load_)(void *ptr, std::size_t size, char const *name);
-	void (*EnterSection_)(char const *name);
-	void (*ExitSection_)(char const *name);
 };
 
 class  NewStateExternalFunctions : public NewState {
