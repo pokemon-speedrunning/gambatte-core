@@ -45,6 +45,7 @@ using MemoryCallback = gambatte::MemoryCallback;
 using CDCallback = gambatte::CDCallback;
 #endif
 
+#if defined(LIBGAMBATTE_SHARED)
 #if defined(_WIN32) || defined(__CYGWIN__)
 #if defined(LIBGAMBATTE_DLL_EXPORT)
 #define GBEXPORT __declspec(dllexport)
@@ -54,6 +55,9 @@ using CDCallback = gambatte::CDCallback;
 #elif defined(LIBGAMBATTE_HAVE_ATTRIBUTE_VISIBILITY_DEFAULT)
 #define GBEXPORT __attribute__((visibility("default")))
 #else
+#define GBEXPORT
+#endif
+#else /* !defined(LIBGAMBATTE_SHARED) */
 #define GBEXPORT
 #endif
 

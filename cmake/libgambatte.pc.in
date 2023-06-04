@@ -6,7 +6,7 @@ includedir=${prefix}/@LIBGAMBATTE_PC_INCLUDEDIR@
 Name: libgambatte
 Description: The gambatte emulator core library
 Version: @LIBGAMBATTE_REVISION@
-Cflags: -I${includedir}/gambatte
+Cflags: -I${includedir}/gambatte @LIBGAMBATTE_PC_CFLAGS@
 Libs: -L${libdir} -lgambatte
 Requires: @LIBGAMBATTE_PC_REQUIRES@
 Requires.private: @LIBGAMBATTE_PC_REQUIRES_PRIVATE@

@@ -168,6 +168,7 @@ if(LIBGAMBATTE_BUILD_SHARED)
   add_library(libgambatte-shared SHARED ${LIBGAMBATTE_SOURCES})
   add_library(libgambatte::libgambatte-shared ALIAS libgambatte-shared)
   list(APPEND LIBGAMBATTE_TARGETS libgambatte-shared)
+  target_compile_definitions(libgambatte-shared PUBLIC "LIBGAMBATTE_SHARED")
 endif()
 
 if(LIBGAMBATTE_BUILD_STATIC)
@@ -313,6 +314,12 @@ if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}")
   )
 else()
   set(LIBGAMBATTE_PC_LIBDIR "${CMAKE_INSTALL_LIBDIR}")
+endif()
+
+set(LIBGAMBATTE_PC_CFLAGS)
+
+if(LIBGAMBATTE_BUILD_SHARED)
+  set(LIBGAMBATTE_PC_CFLAGS "-DLIBGAMBATTE_SHARED")
 endif()
 
 configure_file(
