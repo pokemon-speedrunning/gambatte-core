@@ -13,7 +13,11 @@
 #include <zlib.h>
 #include "ioapi.h"
 
-
+#ifdef _MSC_VER
+#define ATTRIBUTE_UNUSED
+#else
+#define ATTRIBUTE_UNUSED __attribute__((unused))
+#endif
 
 /* I've found an old Unix (a SunOS 4.1.3_U1) without all SEEK_* defined.... */
 
@@ -66,7 +70,7 @@ int ZCALLBACK ferror_file_func OF((
 
 
 voidpf ZCALLBACK fopen_file_func (opaque, filename, mode)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    const char* filename;
    int mode;
 {
@@ -88,7 +92,7 @@ voidpf ZCALLBACK fopen_file_func (opaque, filename, mode)
 
 
 uLong ZCALLBACK fread_file_func (opaque, stream, buf, size)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    voidpf stream;
    void* buf;
    uLong size;
@@ -100,7 +104,7 @@ uLong ZCALLBACK fread_file_func (opaque, stream, buf, size)
 
 
 uLong ZCALLBACK fwrite_file_func (opaque, stream, buf, size)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    voidpf stream;
    const void* buf;
    uLong size;
@@ -111,7 +115,7 @@ uLong ZCALLBACK fwrite_file_func (opaque, stream, buf, size)
 }
 
 long ZCALLBACK ftell_file_func (opaque, stream)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    voidpf stream;
 {
     long ret;
@@ -120,7 +124,7 @@ long ZCALLBACK ftell_file_func (opaque, stream)
 }
 
 long ZCALLBACK fseek_file_func (opaque, stream, offset, origin)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    voidpf stream;
    uLong offset;
    int origin;
@@ -146,7 +150,7 @@ long ZCALLBACK fseek_file_func (opaque, stream, offset, origin)
 }
 
 int ZCALLBACK fclose_file_func (opaque, stream)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    voidpf stream;
 {
     int ret;
@@ -155,7 +159,7 @@ int ZCALLBACK fclose_file_func (opaque, stream)
 }
 
 int ZCALLBACK ferror_file_func (opaque, stream)
-   voidpf opaque __attribute__((unused));
+   voidpf opaque ATTRIBUTE_UNUSED;
    voidpf stream;
 {
     int ret;

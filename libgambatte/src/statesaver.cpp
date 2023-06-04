@@ -550,10 +550,11 @@ bool StateSaver::saveState(SaveState const &state,
 		return false;
 
 	std::size_t size = saveState(state, videoBuf, pitch, NULL, mode);
-	char stateBuf[size];
+	std::string stateBuf;
+	stateBuf.reserve(size);
 
-	saveState(state, videoBuf, pitch, stateBuf, mode);
-	file.write(stateBuf, size);
+	saveState(state, videoBuf, pitch, stateBuf.data(), mode);
+	file << stateBuf;
 
 	return !file.fail();
 }
