@@ -18,7 +18,7 @@ enum LoadRes {
 	LOADRES_OK = 0
 };
 
-std::string const GBEXPORT to_string(LoadRes);
+GBEXPORT std::string const to_string(LoadRes);
 
 }
 
