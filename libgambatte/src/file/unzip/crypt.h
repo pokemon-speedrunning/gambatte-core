@@ -29,17 +29,12 @@
 
 #define CRC32(c, b) ((*(pcrc_32_tab+(((int)(c) ^ (b)) & 0xff))) ^ ((c) >> 8))
 
-#ifdef _MSC_VER
-#define ATTRIBUTE_UNUSED
-#else
-#define ATTRIBUTE_UNUSED __attribute__((unused))
-#endif
-
 /***********************************************************************
  * Return the next byte in the pseudo-random sequence
  */
-static int decrypt_byte(unsigned long* pkeys, const unsigned long* pcrc_32_tab ATTRIBUTE_UNUSED)
+static int decrypt_byte(unsigned long* pkeys, const unsigned long* pcrc_32_tab)
 {
+    (void)pcrc_32_tab;
     unsigned temp;  /* POTENTIAL BUG:  temp*(temp^1) may overflow in an
                      * unpredictable manner on 16-bit systems; not a problem
                      * with any known compiler so far, though */
