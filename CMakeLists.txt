@@ -197,6 +197,7 @@ if(WIN32 AND NOT MINGW AND LIBGAMBATTE_BUILD_STATIC)
 endif()
 
 foreach(_target IN LISTS LIBGAMBATTE_TARGETS)
+  target_compile_definitions(${_target} PRIVATE "LIBGAMBATTE_DLL_EXPORT")
   target_compile_options(${_target} PRIVATE ${LIBGAMBATTE_COMPILE_FLAGS})
 
   target_include_directories(${_target}
