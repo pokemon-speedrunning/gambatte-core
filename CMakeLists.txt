@@ -43,6 +43,7 @@ get_available_compile_flags(LIBGAMBATTE_COMPILE_FLAGS)
 
 set(LIBGAMBATTE_SOURCES
   "libgambatte/src/bitmap_font.cpp"
+  "libgambatte/src/cinterface.cpp"
   "libgambatte/src/cpu.cpp"
   "libgambatte/src/gambatte.cpp"
   "libgambatte/src/initstate.cpp"
@@ -164,7 +165,7 @@ configure_file(
 )
 
 if(LIBGAMBATTE_BUILD_SHARED)
-  add_library(libgambatte-shared SHARED ${LIBGAMBATTE_SOURCES} "libgambatte/src/cinterface.cpp")
+  add_library(libgambatte-shared SHARED ${LIBGAMBATTE_SOURCES})
   add_library(libgambatte::libgambatte-shared ALIAS libgambatte-shared)
   list(APPEND LIBGAMBATTE_TARGETS libgambatte-shared)
 endif()
