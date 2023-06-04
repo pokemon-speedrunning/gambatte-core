@@ -23,7 +23,6 @@ execute_process(
 message(STATUS "Done processing assembly files")
 file(GLOB_RECURSE GB_ASM_BIN "hwtests/**/*.gb")
 
-
 add_executable(testrunner testrunner.cpp)
 target_compile_options(testrunner PRIVATE ${LIBGAMBATTE_COMPILE_FLAGS})
 target_include_directories(testrunner PRIVATE ${LIBGAMBATTE_COMMON_PRIVATE_HEADERS})
@@ -38,4 +37,19 @@ add_test(
   NAME testrunner
   COMMAND testrunner ${GB_ASM_BIN}
   WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}"
+)
+
+enable_language(C)
+add_executable(testcapi testcapi.c)
+target_compile_options(testcapi PRIVATE ${LIBGAMBATTE_COMPILE_FLAGS})
+target_link_libraries(testcapi PRIVATE libgambatte::libgambatte-static)
+set_target_properties(testcapi PROPERTIES
+  C_STANDARD 99
+  C_STANDARD_REQUIRED TRUE
+  C_EXTENSIONS OFF
+)
+
+add_test(
+  NAME test_c_api
+  COMMAND testcapi
 )
