@@ -6,10 +6,11 @@
 #else
 
 #include <cstring>
+#include "gbint.h"
 
 namespace gambatte {
 
-unsigned long crc32(unsigned long crc, void const *buf, std::size_t size);
+gambatte::uint_least32_t crc32(gambatte::uint_least32_t crc, void const *buf, std::size_t size);
 
 }
 
