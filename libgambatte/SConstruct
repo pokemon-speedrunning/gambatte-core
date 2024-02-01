@@ -1,6 +1,5 @@
 global_cflags = ARGUMENTS.get('CFLAGS', '-Wall -Wextra -O2 -fomit-frame-pointer')
 global_cxxflags = ARGUMENTS.get('CXXFLAGS', global_cflags + ' -fno-exceptions -fno-rtti -std=c++11')
-global_defines = ' -DHAVE_STDINT_H'
 vars = Variables()
 vars.Add('CC')
 vars.Add('CXX')
@@ -8,8 +7,8 @@ vars.Add('CXX')
 import os
 env = Environment(ENV = os.environ,
                   CPPPATH = ['src', 'include', '../common'],
-                  CFLAGS = global_cflags + global_defines,
-                  CXXFLAGS = global_cxxflags + global_defines,
+                  CFLAGS = global_cflags,
+                  CXXFLAGS = global_cxxflags,
                   variables = vars)
 
 sourceFiles = Split('''
@@ -75,31 +74,48 @@ if not bool(ARGUMENTS.get('NO_ZIP', 0)) and conf.CheckHeader('zlib.h'):
 	sourceFiles.append('src/file/unzip/unzip.c')
 	sourceFiles.append('src/file/unzip/ioapi.c')
 	sourceFiles.append('src/file/file_zip.cpp')
-	env.Append(CCFLAGS = ' -DHAVE_ZLIB_H')
 	sys_libs = ['z']
 else:
 	sourceFiles.append('src/file/file.cpp')
 	sourceFiles.append('src/file/crc32.cpp')
 	sys_libs = []
 
+have_cstdint = conf.CheckHeader('cstdint')
+have_stdint_h = conf.CheckHeader('stdint.h')
+
 conf.Finish()
 
-lib = env.Library('gambatte', sourceFiles)
-
-def rev():
+def write_config_h():
+	defines = []
 	try:
 		from subprocess import check_output, CalledProcessError
 		stdout = check_output(['git', 'rev-list', 'HEAD', '--count'])
-		return ' -DREVISION=' + stdout.decode().strip()
+		defines.append('#define LIBGAMBATTE_REVISION ' + stdout.decode().strip())
 	except (OSError, CalledProcessError):
-		return ' -DREVISION=-1'
+		defines.append('#define LIBGAMBATTE_REVISION -1')
+	
+	if 'z' in sys_libs:
+		defines.append('#define LIBGAMBATTE_SUPPORT_ZIP')
+	
+	if have_cstdint:
+		defines.append('#define HAVE_CSTDINT')
+	
+	if have_stdint_h:
+		defines.append('#define HAVE_STDINT_H')
+
+	with open("include/config.h", "w") as config_h:
+		config_h.write('\n'.join(defines))
+
+write_config_h()
+
+lib = env.Library('gambatte', sourceFiles)
 
 import sys
 if sys.platform == 'darwin':
 	sys_libs.append('System')
 
 shlib = env.SharedLibrary('gambatte', sourceFiles + ['src/cinterface.cpp'],
-                          CXXFLAGS = env['CXXFLAGS'] + rev(),
+                          CXXFLAGS = env['CXXFLAGS'],
                           LINKFLAGS = env['LINKFLAGS'] + ' -s',
                           LIBS = sys_libs,
                           SHLIBPREFIX = "lib")

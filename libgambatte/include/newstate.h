@@ -4,9 +4,10 @@
 #include <cstring>
 #include <cstddef>
 
+#include "fptrs.h"
 namespace gambatte {
 
-class NewState {
+class  NewState {
 public:
 	virtual void Save(void const *ptr, std::size_t size, char const *name) = 0;
 	virtual void Load(void *ptr, std::size_t size, char const *name) = 0;
@@ -14,7 +15,7 @@ public:
 	virtual void ExitSection(char const */*name*/) { }
 };
 
-class NewStateDummy : public NewState {
+class  NewStateDummy : public NewState {
 public:
 	NewStateDummy();
 	long GetLength() { return length; }
@@ -26,7 +27,7 @@ private:
 	long length;
 };
 
-class NewStateExternalBuffer : public NewState {
+class  NewStateExternalBuffer : public NewState {
 public:
 	NewStateExternalBuffer(char *buffer, long maxlength);
 	long GetLength() { return length; }
@@ -41,14 +42,7 @@ private:
 	const long maxlength;
 };
 
-struct FPtrs {
-	void (*Save_)(void const *ptr, std::size_t size, char const *name);
-	void (*Load_)(void *ptr, std::size_t size, char const *name);
-	void (*EnterSection_)(char const *name);
-	void (*ExitSection_)(char const *name);
-};
-
-class NewStateExternalFunctions : public NewState {
+class  NewStateExternalFunctions : public NewState {
 public:
 	NewStateExternalFunctions(const FPtrs *ff);
 	virtual void Save(void const *ptr, std::size_t size, char const *name);

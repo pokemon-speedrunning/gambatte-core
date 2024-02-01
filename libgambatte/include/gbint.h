@@ -19,6 +19,8 @@
 #ifndef GAMBATTE_INT_H
 #define GAMBATTE_INT_H
 
+#include "config.h"
+
 #ifdef HAVE_CSTDINT
 
 #include <cstdint>

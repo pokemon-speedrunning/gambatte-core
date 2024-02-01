@@ -42,7 +42,7 @@
 
 #include "crc32.h"
 
-#ifndef HAVE_ZLIB_H
+#ifndef LIBGAMBATTE_SUPPORT_ZIP
 
 namespace gambatte {
 

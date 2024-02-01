@@ -16,7 +16,7 @@
 //   51 Franklin St, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 
-#include "cinterface.h"
+#include "gambatte-c.h"
 #include "gambatte.h"
 #include "newstate.h"
 
@@ -43,8 +43,10 @@ namespace {
 
 using namespace gambatte;
 
+extern "C" {
+
 GBEXPORT int gambatte_revision() {
-	return REVISION;
+	return LIBGAMBATTE_REVISION;
 }
 
 GBEXPORT GB * gambatte_create() {
@@ -301,5 +303,5 @@ GBEXPORT int gambatte_getdivstate(GB *g) {
 GBEXPORT void gambatte_setspeedupflags(GB *g, unsigned flags) {
 	g->setSpeedupFlags(flags);
 }
-
+}
 }

@@ -17,6 +17,6 @@ static char const * to_cstr(LoadRes const loadres) {
 	return "";
 }
 
-std::string const to_string(LoadRes loadres) { return to_cstr(loadres); }
+ std::string const to_string(LoadRes loadres) { return to_cstr(loadres); }
 
 }

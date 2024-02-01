@@ -1,19 +1,164 @@
-name: Check GSR testROM accuracy
+name: Build and run tests
+
 on: [push, pull_request]
+
 jobs:
-  Check-TestROMs:
-    runs-on: ubuntu-20.04
+  build-and-test:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.runner }}
+    defaults:
+      run:
+        shell: ${{ matrix.config.shell }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+              name: "MSYS2 UCRT64",
+              runner: windows-latest,
+              shell: "msys2 {0}",
+              msystem: ucrt64,
+              msys-env: mingw-w64-ucrt-x86_64,
+              cmake_flags: "-G Ninja",
+            }
+          - {
+              name: "MSYS2 i686",
+              runner: windows-latest,
+              shell: "msys2 {0}",
+              msystem: mingw32,
+              msys-env: mingw-w64-i686,
+              cmake_flags: "-G Ninja",
+            }
+          - {
+              name: "Windows (Clang-cl)",
+              runner: windows-latest,
+              shell: bash,
+              cmake_flags: "-T ClangCL -A x64",
+              vcpkg_triplet: x64-windows,
+            }
+          - {
+              name: "Windows (Clang GNU)",
+              runner: windows-latest,
+              shell: bash,
+              cmake_flags: "-G Ninja -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++",
+              vcpkg_triplet: x64-windows,
+            }
+          - {
+              name: "macOS",
+              runner: macos-latest,
+              shell: bash,
+              cmake_flags: '-G Ninja -DPNG_LIBRARY="$(brew --prefix libpng)/lib/libpng.a" -DPNG_PNG_INCLUDE_DIR="$(brew --prefix libpng)/include"',
+            }
+          - {
+              name: "Linux",
+              runner: ubuntu-latest,
+              shell: bash,
+              cmake_flags: "-G Ninja",
+            }
+
     steps:
-      - name: Install dependencies
-        run: "sudo apt install scons"
-
-      - name: Checkout repository code
-        uses: actions/checkout@v2
+      - name: Install dependencies (MSYS)
+        if: matrix.config.shell == 'msys2 {0}'
+        uses: msys2/setup-msys2@v2
         with:
-          path: gambatte-speedrun
-      
-      - name: Assemble TestROMs
-        run: "cd gambatte-speedrun/test && sh scripts/assemble_tests.sh"
+          update: true
+          msystem: ${{ matrix.config.msystem }}
+          install: >-
+            ${{ matrix.config.msys-env }}-gcc
+            ${{ matrix.config.msys-env }}-cmake
+            ${{ matrix.config.msys-env }}-ninja
+            ${{ matrix.config.msys-env }}-pkgconf
+            ${{ matrix.config.msys-env }}-libpng
+            ${{ matrix.config.msys-env }}-python3
+            ${{ matrix.config.msys-env }}-zlib
 
-      - name: Build libgambatte and run tests
-        run: "cd gambatte-speedrun && sh scripts/test.sh"
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew unlink pkg-config
+          brew install \
+            cmake \
+            ninja \
+            pkgconf \
+            libpng \
+            python3 \
+            zlib
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get upgrade -y
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            pkgconf \
+            libpng-dev \
+            libz-dev \
+            python3
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows' && matrix.config.shell != 'msys2 {0}'
+        run: |
+          vcpkg install --triplet ${{ matrix.config.vcpkg_triplet }} libpng pkgconf zlib
+          echo "$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.config.vcpkg_triplet }}/tools/pkgconf" >> $GITHUB_PATH
+          echo "CMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" >> $GITHUB_ENV
+          echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.config.vcpkg_triplet }}/lib/pkgconfig" >> $GITHUB_ENV
+
+      - uses: actions/checkout@v3
+
+      - name: Configure
+        run: |
+          cmake -S.\
+                -Bbuild \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_INSTALL_PREFIX=install-prefix \
+                -DLIBGAMBATTE_BUILD_SHARED=ON \
+                -DLIBGAMBATTE_BUILD_STATIC=ON \
+                -DLIBGAMBATTE_ENABLE_ZIP=ON \
+                -DLIBGAMBATTE_ENABLE_TESTING=ON \
+                -DVCPKG_MANIFEST_MODE=OFF \
+                ${{ matrix.config.cmake_flags }}
+
+      - name: Build
+        run: |
+          cmake --build build --config Release
+
+      - name: Run tests
+        run: |
+          ctest --extra-verbose --test-dir build -C Release
+
+      - name: Install
+        run: |
+          cmake --install build --config Release
+
+      - name: Test consuming from build directory
+        run: |
+          cmake -Scmake/test \
+                -Bconsumer-from-build \
+                -DCMAKE_BUILD_TYPE=Release \
+                -Dlibgambatte_DIR="$(pwd)/build" \
+                ${{ matrix.config.cmake_flags }}
+          cmake --build consumer-from-build --config Release
+
+      - name: Test consuming from installation
+        run: |
+          cmake -Scmake/test \
+                -Bconsumer-from-install \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_PREFIX_PATH="$(pwd)/install-prefix" \
+                ${{ matrix.config.cmake_flags }}
+          cmake --build consumer-from-install --config Release
+
+      - name: Test consuming from pkg-config
+        run: |
+          pkgconf --with-path="$(pwd)/install-prefix/lib/pkgconfig" --validate libgambatte
+          cmake -Scmake/test \
+                -Bconsumer-from-pkg-config \
+                -DCMAKE_BUILD_TYPE=Release \
+                -DCMAKE_PREFIX_PATH="$(pwd)/install-prefix" \
+                -DUSE_PKG_CONFIG=TRUE \
+                ${{ matrix.config.cmake_flags }}
+          cmake --build consumer-from-pkg-config --config Release
