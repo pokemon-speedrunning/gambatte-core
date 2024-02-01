@@ -78,10 +78,6 @@ void Rtc::updateClock(unsigned long const cc) {
 	}
 }
 
-unsigned long long Rtc::timeNow() const {
-	return (((((((dataDh_ & 0x01) << 8) | dataDl_) * 86400) + (dataH_ * 3600) + (dataM_ * 60) + dataS_) * time_.getRtcDivisor()) + dataC_) >> 1;
-}
-
 void Rtc::setTime(unsigned long long const dividers) {
 	unsigned long const cycleDivisor = time_.getRtcDivisor();
 	dataC_ = dividers * 2 % cycleDivisor;

@@ -423,10 +423,15 @@ public:
 	/** Gets the address the CPU was interrupted at or -1 if stopped normally. */
 	int getHitInterruptAddress();
 
-	/** Returns the current cycle-based time counter as dividers. (2^21/sec) */
+	/** Returns a cycle-based time counter as dividers. (2^21/sec)
+	  * Note that this is stored in savestates, so this counter may change due to loading a savestate.
+	  * This counter will be reset on a load() or reset() call
+	  */
 	unsigned long long timeNow() const;
 
-	/** Sets the current cycle-based time counter as dividers. (2^21/sec) */
+	/** Sets RTC time counter as dividers. (2^21/sec).
+	  * This is NOT the same counter from the timeNow() function.
+	  */
 	void setTime(unsigned long long dividers) const;
 
 	/** Return a value in range 0-3FFF representing current "position" of internal divider */

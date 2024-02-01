@@ -358,7 +358,8 @@ public:
 		std::memcpy(bios_.get(), buffer.get(), buffer.size());
 	}
 
-	unsigned long long timeNow() const { return cart_.timeNow(); }
+	unsigned long long timeNow() const { return totalSamplesEmitted_; }
+
 	void setTime(unsigned long long dividers) { cart_.setTime(dividers); }
 
 	unsigned long getDivLastUpdate() { return divLastUpdate_; }
@@ -407,6 +408,8 @@ private:
 	void (*linkCallback_)();
 	bool linked_;
 	bool linkClockTrigger_;
+
+	unsigned long long totalSamplesEmitted_;
 
 	void decEventCycles(IntEventId eventId, unsigned long dec);
 	void oamDmaInitSetup();

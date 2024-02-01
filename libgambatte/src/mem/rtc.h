@@ -62,7 +62,6 @@ public:
 	}
 
 	virtual void updateClock(unsigned long const cc);
-	virtual unsigned long long timeNow() const;
 	virtual void setTime(unsigned long long const dividers);
 	virtual void setBaseTime(unsigned long long baseTime, unsigned long const cc);
 
