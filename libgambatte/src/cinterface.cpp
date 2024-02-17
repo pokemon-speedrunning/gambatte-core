@@ -23,6 +23,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#ifdef SHLIB
+
 // new is actually called in a few different places, so replace all of them for determinism guarantees
 void *operator new(std::size_t n) {
 	void *p = std::malloc(n);
@@ -38,6 +40,8 @@ void operator delete(void *p) {
 void operator delete(void *p, std::size_t) {
 	std::free(p);
 }
+
+#endif
 
 namespace {
 

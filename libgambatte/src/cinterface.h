@@ -19,10 +19,16 @@
 #ifndef CINTERFACE_H
 #define CINTERFACE_H
 
-#ifdef _WIN32
-# define GBEXPORT extern "C" __declspec(dllexport)
+#ifdef SHLIB
+	#ifdef _WIN32
+		#define GBEXPORT extern "C" __declspec(dllexport)
+	#elif defined(__GNUC__) && __GNUC__ >= 4
+		#define GBEXPORT extern "C" __attribute__((visibility("default")))
+	#else
+		#define GBEXPORT extern "C"
+	#endif
 #else
-# define GBEXPORT extern "C"
+	#define GBEXPORT extern "C"
 #endif
 
 #endif
