@@ -121,8 +121,9 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 
 	if (sgb) {
 		unsigned short palettes[4];
-		char romTitle[0x10];
-		std::memcpy(romTitle, romTitlePtr, sizeof romTitle);
+		char romTitle[0x10 + 1];
+		std::memcpy(romTitle, romTitlePtr, sizeof romTitle - 1);
+		romTitle[0x10] = '\0';
 		if (!std::strcmp(romTitle, "SUPERMARIOLAND3")) {
 			palettes[0] = 0x637B;
 			palettes[1] = 0x3AD9;

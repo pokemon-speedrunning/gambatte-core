@@ -222,12 +222,12 @@ GBEXPORT void gambatte_newstateload_ex(GB *g, FPtrs *ff) {
 }
 
 GBEXPORT void gambatte_romtitle(GB *g, char *dest) {
-	std::strcpy(dest, g->romTitle().c_str());
+	std::strncpy(dest, g->romTitle().c_str(), 16 + 1);
 }
 
 GBEXPORT void gambatte_pakinfo(GB *g, char *mbc, unsigned *rambanks, unsigned *rombanks, unsigned *crc, unsigned *headerChecksumOk) {
 	PakInfo pakInfo = g->pakInfo();
-	std::strcpy(mbc, pakInfo.mbc().c_str());
+	std::strncpy(mbc, pakInfo.mbc().c_str(), 32 + 1);
 	*rambanks = pakInfo.rambanks();
 	*rombanks = pakInfo.rombanks();
 	*crc = pakInfo.crc();
