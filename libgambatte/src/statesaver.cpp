@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <fstream>
 #include <functional>
+#include <memory>
 #include <sstream>
 #include <vector>
 #include <cstring>
@@ -552,10 +553,10 @@ bool StateSaver::saveState(SaveState const &state,
 		return false;
 
 	std::size_t size = saveState(state, videoBuf, pitch, NULL, mode);
-	char stateBuf[size];
+	std::unique_ptr<char[]> stateBuf {new char[size]};
 
-	saveState(state, videoBuf, pitch, stateBuf, mode);
-	file.write(stateBuf, size);
+	saveState(state, videoBuf, pitch, stateBuf.get(), mode);
+	file.write(stateBuf.get(), size);
 
 	return !file.fail();
 }
