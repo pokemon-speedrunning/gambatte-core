@@ -101,6 +101,8 @@ unsigned long Memory::saveState(SaveState &state, unsigned long cc) {
 	state.mem.biosMode = biosMode_;
 	state.mem.stopped = stopped_;
 	state.mem.lastCartBusUpdate = lastCartBusUpdate_;
+	state.mem.totalSamplesEmittedHigh = totalSamplesEmitted_ >> 32;
+	state.mem.totalSamplesEmittedLow = totalSamplesEmitted_ & 0xFFFFFFFF;
 
 	intreq_.saveState(state);
 	cart_.saveState(state, cc);
@@ -116,6 +118,9 @@ void Memory::loadState(SaveState const &state) {
 	biosMode_ = state.mem.biosMode;
 	stopped_ = state.mem.stopped;
 	lastCartBusUpdate_ = state.mem.lastCartBusUpdate;
+	totalSamplesEmitted_ = (unsigned long long)state.mem.totalSamplesEmittedHigh << 32;
+	totalSamplesEmitted_ |= state.mem.totalSamplesEmittedLow;
+
 	psg_.loadState(state);
 	lcd_.loadState(state, state.mem.oamDmaPos < oam_size ? cart_.rdisabledRam() : ioamhram_);
 	tima_.loadState(state, TimaInterruptRequester(intreq_));
@@ -1445,6 +1450,7 @@ std::size_t Memory::fillSoundBuffer(unsigned long cc) {
 	if (cart_.isHuC3())
 		cart_.accumulateSamples(cc);
 
+	totalSamplesEmitted_ += samples;
 	return samples;
 }
 
@@ -1535,4 +1541,5 @@ SYNCFUNC(Memory) {
 	NSS(stopped_);
 	NSS(linked_);
 	NSS(linkClockTrigger_);
+	NSS(totalSamplesEmitted_);
 }

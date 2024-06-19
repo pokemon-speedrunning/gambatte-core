@@ -252,6 +252,8 @@ SaverList::SaverList()
 	{ static char const label[] = { m,i,n,i,n,t,t, NUL }; ADD(mem.minIntTime); }
 	{ static char const label[] = { u,n,h,a,l,t,t, NUL }; ADD(mem.unhaltTime); }
 	{ static char const label[] = { l,c,b,u,s,u,p, NUL }; ADD(mem.lastCartBusUpdate); }
+	{ static char const label[] = { t,s,a,m,p,s,h, NUL }; ADD(mem.totalSamplesEmittedHigh); }
+	{ static char const label[] = { t,s,a,m,p,s,l, NUL }; ADD(mem.totalSamplesEmittedLow); }
 	{ static char const label[] = { r,o,m,b,a,n,k, NUL }; ADD(mem.rombank); }
 	{ static char const label[] = { d,m,a,s,r,c,   NUL }; ADD(mem.dmaSource); }
 	{ static char const label[] = { d,m,a,d,s,t,   NUL }; ADD(mem.dmaDestination); }

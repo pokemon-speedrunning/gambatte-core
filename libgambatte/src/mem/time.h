@@ -30,7 +30,6 @@ struct SaveState;
 class Clock {
 public:
 	virtual void updateClock(unsigned long const cc) = 0;
-	virtual unsigned long long timeNow() const = 0;
 	virtual void setTime(unsigned long long const dividers) = 0;
 	virtual void setBaseTime(unsigned long long baseTime, unsigned long const cc) = 0;
 };
@@ -47,7 +46,6 @@ public:
 	void setTimeMode(bool useCycles, unsigned long cycleCounter);
 
 	void set(Clock *clock) { clock_ = clock; }
-	unsigned long long timeNow() const { return clock_ ? clock_->timeNow() : 0; }
 	void setTime(unsigned long long const dividers) { if (clock_) clock_->setTime(dividers); }
 	void setBaseTime(unsigned long long baseTime, unsigned long const cc) { if (clock_) clock_->setBaseTime(baseTime, cc); }
 

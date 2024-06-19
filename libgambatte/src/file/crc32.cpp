@@ -86,11 +86,11 @@ unsigned long crc32(unsigned long crc, void const *buf, std::size_t size) {
 		return crc;
 
 	unsigned char const *p = reinterpret_cast<unsigned char const *>(buf);
-	crc = ~crc;
+	crc = ~crc & 0xFFFFFFFF;
 	while (size--)
 		crc = CRC32Table[(crc ^ *(p++)) & 0xFF] ^ (crc >> 8);
 
-	return ~crc;
+	return ~crc & 0xFFFFFFFF;
 }
 
 }

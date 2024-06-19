@@ -73,6 +73,8 @@ struct SaveState {
 		unsigned long minIntTime;
 		unsigned long unhaltTime;
 		unsigned long lastCartBusUpdate;
+		unsigned long totalSamplesEmittedHigh;
+		unsigned long totalSamplesEmittedLow;
 		unsigned short rombank;
 		unsigned short dmaSource;
 		unsigned short dmaDestination;

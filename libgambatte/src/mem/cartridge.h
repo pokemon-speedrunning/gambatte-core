@@ -73,7 +73,6 @@ public:
 	}
 	void setTimeMode(bool useCycles, unsigned long const cc) { time_.setTimeMode(useCycles, cc); }
 	void setRtcDivisorOffset(long const rtcDivisorOffset) { time_.setRtcDivisorOffset(rtcDivisorOffset); }
-	unsigned long long timeNow() const { return time_.timeNow(); }
 	void setTime(unsigned long long dividers) { time_.setTime(dividers); }
 	void rtcWrite(unsigned data, unsigned long const cc) { rtc_.write(data, cc); }
 	unsigned char rtcRead() const { return rtc_.activeLatch() ? *rtc_.activeLatch() : 0xFF; }
