@@ -220,10 +220,6 @@ void Channel4::reset(unsigned long cc) {
 	setEvent();
 }
 
-void Channel4::init(bool agb) {
-	envelopeUnit_.init(agb);
-}
-
 void Channel4::saveState(SaveState &state, unsigned long cc) {
 	lfsr_.saveState(state, cc);
 	envelopeUnit_.saveState(state.spu.ch4.env);

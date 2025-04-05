@@ -91,10 +91,6 @@ void Channel2::reset() {
 	setEvent();
 }
 
-void Channel2::init(bool agb) {
-	envelopeUnit_.init(agb);
-}
-
 void Channel2::saveState(SaveState &state, unsigned long cc) {
 	dutyUnit_.saveState(state.spu.ch2.duty, cc);
 	envelopeUnit_.saveState(state.spu.ch2.env);

@@ -34,12 +34,11 @@ public:
 
 	explicit EnvelopeUnit(VolOnOffEvent &volOnOffEvent = nullEvent_);
 	void event();
-	bool dacIsOn() const { return agb_ || (nr2_ & 0xF8); }
+	bool dacIsOn() const { return nr2_ & 0xF8; }
 	unsigned getVolume() const { return volume_; }
 	void nr2Change(unsigned newNr2, unsigned long cc, bool master);
 	bool nr4Init(unsigned long cycleCounter);
 	void reset();
-	void init(bool agb) { agb_ = agb; }
 	void saveState(SaveState::SPU::Env &estate) const;
 	void loadState(SaveState::SPU::Env const &estate, unsigned nr2, unsigned long cc);
 	template<bool isReader>void SyncState(NewState *ns);
@@ -50,7 +49,6 @@ private:
 	unsigned char nr2_;
 	unsigned char volume_;
 	bool clock_;
-	bool agb_;
 
 	bool clock(unsigned long cc) {
 		if (counter_ == counter_disabled)
