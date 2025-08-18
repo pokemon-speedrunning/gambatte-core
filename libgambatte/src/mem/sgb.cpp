@@ -447,12 +447,12 @@ void Sgb::onTransfer(unsigned char *frame) {
 	switch (pending) {
 	case SOU_TRN:
 	{
-		unsigned char *end = &vram[sizeof vram];
+		unsigned char *end = &vram[sizeof vram - 1];
 		unsigned char *src = vram;
 		unsigned char *dst = spc.get_ram();
 		
 		while (true) {
-			if (src + 4 >= end)
+			if (src + 4 > end)
 				break;
 
 			unsigned len = src[0] | src[1] << 8;
@@ -461,7 +461,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 				break;
 
 			src += 4;
-			if ((src + len) >= end || (addr + len) >= 0x10000)
+			if ((src + len) > end || (addr + len) >= 0x10000)
 				break;
 
 			std::memcpy(dst + addr, src, len);
@@ -480,35 +480,27 @@ void Sgb::onTransfer(unsigned char *frame) {
 	case CHR_TRN:
 	{
 		unsigned char *tileAddr = (pending & HIGH) ? &tiles[4096] : &tiles[0];
-		unsigned short *src = (unsigned short *)vram;
-		unsigned short *dst = (unsigned short *)tileAddr;
-		for (unsigned i = 0; i < 2048; i++)
-			dst[i] = src[i];
-
+		std::memcpy(tileAddr, vram, 4096);
 		break;
 	}
 	case PCT_TRN:
 	{
-		unsigned short *src = (unsigned short *)vram;
+		unsigned char *src = vram;
 		unsigned short *dst = tilemap;
 		for (unsigned i = 0; i < 32 * 32; i++)
-			dst[i] = src[i];
+			dst[i] = src[i * 2] | src[i * 2 + 1] << 8;
 
-		src += sizeof tilemap / sizeof tilemap[0];
+		src += sizeof tilemap;
 		dst = tileColors;
 		for (unsigned i = 0; i < 16 * 4; i++)
-			dst[i] = src[i];
+			dst[i] = src[i * 2] | src[i * 2 + 1] << 8;
 
 		borderFade = 105;
 		break;
 	}
 	case ATTR_TRN:
 	{
-		unsigned short *src = (unsigned short *)vram;
-		unsigned short *dst = (unsigned short *)systemAttributes;
-		for (unsigned i = 0; i < (45 * 90) / 2; i++)
-			dst[i] = src[i];
-
+		std::memcpy(systemAttributes, vram, sizeof systemAttributes);
 		break;
 	}
 	}

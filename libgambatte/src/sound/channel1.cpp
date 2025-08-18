@@ -191,9 +191,8 @@ void Channel1::reset() {
 	setEvent();
 }
 
-void Channel1::init(bool cgb, bool agb) {
+void Channel1::init(bool cgb) {
 	sweepUnit_.init(cgb);
-	envelopeUnit_.init(agb);
 }
 
 void Channel1::saveState(SaveState &state, unsigned long cc) {

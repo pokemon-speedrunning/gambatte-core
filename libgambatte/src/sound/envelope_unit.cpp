@@ -30,7 +30,6 @@ EnvelopeUnit::EnvelopeUnit(VolOnOffEvent &volOnOffEvent)
 , nr2_(0)
 , volume_(0)
 , clock_(false)
-, agb_(false)
 {
 }
 
@@ -144,5 +143,4 @@ SYNCFUNC(EnvelopeUnit) {
 	NSS(nr2_);
 	NSS(volume_);
 	NSS(clock_);
-	NSS(agb_);
 }
