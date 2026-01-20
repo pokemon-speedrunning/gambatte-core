@@ -143,15 +143,17 @@ void CPU::loadState(SaveState const &state) {
 #define de() ( d * 0x100u | e )
 #define hl() ( h * 0x100u | l )
 
-#define READ(dest, addr) do { (dest) = mem_.read<false, false, false, callbacksActive>(addr, cycleCounter); cycleCounter += 4; } while (0)
-#define PC_READ_OPCODE(dest) do { (dest) = mem_.read<false, true, true, callbacksActive>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; } while (0)
-#define PC_READ_OPERAND(dest, operand) do { (dest) = mem_.read<false, true, false, callbacksActive>(pc, cycleCounter); pc = (pc + 1) & 0xFFFF; cycleCounter += 4; if (callbacksActive) (operand) = (dest); } while (0)
-#define FF_READ(dest, addr) do { (dest) = mem_.ff_read<callbacksActive>(addr, cycleCounter); cycleCounter += 4; } while (0)
+#define cc() ( callbacksActive ? cycleCounter_ : cycleCounter )
 
-#define WRITE(addr, data) do { mem_.write<false, callbacksActive>(addr, data, cycleCounter); cycleCounter += 4; } while (0)
-#define FF_WRITE(addr, data) do { mem_.ff_write<callbacksActive>(addr, data, cycleCounter); cycleCounter += 4; } while (0)
+#define READ(dest, addr) do { (dest) = mem_.read<false, false, false, callbacksActive>(addr, cc()); cc() += 4; } while (0)
+#define PC_READ_OPCODE(dest) do { (dest) = mem_.read<false, true, true, callbacksActive>(pc, cc()); pc = (pc + 1) & 0xFFFF; cc() += 4; } while (0)
+#define PC_READ_OPERAND(dest, operand) do { (dest) = mem_.read<false, true, false, callbacksActive>(pc, cc()); pc = (pc + 1) & 0xFFFF; cc() += 4; if (callbacksActive) (operand) = (dest); } while (0)
+#define FF_READ(dest, addr) do { (dest) = mem_.ff_read<callbacksActive>(addr, cc()); cc() += 4; } while (0)
 
-#define PC_MOD(data) do { pc = data; cycleCounter += 4; } while (0)
+#define WRITE(addr, data) do { mem_.write<false, callbacksActive>(addr, data, cc()); cc() += 4; } while (0)
+#define FF_WRITE(addr, data) do { mem_.ff_write<callbacksActive>(addr, data, cc()); cc() += 4; } while (0)
+
+#define PC_MOD(data) do { pc = data; cc() += 4; } while (0)
 
 #define PUSH(r1, r2) do { \
 	sp = (sp - 1) & 0xFFFF; \
@@ -304,7 +306,7 @@ void CPU::loadState(SaveState const &state) {
 // push rr (16 cycles):
 // Push value of register pair onto stack:
 #define push_rr(r1, r2) do { \
-	cycleCounter += 4; \
+	cc() += 4; \
 	PUSH(r1, r2); \
 } while (0)
 
@@ -423,7 +425,7 @@ void CPU::loadState(SaveState const &state) {
 	hf2 = (cf & 0x100) | (rh); \
 	cf = h + (cf >> 8) + (rh); \
 	h = cf & 0xFF; \
-	cycleCounter += 4; \
+	cc() += 4; \
 } while (0)
 
 // inc rr (8 cycles):
@@ -432,7 +434,7 @@ void CPU::loadState(SaveState const &state) {
 	unsigned const lowinc = (rl) + 1; \
 	(rl) = lowinc & 0xFF; \
 	(rh) = ((rh) + (lowinc >> 8)) & 0xFF; \
-	cycleCounter += 4; \
+	cc() += 4; \
 } while (0)
 
 // dec rr (8 cycles):
@@ -441,7 +443,7 @@ void CPU::loadState(SaveState const &state) {
 	unsigned const lowdec = (rl) - 1; \
 	(rl) = lowdec & 0xFF; \
 	(rh) = ((rh) - (lowdec >> 8 & 1)) & 0xFF; \
-	cycleCounter += 4; \
+	cc() += 4; \
 } while (0)
 
 #define sp_plus_n(sumout) do { \
@@ -453,7 +455,7 @@ void CPU::loadState(SaveState const &state) {
 	cf = sp ^ disp ^ res; \
 	hf2 = cf << 5 & hf2_hcf; \
 	zf = 1; \
-	cycleCounter += 4; \
+	cc() += 4; \
 	(sumout) = res & 0xFFFF; \
 } while (0)
 
@@ -526,11 +528,11 @@ void CPU::process(unsigned long const cycles) {
 	while (mem_.isActive()) {
 
 		if (mem_.halted()) {
-			if (cycleCounter < mem_.nextEventTime()) {
-				unsigned long cycles = mem_.nextEventTime() - cycleCounter;
-				cycleCounter += cycles + (-cycles & 3);
+			if (cc() < mem_.nextEventTime()) {
+				unsigned long cycles = mem_.nextEventTime() - cc();
+				cc() += cycles + (-cycles & 3);
 			}
-		} else while (cycleCounter < mem_.nextEventTime()) {
+		} else while (cc() < mem_.nextEventTime()) {
 			unsigned char opcode;
 			unsigned char operandHigh;
 			unsigned char operandLow;
@@ -541,7 +543,7 @@ void CPU::process(unsigned long const cycles) {
 
 					if (!bank || bank == getAddrBank(pc)) {
 						hitInterruptAddress = interruptAddresses[i];
-						mem_.setEndtime(cycleCounter, 0);
+						mem_.setEndtime(cc(), 0);
 						break;
 					}
 				}
@@ -554,7 +556,7 @@ void CPU::process(unsigned long const cycles) {
 			if (callbacksActive && traceCallback_) {
 				hf2 = updateHf2FromHf1(hf1, hf2);
 
-				result[0] = mem_.callbackCycleOffset(cycleCounter);
+				result[0] = mem_.callbackCycleOffset(cc());
 				result[1] = pc;
 				result[2] = sp;
 				result[3] = a;
@@ -566,14 +568,14 @@ void CPU::process(unsigned long const cycles) {
 				result[9] = h;
 				result[10] = l;
 				result[11] = prefetched_;
-				result[13] = mem_.ff_read<false>(0x44, cycleCounter);
+				result[13] = mem_.ff_read<false>(0x44, cc());
 			}
 
 			if (!prefetched_) {
 				PC_READ_OPCODE(opcode);
 			} else {
 				opcode = opcode_;
-				cycleCounter += 4;
+				cc() += 4;
 				prefetched_ = false;
 			}
 
@@ -655,10 +657,10 @@ void CPU::process(unsigned long const cycles) {
 				// Halt CPU and LCD display until button pressed:
 			case 0x10:
 				PC_READ_OPERAND(opcode_, operandHigh);
-				cycleCounter = mem_.stop(cycleCounter - 4, prefetched_);
-				if (cycleCounter < mem_.nextEventTime()) {
-					unsigned long cycles = mem_.nextEventTime() - cycleCounter;
-					cycleCounter += cycles + (-cycles & 3);
+				cc() = mem_.stop(cc() - 4, prefetched_);
+				if (cc() < mem_.nextEventTime()) {
+					unsigned long cycles = mem_.nextEventTime() - cc();
+					cc() += cycles + (-cycles & 3);
 				}
 
 				break;
@@ -892,7 +894,7 @@ void CPU::process(unsigned long const cycles) {
 
 			case 0x33:
 				sp = (sp + 1) & 0xFFFF;
-				cycleCounter += 4;
+				cc() += 4;
 				break;
 
 				// inc (hl) (12 cycles):
@@ -961,7 +963,7 @@ void CPU::process(unsigned long const cycles) {
 				cf >>= 8;
 				cf += h;
 				h = cf & 0xFF;
-				cycleCounter += 4;
+				cc() += 4;
 				break;
 
 				// ldd a,(hl) (8 cycles):
@@ -969,8 +971,8 @@ void CPU::process(unsigned long const cycles) {
 			case 0x3A:
 				{
 					unsigned addr = hl();
-					a = mem_.read<false, false, false, callbacksActive>(addr, cycleCounter);
-					cycleCounter += 4;
+					a = mem_.read<false, false, false, callbacksActive>(addr, cc());
+					cc() += 4;
 
 					addr = (addr - 1) & 0xFFFF;
 					l = addr;
@@ -981,7 +983,7 @@ void CPU::process(unsigned long const cycles) {
 
 			case 0x3B:
 				sp = (sp - 1) & 0xFFFF;
-				cycleCounter += 4;
+				cc() += 4;
 				break;
 
 			case 0x3C:
@@ -1064,15 +1066,15 @@ void CPU::process(unsigned long const cycles) {
 
 				// halt (4n cycles):
 			case 0x76:
-				opcode_ = mem_.read<false, true, true, callbacksActive>(pc, cycleCounter);
-				if (mem_.pendingIrqs(cycleCounter)) {
+				opcode_ = mem_.read<false, true, true, callbacksActive>(pc, cc());
+				if (mem_.pendingIrqs(cc())) {
 					prefetched_ = true;
 				} else {
-					prefetched_ = mem_.halt(cycleCounter);
-					cycleCounter += 4 + 4 * !mem_.isCgb();
-					if (cycleCounter < mem_.nextEventTime()) {
-						unsigned long cycles = mem_.nextEventTime() - cycleCounter;
-						cycleCounter += cycles + (-cycles & 3);
+					prefetched_ = mem_.halt(cc());
+					cc() += 4 + 4 * !mem_.isCgb();
+					if (cc() < mem_.nextEventTime()) {
+						unsigned long cycles = mem_.nextEventTime() - cc();
+						cc() += cycles + (-cycles & 3);
 					}
 				}
 
@@ -1186,7 +1188,7 @@ void CPU::process(unsigned long const cycles) {
 				// ret nz (20;8 cycles):
 				// Pop two bytes from the stack and jump to that address, if ZF is unset:
 			case 0xC0:
-				cycleCounter += 4;
+				cc() += 4;
 
 				if (zf & 0xFF)
 					ret();
@@ -1247,7 +1249,7 @@ void CPU::process(unsigned long const cycles) {
 				// ret z (20;8 cycles):
 				// Pop two bytes from the stack and jump to that address, if ZF is set:
 			case 0xC8:
-				cycleCounter += 4;
+				cc() += 4;
 
 				if (!(zf & 0xFF))
 					ret();
@@ -1725,7 +1727,7 @@ void CPU::process(unsigned long const cycles) {
 				// ret nc (20;8 cycles):
 				// Pop two bytes from the stack and jump to that address, if CF is unset:
 			case 0xD0:
-				cycleCounter += 4;
+				cc() += 4;
 
 				if (!(cf & 0x100))
 					ret();
@@ -1750,7 +1752,7 @@ void CPU::process(unsigned long const cycles) {
 				break;
 
 			case 0xD3: // not specified. should freeze.
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 				// call nc,nn (24;12 cycles):
@@ -1787,7 +1789,7 @@ void CPU::process(unsigned long const cycles) {
 				// ret c (20;8 cycles):
 				// Pop two bytes from the stack and jump to that address, if CF is set:
 			case 0xD8:
-				cycleCounter += 4;
+				cc() += 4;
 
 				if (cf & 0x100)
 					ret();
@@ -1800,7 +1802,7 @@ void CPU::process(unsigned long const cycles) {
 				{
 					unsigned sl, sh;
 					pop_rr(sh, sl);
-					mem_.ei(cycleCounter);
+					mem_.ei(cc());
 					PC_MOD(sh << 8 | sl);
 				}
 
@@ -1820,7 +1822,7 @@ void CPU::process(unsigned long const cycles) {
 				break;
 
 			case 0xDB: // not specified. should freeze.
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 				// call c,nn (24;12 cycles):
@@ -1838,7 +1840,7 @@ void CPU::process(unsigned long const cycles) {
 				break;
 
 			case 0xDD: // not specified. should freeze.
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 			case 0xDE:
@@ -1877,7 +1879,7 @@ void CPU::process(unsigned long const cycles) {
 
 			case 0xE3: // not specified. should freeze.
 			case 0xE4: // not specified. should freeze.
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 			case 0xE5:
@@ -1901,7 +1903,7 @@ void CPU::process(unsigned long const cycles) {
 				// Add next (signed) byte in memory to SP, reset ZF and SF, check HCF and CF:
 			case 0xE8:
 				sp_plus_n(sp);
-				cycleCounter += 4;
+				cc() += 4;
 				break;
 
 				// jp hl (4 cycles):
@@ -1926,7 +1928,7 @@ void CPU::process(unsigned long const cycles) {
 			case 0xEB: // not specified. should freeze.
 			case 0xEC: // not specified. should freeze.
 			case 0xED: // not specified. should freeze.
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 			case 0xEE:
@@ -1976,7 +1978,7 @@ void CPU::process(unsigned long const cycles) {
 				break;
 
 			case 0xF4: // not specified. should freeze.
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 			case 0xF5:
@@ -2018,7 +2020,7 @@ void CPU::process(unsigned long const cycles) {
 				// Put value in HL into SP
 			case 0xF9:
 				sp = hl();
-				cycleCounter += 4;
+				cc() += 4;
 				break;
 
 				// ld a,(nn) (16 cycles):
@@ -2037,12 +2039,12 @@ void CPU::process(unsigned long const cycles) {
 				// ei (4 cycles):
 				// Enable Interrupts after next instruction:
 			case 0xFB:
-				mem_.ei(cycleCounter);
+				mem_.ei(cc());
 				break;
 
 			case 0xFC: // not specified. should freeze.
 			case 0xFD: // not specified. should freeze
-				cycleCounter = freeze(mem_, cycleCounter);
+				cc() = freeze(mem_, cc());
 				break;
 
 			case 0xFE:
@@ -2065,10 +2067,11 @@ void CPU::process(unsigned long const cycles) {
 				traceCallback_((void*)result);
 			}
 		}
-		cycleCounter = mem_.event(cycleCounter);
+		cc() = mem_.event(cc());
 	}
 
-	cycleCounter_ = cycleCounter;
+	if (!callbacksActive)
+		cycleCounter_ = cycleCounter;
 }
 
 void CPU::getRegs(int *dest) {
