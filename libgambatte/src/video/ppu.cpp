@@ -232,7 +232,7 @@ namespace M2 {
 */
 
 int loadTileDataByte0(PPUPriv const &p) {
-	if (p.tileIndexIsTd)
+	if (p.tileIndexIsTd && !(p.reg1 & 0x80))
 		return p.reg1;
 
 	unsigned const yoffset = p.winDrawState & win_draw_started
@@ -248,7 +248,7 @@ int loadTileDataByte0(PPUPriv const &p) {
 }
 
 int loadTileDataByte1(PPUPriv const &p) {
-	if (p.tileIndexIsTd)
+	if (p.tileIndexIsTd && !(p.reg1 & 0x80))
 		return p.reg1;
 
 	unsigned const yoffset = p.winDrawState & win_draw_started
