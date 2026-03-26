@@ -36,7 +36,7 @@ See the above link if you have an older installation of MSYS2 and/or pacman.
 ```
 \- Install MSYS2 packages for general build development environment:
 ```
-$ pacman -S base-devel git mingw-w64-i686-zlib mingw-w64-i686-toolchain
+$ pacman -S base-devel git mingw-w64-i686-zlib mingw-w64-i686-toolchain scons
 ```
 
 ### Qt-specific steps
@@ -118,3 +118,4 @@ $ sudo apt install qt5-default libqt5x11extras5-dev libxrandr-dev libxv-dev liba
 ```
 $ sudo apt install libpng-dev
 ```
+
