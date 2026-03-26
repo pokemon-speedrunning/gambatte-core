@@ -888,10 +888,8 @@ void Memory::nontrivial_ff_write(unsigned const p, unsigned data, unsigned long 
 	switch (p & 0xFF) {
 	case 0x00:
 		if ((data ^ ioamhram_[0x100]) & 0x30) {
-			if (isSgb()) {
-				if ((((data ^ ioamhram_[0x100]) & 0x30) & data) && !biosMode_)
-					sgb_.onJoypad(ioamhram_[0x100], data);
-			}
+			if (isSgb() && !biosMode_)
+				sgb_.onJoypad(ioamhram_[0x100], data);
 
 			ioamhram_[0x100] = (ioamhram_[0x100] & ~0x30u) | (data & 0x30);
 			updateInput();

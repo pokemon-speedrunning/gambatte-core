@@ -122,7 +122,7 @@ private:
 	void saveSpcState();
 	void loadSpcState();
 
-	void handleTransfer(unsigned data);
+	void handleTransfer(unsigned data, unsigned write);
 	void onCommand();
 	void onTransfer(unsigned char *frame);
 

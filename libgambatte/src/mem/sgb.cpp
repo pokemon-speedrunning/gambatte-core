@@ -142,7 +142,7 @@ void Sgb::loadSpcState() {
 }
 
 void Sgb::onJoypad(unsigned data, unsigned write) {
-	handleTransfer(data);
+	handleTransfer(data, write);
 
 	if ((data & 0x20) == 0 && (write & 0x20) != 0)
 		joypadIndex = (joypadIndex + 1) & joypadMask;
@@ -315,30 +315,36 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	return 0;
 }
 
-void Sgb::handleTransfer(unsigned data) {
-	if ((data & 0x30) == 0) {
+void Sgb::handleTransfer(unsigned data, unsigned write) {
+	if ((data & 0x30) != 0x30 || (write & 0x30) == 0x30)
+		return;
+
+	if ((write & 0x30) == 0) {
 		std::memset(packet, 0, sizeof packet);
 		transfer = 0;
 	} else if (transfer != 0xFF) {
 		if (transfer < 128) {
-			packet[transfer >> 3] |= ((data & 0x20) == 0) << (transfer & 7);
+			packet[transfer >> 3] |= ((write & 0x30) == 0x10) << (transfer & 7);
 			transfer++;
-		} else if ((data & 0x10) == 0) {
+		} else if ((write & 0x30) == 0x20) {
 			transfer = 0xFF;
 			std::memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
 
-			if (++commandIndex == (command[0] & 7)) {
-				onCommand();
-				commandIndex = 0;
+			if (command[0] & 7) {
+				if (++commandIndex == (command[0] & 7)) {
+					onCommand();
+					commandIndex = 0;
+				}
 			}
+		} else if ((write & 0x30) == 0x10) {
+			// invalid command?
+			transfer = 0xFF;
+			commandIndex = 0;
 		}
 	}
 }
 
 void Sgb::onCommand() {
-	if ((command[0] & 7) == 0)
-		return;
-
 	switch (command[0] >> 3) {
 	case PAL01:
 		palnn(0, 1);
@@ -668,14 +674,13 @@ void Sgb::attrChr() {
 
 void Sgb::attrSet() {
 	unsigned attr = command[1] & 0x3F;
-	if (attr >= 45)
-		return;
-
-	for (unsigned i = 0; i < 90; i++) {
-		unsigned char b = systemAttributes[attr * 90 + i];
-		for (unsigned j = 0; j < 4; j++) {
-			attributes[j + i * 4] = b >> 6;
-			b <<= 2;
+	if (attr < 45) {
+		for (unsigned i = 0; i < 90; i++) {
+			unsigned char b = systemAttributes[attr * 90 + i];
+			for (unsigned j = 0; j < 4; j++) {
+				attributes[j + i * 4] = b >> 6;
+				b <<= 2;
+			}
 		}
 	}
 	if (command[1] & 0x40)
@@ -693,14 +698,13 @@ void Sgb::palSet() {
 	}
 	if (command[9] & 0x80) {
 		unsigned attr = command[9] & 0x3F;
-		if (attr >= 45)
-			attr = 44;
-		
-		for (unsigned i = 0; i < 90; i++) {
-			unsigned char b = systemAttributes[attr * 90 + i];
-			for (unsigned j = 0; j < 4; j++) {
-				attributes[j + i * 4] = b >> 6;
-				b <<= 2;
+		if (attr < 45) {
+			for (unsigned i = 0; i < 90; i++) {
+				unsigned char b = systemAttributes[attr * 90 + i];
+				for (unsigned j = 0; j < 4; j++) {
+					attributes[j + i * 4] = b >> 6;
+					b <<= 2;
+				}
 			}
 		}
 	}
