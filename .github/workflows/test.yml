@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install dependencies
-        run: "sudo apt install scons"
+        run: "sudo apt install scons libpng-dev"
 
       - name: Checkout repository code
         uses: actions/checkout@v6
