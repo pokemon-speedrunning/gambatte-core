@@ -95,7 +95,7 @@ public:
 	template <bool callbacksActive>
 	unsigned ff_read(unsigned p, unsigned long cc) {
 		if (callbacksActive && readCallback_)
-			readCallback_(p, callbackCycleOffset(cc));
+			readCallback_(p, callbackCycleOffset(cc), 0);
 
 		return p < 0x80 ? nontrivial_ff_read(p, cc) : ioamhram_[p + 0x100];
 	}
@@ -145,9 +145,9 @@ public:
 	template <bool peek, bool execute, bool opcode, bool callbacksActive>
 	unsigned read(unsigned p, unsigned long cc) {
 		if (!peek && callbacksActive && !execute && readCallback_)
-			readCallback_(p, callbackCycleOffset(cc));
+			readCallback_(p, callbackCycleOffset(cc), 0);
 		else if (!peek && callbacksActive && execute && opcode && execCallback_)
-			execCallback_(p, callbackCycleOffset(cc));
+			execCallback_(p, callbackCycleOffset(cc), 0);
 
 		if (biosMode_ && p < bios_.size() && !(p >= 0x100 && p < 0x200))
 			return readBios(p);
@@ -223,7 +223,7 @@ public:
 
 		if (!poke && callbacksActive) {
 			if (writeCallback_)
-				writeCallback_(p, callbackCycleOffset(cc));
+				writeCallback_(p, callbackCycleOffset(cc), data);
 
 			if (cdCallback_ && !biosMode_) {
 				CDMapResult map = CDMap(p);
@@ -241,7 +241,7 @@ public:
 			nontrivial_ff_write(p, data, cc);
 
 		if (callbacksActive && writeCallback_)
-			writeCallback_(mm_io_begin + p, callbackCycleOffset(cc));
+			writeCallback_(mm_io_begin + p, callbackCycleOffset(cc), data);
 		if (callbacksActive && cdCallback_ && !biosMode_) {
 			CDMapResult map = CDMap(mm_io_begin + p);
 			if (map.type != eCDLog_AddrType_None)
