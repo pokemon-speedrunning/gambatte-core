@@ -53,7 +53,7 @@ public:
 		refreshPalettes();
 	}
 
-	void onJoypad(unsigned data, unsigned write);
+	void onJoypad(unsigned oldJoypad, unsigned newJoypad);
 	void updateScreen(bool blanklcd);
 	unsigned updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch);
 
@@ -122,7 +122,7 @@ private:
 	void saveSpcState();
 	void loadSpcState();
 
-	void handleTransfer(unsigned data, unsigned write);
+	void handleTransfer(unsigned oldJoypad, unsigned newJoypad);
 	void onCommand();
 	void onTransfer(unsigned char *frame);
 

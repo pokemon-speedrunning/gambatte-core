@@ -141,10 +141,10 @@ void Sgb::loadSpcState() {
 	spc.copy_state(&i, loadStateCallback);
 }
 
-void Sgb::onJoypad(unsigned data, unsigned write) {
-	handleTransfer(data, write);
+void Sgb::onJoypad(unsigned oldJoypad, unsigned newJoypad) {
+	handleTransfer(oldJoypad, newJoypad);
 
-	if ((data & 0x20) == 0 && (write & 0x20) != 0)
+	if ((oldJoypad & 0x20) == 0 && (newJoypad & 0x20) != 0)
 		joypadIndex = (joypadIndex + 1) & joypadMask;
 }
 
@@ -315,18 +315,32 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	return 0;
 }
 
-void Sgb::handleTransfer(unsigned data, unsigned write) {
-	if ((data & 0x30) != 0x30 || (write & 0x30) == 0x30)
+void Sgb::handleTransfer(unsigned oldJoypad, unsigned newJoypad) {
+	// 0x00 in the joypad holds the packet transfer in a reset state
+	if ((newJoypad & 0x30) == 0) {
+		std::memset(packet, 0, sizeof packet);
+		transfer = 0xFF;
+		return;
+	}
+
+	// commands are only "committed" with a 0x30 write after them
+	if ((newJoypad & 0x30) != 0x30)
 		return;
 
-	if ((write & 0x30) == 0) {
-		std::memset(packet, 0, sizeof packet);
+	// 0x00 -> 0x30 begins a packet transfer
+	if (transfer == 0xFF && (oldJoypad & 0x30) == 0) {
 		transfer = 0;
-	} else if (transfer != 0xFF) {
+		return;
+	}
+
+	// 0x10/0x20 -> 0x30 writes a bit, if a packet transfer is active
+	if (transfer != 0xFF) {
 		if (transfer < 128) {
-			packet[transfer >> 3] |= ((write & 0x30) == 0x10) << (transfer & 7);
+			// 0x10 -> 0x30 writes a 1 bit
+			// 0x20 -> 0x30 writes a 0 bit
+			packet[transfer >> 3] |= ((oldJoypad & 0x30) == 0x10) << (transfer & 7);
 			transfer++;
-		} else if ((write & 0x30) == 0x20) {
+		} else {
 			transfer = 0xFF;
 			std::memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
 
@@ -336,10 +350,6 @@ void Sgb::handleTransfer(unsigned data, unsigned write) {
 					commandIndex = 0;
 				}
 			}
-		} else if ((write & 0x30) == 0x10) {
-			// invalid command?
-			transfer = 0xFF;
-			commandIndex = 0;
 		}
 	}
 }
