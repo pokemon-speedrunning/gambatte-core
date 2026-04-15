@@ -280,6 +280,8 @@ SaverList::SaverList()
 	{ static char const label[] = { s,g,b,p,k,t,   NUL }; ADDPTR(mem.sgb.packet); }
 	{ static char const label[] = { s,g,b,c,m,d,   NUL }; ADDPTR(mem.sgb.command); }
 	{ static char const label[] = { s,g,b,f,b,u,f, NUL }; ADDPTR(mem.sgb.frameBuf); }
+	{ static char const label[] = { s,g,b,l,o,g,o, NUL }; ADDPTR(mem.sgb.logoBuf); }
+	{ static char const label[] = { s,g,b,h,o,o,k, NUL }; ADDPTR(mem.sgb.hookBuf); }
 	{ static char const label[] = { s,g,b,s,p,c,   NUL }; ADDPTR(mem.sgb.spcState); }
 	{ static char const label[] = { s,g,b,s,o,c,o, NUL }; ADDPTR(mem.sgb.soundControl); }
 	{ static char const label[] = { s,g,b,s,a,m,p, NUL }; ADD(mem.sgb.samplesAccumulated); }
@@ -291,6 +293,8 @@ SaverList::SaverList()
 	{ static char const label[] = { s,g,b,p,e,n,d, NUL }; ADD(mem.sgb.pending); }
 	{ static char const label[] = { s,g,b,p,c,     NUL }; ADD(mem.sgb.pendingCount); }
 	{ static char const label[] = { s,g,b,m,a,s,k, NUL }; ADD(mem.sgb.mask); }
+	{ static char const label[] = { s,g,b,d,c,m,d, NUL }; ADD(mem.sgb.disableCommands); }
+	{ static char const label[] = { s,g,b,h,d,s,t, NUL }; ADD(mem.sgb.headerSent); }
 	{ static char const label[] = { d,m,g,c,o,l,s, NUL }; ADDPTR(ppu.dmgColorsBgr15); }
 	{ static char const label[] = { b,g,p,         NUL }; ADDPTR(ppu.bgpData); }
 	{ static char const label[] = { o,b,j,p,       NUL }; ADDPTR(ppu.objpData); }

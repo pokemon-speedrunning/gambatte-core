@@ -104,6 +104,8 @@ struct SaveState {
 			Ptr<unsigned char> packet;
 			Ptr<unsigned char> command;
 			Ptr<unsigned char> frameBuf;
+			Ptr<unsigned char> logoBuf;
+			Ptr<unsigned char> hookBuf;
 			Ptr<unsigned char> spcState;
 			Ptr<unsigned char> soundControl;
 			unsigned long samplesAccumulated;
@@ -115,6 +117,8 @@ struct SaveState {
 			unsigned char pending;
 			unsigned char pendingCount;
 			unsigned char mask;
+			unsigned char /*bool*/ disableCommands;
+			unsigned char /*bool*/ headerSent;
 		} sgb;
 	} mem;
 

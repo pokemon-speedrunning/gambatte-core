@@ -67,6 +67,12 @@ private:
 	unsigned char command[0x10 * 7];
 	unsigned char commandIndex;
 
+	bool disableCommands;
+	bool headerSent;
+
+	unsigned char logoBuf[0x30];
+	unsigned char hookBuf[0x400];
+
 	unsigned char joypadIndex;
 	unsigned char joypadMask;
 
@@ -77,7 +83,8 @@ private:
 	unsigned short systemColors[512 * 4];
 	unsigned short colors[4 * 4];
 	unsigned long palette[4 * 4];
-	unsigned char systemAttributes[45 * 90];
+	// Only the first 45 * 90 bytes have valid attributes
+	unsigned char systemAttributes[0x1000];
 	unsigned char attributes[20 * 18];
 
 	unsigned char systemTiles[256 * 8 * 4];
@@ -110,12 +117,20 @@ private:
 		SOU_TRN  = 0x09,
 		PAL_SET  = 0x0A,
 		PAL_TRN  = 0x0B,
+		ATRC_EN  = 0x0C,
+		TEST_EN  = 0x0D,
+		ICON_EN  = 0x0E,
+		DATA_SND = 0x0F,
+		DATA_TRN = 0x10,
 		MLT_REQ  = 0x11,
+		JUMP     = 0x12,
 		CHR_TRN  = 0x13,
 		PCT_TRN  = 0x14,
 		ATTR_TRN = 0x15,
 		ATTR_SET = 0x16,
 		MASK_EN  = 0x17,
+		OBJ_TRN  = 0x18,
+		PAL_PRI  = 0x19,
 		HIGH     = 0x80 // for CHR_TRN 
 	};
 
@@ -130,6 +145,10 @@ private:
 	unsigned long gbcToRgb32(unsigned bgr15, unsigned fade);
 	void refreshPalettes();
 
+	unsigned char readCmdBuf(unsigned offset);
+	void writeAttrRect(unsigned x, unsigned y, unsigned width, unsigned height, unsigned char pal);
+	void setAttrFile(unsigned attr);
+
 	void palnn(unsigned a, unsigned b);
 	void attrBlk();
 	void attrLin();
@@ -137,6 +156,7 @@ private:
 	void attrChr();
 	void attrSet();
 	void palSet();
+	void dataSnd();
 	void cmdSound();
 };
 

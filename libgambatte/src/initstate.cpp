@@ -117,6 +117,8 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	std::memset(state.mem.sgb.packet.ptr, 0, state.mem.sgb.packet.size());
 	std::memset(state.mem.sgb.command.ptr, 0, state.mem.sgb.command.size());
 	std::memset(state.mem.sgb.frameBuf.ptr, 0, state.mem.sgb.frameBuf.size());
+	std::memset(state.mem.sgb.hookBuf.ptr, 0, state.mem.sgb.hookBuf.size());
+	std::memset(state.mem.sgb.command.ptr, 0, state.mem.sgb.command.size());
 	std::memset(state.mem.sgb.soundControl.ptr, 0, state.mem.sgb.soundControl.size());
 
 	if (sgb) {
@@ -254,6 +256,7 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 			state.mem.sgb.colors.ptr[i + 3] = palettes[3];
 		}
 
+		setInitialSgbHookState(state.mem.sgb.hookBuf.ptr);
 		setInitialSpcState(state.mem.sgb.spcState.ptr);
 	}
 
@@ -266,6 +269,8 @@ void gambatte::setInitState(SaveState &state, bool const cgb, bool const sgb, bo
 	state.mem.sgb.pendingCount = 0;
 	state.mem.sgb.mask = 0;
 	state.mem.sgb.samplesAccumulated = 0;
+	state.mem.sgb.disableCommands = false;
+	state.mem.sgb.headerSent = false;
 
 	for (int i = 0x00; i < 0x40; i += 0x02) {
 		state.ppu.bgpData.ptr[i    ] = 0xFF;
@@ -454,6 +459,8 @@ void gambatte::setPostBiosState(SaveState &state, bool const cgb, bool const agb
 	state.mem.ioamhram.ptr[0x1FC] -= agb;
 
 	state.mem.divLastUpdate = -0x1C00;
+
+	state.mem.sgb.headerSent = true;
 
 	if (!notCgbDmg) {
 		state.ppu.bgpData.ptr[0] = state.mem.ioamhram.get()[0x147];

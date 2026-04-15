@@ -40,17 +40,51 @@ namespace gambatte {
 
 Sgb::Sgb()
 : transfer(0xFF)
+, commandIndex(0)
+, disableCommands(false)
+, headerSent(false)
+, joypadIndex(0)
+, joypadMask(0)
+, videoBuf_(0)
+, pitch_(0)
+, borderFade(0)
 , pending(0xFF)
+, pendingCount(0)
+, mask(0)
 , samplesAccumulated_(0)
 {
 	// FIXME: this code is ugly
 	unsigned i = 0;
-	for (unsigned b = 0; b < 32; b++)
-		for (unsigned g = 0; g < 32; g++)
+	for (unsigned b = 0; b < 32; b++) {
+		for (unsigned g = 0; g < 32; g++) {
 			for (unsigned r = 0; r < 32; r++)
-				cgbColorsRgb32_[i++] = ((b * 255 + 15) / 31) | (((g * 255 + 15) / 31) << 8) | (((r * 255 + 15) / 31) << 16) | 255 << 24;
+				cgbColorsRgb32_[i++] = ((b * 0xFF + 0xF) / 0x1F) | (((g * 0xFF + 0xF) / 0x1F) << 8) | (((r * 0xFF + 0xF) / 0x1F) << 16) | 0xFF << 24;
+		}
+	}
 
+	std::memset(packet, 0, sizeof packet);
+	std::memset(command, 0, sizeof command);
+
+	std::memset(logoBuf, 0, sizeof logoBuf);
+	std::memset(hookBuf, 0, sizeof hookBuf);
+
+	std::memset(frameBuf_, 0, sizeof frameBuf_);
+
+	std::memset(systemColors, 0, sizeof systemColors);
 	std::memset(colors, 0, sizeof colors);
+	std::memset(systemAttributes, 0, sizeof systemAttributes);
+	std::memset(attributes, 0, sizeof attributes);
+
+	std::memset(systemTiles, 0, sizeof systemTiles);
+	std::memset(tiles, 0, sizeof tiles);
+	std::memset(systemTilemap, 0, sizeof systemTilemap);
+	std::memset(tilemap, 0, sizeof tilemap);
+	std::memset(systemTileColors, 0, sizeof systemTileColors);
+	std::memset(tileColors, 0, sizeof tileColors);
+
+	std::memset(spcState, 0, sizeof spcState);
+	std::memset(soundControl, 0, sizeof soundControl);
+
 	refreshPalettes();
 	spc.init();
 }
@@ -70,6 +104,8 @@ void Sgb::setStatePtrs(SaveState &state, bool sgb) {
 	if (sgb) {
 		state.mem.sgb.packet.set(packet, sizeof packet);
 		state.mem.sgb.command.set(command, sizeof command);
+		state.mem.sgb.logoBuf.set(logoBuf, sizeof logoBuf);
+		state.mem.sgb.hookBuf.set(hookBuf, sizeof hookBuf);
 		state.mem.sgb.frameBuf.set(frameBuf_, sizeof frameBuf_);
 		state.mem.sgb.systemColors.set(systemColors, sizeof systemColors / sizeof systemColors[0]);
 		state.mem.sgb.colors.set(colors, sizeof colors / sizeof colors[0]);
@@ -87,6 +123,8 @@ void Sgb::setStatePtrs(SaveState &state, bool sgb) {
 	} else {
 		state.mem.sgb.packet.set(packet, 1);
 		state.mem.sgb.command.set(command, 1);
+		state.mem.sgb.logoBuf.set(logoBuf, 1);
+		state.mem.sgb.hookBuf.set(hookBuf, 1);
 		state.mem.sgb.frameBuf.set(frameBuf_, 1);
 		state.mem.sgb.systemColors.set(systemColors, 1);
 		state.mem.sgb.colors.set(colors, 1);
@@ -106,6 +144,8 @@ void Sgb::setStatePtrs(SaveState &state, bool sgb) {
 void Sgb::saveState(SaveState &state) const {
 	state.mem.sgb.transfer = transfer;
 	state.mem.sgb.commandIndex = commandIndex;
+	state.mem.sgb.disableCommands = disableCommands;
+	state.mem.sgb.headerSent = headerSent;
 	state.mem.sgb.joypadIndex = joypadIndex;
 	state.mem.sgb.joypadMask = joypadMask;
 	state.mem.sgb.borderFade = borderFade;
@@ -118,6 +158,8 @@ void Sgb::saveState(SaveState &state) const {
 void Sgb::loadState(SaveState const &state) {
 	transfer = state.mem.sgb.transfer;
 	commandIndex = state.mem.sgb.commandIndex;
+	disableCommands = state.mem.sgb.disableCommands;
+	headerSent = state.mem.sgb.headerSent;
 	joypadIndex = state.mem.sgb.joypadIndex;
 	joypadMask = state.mem.sgb.joypadMask;
 	borderFade = state.mem.sgb.borderFade;
@@ -150,10 +192,10 @@ void Sgb::onJoypad(unsigned oldJoypad, unsigned newJoypad) {
 
 void Sgb::updateScreen(bool blanklcd) {
 	unsigned char frame[160 * 144];
-	
-	for (unsigned j = 0; j < 144; j++) {
-		for (unsigned i = 0; i < 160; i++)
-			frame[j * 160 + i] = 3 - (videoBuf_[j * pitch_ + i] >> 4 & 3);
+
+	for (unsigned y = 0; y < 144; y++) {
+		for (unsigned x = 0; x < 160; x++)
+			frame[y * 160 + x] = 3 - (videoBuf_[y * pitch_ + x] >> 4 & 3);
 	}
 
 	if (pending != 0xFF && --pendingCount == 0)
@@ -169,28 +211,28 @@ void Sgb::updateScreen(bool blanklcd) {
 	switch (mask) {
 	case 0:
 	case 1:
-		for (unsigned j = 0; j < 144; j++) {
-			for (unsigned i = 0; i < 160; i++) {
-				unsigned attribute = attributes[(j / 8) * 20 + (i / 8)] & 3;
-				gbFrame[j * 256 + i] = palette[attribute * 4 + frameBuf_[j * 160 + i]];
+		for (unsigned y = 0; y < 144; y++) {
+			for (unsigned x = 0; x < 160; x++) {
+				unsigned attribute = attributes[(y / 8) * 20 + (x / 8)] & 3;
+				gbFrame[y * 256 + x] = palette[attribute * 4 + frameBuf_[y * 160 + x]];
 			}
 		}
 		break;
 	case 2:
 	{
 		unsigned long const black = gbcToRgb32(0);
-		for (unsigned j = 0; j < 144; j++) {
-			for (unsigned i = 0; i < 160; i++)
-				gbFrame[j * 256 + i] = black;
+		for (unsigned y = 0; y < 144; y++) {
+			for (unsigned x = 0; x < 160; x++)
+				gbFrame[y * 256 + x] = black;
 		}
 		break;
 	}
 	case 3:
 	{
 		unsigned long const pal0 = palette[0];
-		for (unsigned j = 0; j < 144; j++) {
-			for (unsigned i = 0; i < 160; i++)
-				gbFrame[j * 256 + i] = pal0;
+		for (unsigned y = 0; y < 144; y++) {
+			for (unsigned x = 0; x < 160; x++)
+				gbFrame[y * 256 + x] = pal0;
 		}
 		break;
 	}
@@ -219,7 +261,7 @@ void Sgb::updateScreen(bool blanklcd) {
 			if (!(tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23)) // border area
 				continue;
 
-			unsigned short tile = systemTilemap[tileX + tileY * 32];
+			unsigned short tile = systemTilemap[tileY * 32 + tileX];
 			if (tile & 0x300)
 				continue;
 
@@ -231,22 +273,22 @@ void Sgb::updateScreen(bool blanklcd) {
 				for (unsigned x = 0; x < 8; x++) {
 					unsigned char bit = 1 << (x ^ flipX);
 					unsigned char color =
-					((systemTiles[base + 00] & bit) ? 1 : 0) |
-					((systemTiles[base + 01] & bit) ? 2 : 0) |
-					((systemTiles[base + 16] & bit) ? 4 : 0) |
-					((systemTiles[base + 17] & bit) ? 8 : 0);
+					((systemTiles[base + 0x00] & bit) ? 1 : 0) |
+					((systemTiles[base + 0x01] & bit) ? 2 : 0) |
+					((systemTiles[base + 0x10] & bit) ? 4 : 0) |
+					((systemTiles[base + 0x11] & bit) ? 8 : 0);
 
-					uint_least32_t *pixel = &frame_[tileX * 8 + x + (tileY * 8 + y) * 256];
+					uint_least32_t *pixel = &frame_[(tileY * 8 + y) * 256 + tileX * 8 + x];
 					if (color)
-						*pixel = colors[color + pal * 16];
+						*pixel = colors[pal * 16 + color];
 				}
 			}
 		}
 	}
 
-	for (unsigned j = 0; j < 144; j++) {
-		for (unsigned i = 0; i < 160; i++)
-			videoBuf_[j * pitch_ + i] = gbFrame[j * 256 + i];
+	for (unsigned y = 0; y < 144; y++) {
+		for (unsigned x = 0; x < 160; x++)
+			videoBuf_[y * pitch_ + x] = gbFrame[y * 256 + x];
 	}
 }
 
@@ -270,9 +312,9 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	}
 
 	uint_least32_t *gbFrame = &frame[40 * 256 + 48];
-	for (unsigned j = 0; j < 144; j++) {
-		for (unsigned i = 0; i < 160; i++)
-			gbFrame[j * 256 + i] = videoBuf_[j * pitch_ + i];
+	for (unsigned y = 0; y < 144; y++) {
+		for (unsigned x = 0; x < 160; x++)
+			gbFrame[y * 256 + x] = videoBuf_[y * pitch_ + x];
 	}
 
 	for (unsigned tileY = 0; tileY < 28; tileY++) {
@@ -280,7 +322,7 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 			if (tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23) // gb area
 				continue;
 
-			unsigned short tile = systemTilemap[tileX + tileY * 32];
+			unsigned short tile = systemTilemap[tileY * 32 + tileX];
 			if (tile & 0x300)
 				continue;
 
@@ -292,30 +334,33 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 				for (unsigned x = 0; x < 8; x++) {
 					unsigned char bit = 1 << (x ^ flipX);
 					unsigned char color =
-					((systemTiles[base + 00] & bit) ? 1 : 0) |
-					((systemTiles[base + 01] & bit) ? 2 : 0) |
-					((systemTiles[base + 16] & bit) ? 4 : 0) |
-					((systemTiles[base + 17] & bit) ? 8 : 0);
+					((systemTiles[base + 0x00] & bit) ? 1 : 0) |
+					((systemTiles[base + 0x01] & bit) ? 2 : 0) |
+					((systemTiles[base + 0x10] & bit) ? 4 : 0) |
+					((systemTiles[base + 0x11] & bit) ? 8 : 0);
 
-					uint_least32_t *pixel = &frame[tileX * 8 + x + (tileY * 8 + y) * 256];
+					uint_least32_t *pixel = &frame[(tileY * 8 + y) * 256 + tileX * 8 + x];
 					if (color == 0)
 						*pixel = palette[0];
 					else
-						*pixel = colors[color + pal * 16];
+						*pixel = colors[pal * 16 + color];
 				}
 			}
 		}
 	}
 
-	for (unsigned j = 0; j < 224; j++) {
-		for (unsigned i = 0; i < 256; i++)
-			videoBuf[j * pitch + i] = frame[j * 256 + i];
+	for (unsigned y = 0; y < 224; y++) {
+		for (unsigned x = 0; x < 256; x++)
+			videoBuf[y * pitch + x] = frame[y * 256 + x];
 	}
 
 	return 0;
 }
 
 void Sgb::handleTransfer(unsigned oldJoypad, unsigned newJoypad) {
+	if (disableCommands)
+		return;
+
 	// 0x00 in the joypad holds the packet transfer in a reset state
 	if ((newJoypad & 0x30) == 0) {
 		std::memset(packet, 0, sizeof packet);
@@ -344,9 +389,44 @@ void Sgb::handleTransfer(unsigned oldJoypad, unsigned newJoypad) {
 			transfer = 0xFF;
 			std::memcpy(command + commandIndex * sizeof packet, packet, sizeof packet);
 
-			if (command[0] & 7) {
-				if (++commandIndex == (command[0] & 7)) {
+			if (headerSent) {
+				unsigned commandLength = command[0] & 7;
+				if (commandLength == 0)
+					commandLength = 1;
+
+				if (++commandIndex == commandLength) {
 					onCommand();
+					commandIndex = 0;
+				}
+
+				if ((command[0] >> 3) >= 0x1E)
+					commandIndex = 0;
+			} else {
+				// The SGB bootrom sends over the header using special commands
+				if (command[0] != 0xF1) {
+					commandIndex = 0;
+					return;
+				}
+
+				// Command "0xF1" is hardcoded to a length of 6 packets
+				if (++commandIndex == 6) {
+					// The GB logo is copied to a buffer and validated by the SGB BIOS
+					// If the logo is invalid, it's ignored by this implementation
+					std::memcpy(&logoBuf[0x00], &command[0x02], 0xE);
+					std::memcpy(&logoBuf[0x0E], &command[0x12], 0xE);
+					std::memcpy(&logoBuf[0x1C], &command[0x22], 0xE);
+					std::memcpy(&logoBuf[0x2A], &command[0x32], 0x6);
+
+					// Each packet has a checksum attached to it
+					// Normally the SGB BIOS validates these checksums
+					// This implementation does nothing if they're invalid however
+
+					// GB header must have 0x03 in the SGB flag and 0x33 in the old licensee code
+					// Otherwise, SGB commands are disabled
+					if (command[0x4C] != 0x03 || command[0x53] != 0x33)
+						disableCommands = true;
+
+					headerSent = true;
 					commandIndex = 0;
 				}
 			}
@@ -380,9 +460,6 @@ void Sgb::onCommand() {
 	case ATTR_CHR:
 		attrChr();
 		break;
-	case PAL_SET:
-		palSet();
-		break;
 	case SOUND:
 		cmdSound();
 		break;
@@ -390,9 +467,42 @@ void Sgb::onCommand() {
 		pending = SOU_TRN;
 		pendingCount = 3;
 		break;
+	case PAL_SET:
+		palSet();
+		break;
 	case PAL_TRN:
 		pending = PAL_TRN;
 		pendingCount = 3;
+		break;
+	case ATRC_EN:
+		// This allows for disabling the SGB screensaver
+		// In an HLE context, this is irrelevant
+		break;
+	case TEST_EN:
+		// This is stubbed on all retail SGB releases
+		break;
+	case ICON_EN:
+		// Allows for disabling certain SGB features
+		// Bit 0 disables built-in SGB palettes (user selected)
+		// Bit 1 disables controller mode options
+		// Bit 2 disables SGB commands
+		// In an HLE context, only bit 2 bit is relevant
+		disableCommands = command[1] & 4;
+		break;
+	case DATA_SND:
+		dataSnd();
+		break;
+	case DATA_TRN:
+		pending = DATA_TRN;
+		pendingCount = 3;
+		break;
+	case MLT_REQ:
+		joypadMask = command[1] & 3;
+		joypadIndex += joypadMask == 2;
+		joypadIndex &= joypadMask;
+		break;
+	case JUMP:
+		// Not relevant in an HLE context
 		break;
 	case CHR_TRN:
 		pending = CHR_TRN;
@@ -409,16 +519,18 @@ void Sgb::onCommand() {
 		pending = ATTR_TRN;
 		pendingCount = 3;
 		break;
-	case MLT_REQ:
-		joypadMask = command[1] & 3;
-		joypadIndex += joypadMask == 2;
-		joypadIndex &= joypadMask;
-		break;
 	case ATTR_SET:
 		attrSet();
 		break;
 	case MASK_EN:
 		mask = command[1] & 3;
+		break;
+	case OBJ_TRN:
+		// This is stubbed on all retail SGB releases
+		break;
+	case PAL_PRI:
+		// This allows for disabling user set palettes
+		// In an HLE context, this is irrelevant
 		break;
 	}
 }
@@ -466,13 +578,20 @@ void Sgb::onTransfer(unsigned char *frame) {
 		unsigned char *end = &vram[sizeof vram - 1];
 		unsigned char *src = vram;
 		unsigned char *dst = spc.get_ram();
-		
+
+		// FIXME: Not accurate, the SGB does not do bound checking
+		// If src goes past vram, it just reads memory past it
+		// If it goes far enough (overflows lower 16 bits), the ptr is set to the beginning of the SNES ROM
+		// dst just wraps around if it overflows (SPC has a 16 bit address space)
 		while (true) {
 			if (src + 4 > end)
 				break;
 
 			unsigned len = src[0] | src[1] << 8;
 			unsigned addr = src[2] | src[3] << 8;
+			// FIXME: The first iteration does not 0-terminate the loop
+			// Instead len gets treated as 0x10000 if it's 0
+			// This would overflow anyways, but this is not bound checked in reality
 			if (!len)
 				break;
 
@@ -490,6 +609,12 @@ void Sgb::onTransfer(unsigned char *frame) {
 		for (unsigned i = 0; i < 2048; i++)
 			systemColors[i] = vram[i * 2] | vram[i * 2 + 1] << 8;
 
+		break;
+	}
+	case DATA_TRN:
+	{
+		// This doesn't make sense in an HLE context
+		// TODO: Maybe could allow writing in some areas?
 		break;
 	}
 	case CHR_TRN | HIGH:
@@ -529,15 +654,104 @@ void Sgb::refreshPalettes() {
 		palette[i] = gbcToRgb32(colors[i * ((i & 3) != 0)]);
 }
 
+unsigned char Sgb::readCmdBuf(unsigned offset) {
+	// Only 7 packets can be sent to the command buffer
+	// However, corrupt commands can read past this
+
+	if (offset < sizeof command)
+		return command[offset];
+
+	offset -= sizeof command;
+
+	// Next 0x10 bytes after the command buffer is 0 filled
+	// This is probably some padding for the command buffer
+	if (offset < 0x10)
+		return 0;
+
+	offset -= 0x10;
+
+	// Next 0x30 bytes has a buffer for the GB logo sent
+	if (offset < 0x30)
+		return logoBuf[offset];
+
+	offset -= 0x30;
+
+	// Next 0x50 bytes appear to be 0 filled?
+	// Next 0x100 bytes after that is used in the user drawing part of the SGB BIOS
+	// Assuming that part is never used, it remains 0 filled too
+
+	if (offset < 0x150)
+		return 0;
+
+	offset -= 0x150;
+
+	// Next 0x400 bytes are used for various hooks
+	// These hooks can be set by the game with DATA_SND
+	// Most games place the same hooks (bugfix patch)
+	// SGB Rev B + SGB2 automatically write in the common bugfix patch
+
+	if (offset < sizeof hookBuf)
+		return hookBuf[offset];
+
+	offset -= sizeof hookBuf;
+
+	// Next 2 bytes are used for SGB BIOS menu choices
+	// These are constant assuming the user only plays the game
+
+	if (offset == 0)
+		return 0;
+	if (offset == 1)
+		return 3;
+
+	// The rest of memory is unreachable
+	return 0;
+}
+
+void Sgb::writeAttrRect(unsigned x, unsigned y, unsigned width, unsigned height, unsigned char pal) {
+	unsigned attrIndex = y * 20 + x;
+	if (width == 0)
+		width = 0x100;
+	if (height == 0)
+		height = 0x100;
+
+	for (unsigned yOffset = 0; yOffset < height; yOffset++) {
+		for (unsigned xOffset = 0; xOffset < width; xOffset++) {
+			if (attrIndex + xOffset >= sizeof attributes)
+				return;
+
+			attributes[attrIndex + xOffset] = pal;
+		}
+
+		attrIndex += 20;
+	}
+}
+
+void Sgb::setAttrFile(unsigned attr) {
+	unsigned attrFileIndex = attr * 90;
+	unsigned attrIndex = 0;
+	for (unsigned i = 0; i < 90; i++) {
+		// FIXME: This isn't quite accurate
+		// Past the attribute files buffer is a buffer for the GB framebuffer
+		// Emulating this might be as simple as using frameBuf_?
+		unsigned char b = 0;
+		if (attrFileIndex < sizeof systemAttributes)
+			b = systemAttributes[attrFileIndex];
+
+		attributes[attrIndex++] = b >> 6;
+		attributes[attrIndex++] = (b >> 4) & 3;
+		attributes[attrIndex++] = (b >> 2) & 3;
+		attributes[attrIndex++] = b & 3;
+
+		attrFileIndex++;
+	}
+}
+
 void Sgb::palnn(unsigned a, unsigned b) {
 	unsigned short color[7];
 	for (unsigned i = 0; i < 7; i++)
 		color[i] = command[1 + i * 2] | command[1 + i * 2 + 1] << 8;
 
 	colors[0 * 4 + 0] = color[0];
-	colors[1 * 4 + 0] = color[0];
-	colors[2 * 4 + 0] = color[0];
-	colors[3 * 4 + 0] = color[0];
 	colors[a * 4 + 1] = color[1];
 	colors[a * 4 + 2] = color[2];
 	colors[a * 4 + 3] = color[3];
@@ -549,72 +763,73 @@ void Sgb::palnn(unsigned a, unsigned b) {
 }
 
 void Sgb::attrBlk() {
-	unsigned nset = command[1];
-	if (nset >= 19)
-		return;
-	
-	for (unsigned i = 0; i < nset; i++) {
-		unsigned ctrl = command[2 + i * 6 + 0] & 7;
-		unsigned pals = command[2 + i * 6 + 1];
-		unsigned x1 = command[2 + i * 6 + 2] & 31;
-		unsigned y1 = command[2 + i * 6 + 3] & 31;
-		unsigned x2 = command[2 + i * 6 + 4] & 31;
-		unsigned y2 = command[2 + i * 6 + 5] & 31;
+	unsigned nset = command[1] & 0x1F;
+	if (nset == 0)
+		nset = 0x100;
 
-		unsigned inside = ctrl & 1;
-		unsigned line = ctrl & 2;
-		unsigned outside = ctrl & 4;
+	for (unsigned i = 0; i < nset; i++) {
+		unsigned ctrl = readCmdBuf(2 + i * 6 + 0) & 7;
+		unsigned pals = readCmdBuf(2 + i * 6 + 1);
+		unsigned x1 = readCmdBuf(2 + i * 6 + 2) & 0x1F;
+		unsigned y1 = readCmdBuf(2 + i * 6 + 3) & 0x1F;
+		unsigned x2 = readCmdBuf(2 + i * 6 + 4) & 0x1F;
+		unsigned y2 = readCmdBuf(2 + i * 6 + 5) & 0x1F;
+
+		bool inside = ctrl & 1;
+		bool line = ctrl & 2;
+		bool outside = ctrl & 4;
 
 		unsigned char insidepal = pals & 3;
 		unsigned char linepal = pals >> 2 & 3;
 		unsigned char outsidepal = pals >> 4 & 3;
 
 		if (ctrl == 1) {
-			line = 2;
+			line = true;
 			linepal = insidepal;
 		} else if (ctrl == 4) {
-			line = 2;
+			line = true;
 			linepal = outsidepal;
 		}
 
-		for (unsigned j = 0; j < 20 * 18; j++) {
-			unsigned x = j % 20;
-			unsigned y = j / 20;
+		if (inside)
+			writeAttrRect(x1 + 1, y1 + 1, (x2 - x1 - 1) & 0xFF, (y2 - y1 - 1) & 0xFF, insidepal);
 
-			if (x < x1 || y < y1 || x > x2 || y > y2) {
-				if (outside)
-					attributes[j] = outsidepal;
-			} else if (x == x1 || y == y1 || x == x2 || y == y2) {
-				if (line)
-					attributes[j] = linepal;
-			} else if (inside)
-				attributes[j] = insidepal;
+		if (outside) {
+			if (y1 != 0)
+				writeAttrRect(0, 0, 20, y1, outsidepal);
+
+			if (y2 < 17)
+				writeAttrRect(0, y2 + 1, 20, 17 - y2, outsidepal);
+
+			if (x1 != 0)
+				writeAttrRect(0, y1, x1, (y2 - y1 + 1) & 0xFF, outsidepal);
+
+			if (x2 < 19)
+				writeAttrRect(x2 + 1, y1, 19 - x2, (y2 - y1 + 1) & 0xFF, outsidepal);
+		}
+
+		if (line) {
+			writeAttrRect(x1, y1, (x2 - x1 + 1) & 0xFF, 1, linepal);
+			writeAttrRect(x1, y2, (x2 - x1 + 1) & 0xFF, 1, linepal);
+			writeAttrRect(x1, y1, 1, (y2 - y1 + 1) & 0xFF, linepal);
+			writeAttrRect(x2, y1, 1, (y2 - y1 + 1) & 0xFF, linepal);
 		}
 	}
 }
 
 void Sgb::attrLin() {
 	unsigned nset = command[1];
-	if (nset >= 111)
-		return;
+	if (nset == 0)
+		nset = 0x100;
 
 	for (unsigned i = 0; i < nset; i++) {
-		unsigned char v = command[i + 2];
-		unsigned line = v & 31;
+		unsigned char v = readCmdBuf(i + 2);
+		unsigned line = v & 0x1F;
 		unsigned pal = v >> 5 & 3;
-		if (v & 0x80) { // horizontal
-			if (line > 18)
-				continue;
-
-			std::memset(attributes + line * 20, pal, 20);
-		} else { // vertical
-			if (line > 20)
-				continue;
-
-			unsigned char *dst = attributes + line;
-			for (unsigned i = 0; i < 18; i++, dst += 20)
-				dst[0] = pal;
-		}
+		if (v & 0x80) // horizontal
+			writeAttrRect(0, line, 20, 1, pal);
+		else // vertical
+			writeAttrRect(line, 0, 1, 18, pal);
 	}
 }
 
@@ -625,56 +840,50 @@ void Sgb::attrDiv() {
 	unsigned char lowpal = v >> 2 & 3;
 	unsigned char linepal = v >> 4 & 3;
 
-	unsigned pos = command[2] & 31;
+	unsigned pos = command[2] & 0x1F;
+
+	std::memset(attributes, lowpal, sizeof attributes);
+
 	if (v & 0x40) { // horizontal
-		for (unsigned i = 0; i < 18 * 20; i++) {
-			unsigned y = i / 20;
-			if (y < pos)
-				attributes[i] = lowpal;
-			else if (y == pos)
-				attributes[i] = linepal;
-			else
-				attributes[i] = highpal;
-		}
+		writeAttrRect(0, pos, 20, 1, linepal);
+		if (pos < 17)
+			writeAttrRect(0, pos + 1, 20, 17 - pos, highpal);
 	} else { // vertical
-		for (unsigned i = 0; i < 18 * 20; i++) {
-			unsigned x = i % 20;
-			if (x < pos)
-				attributes[i] = lowpal;
-			else if (x == pos)
-				attributes[i] = linepal;
-			else
-				attributes[i] = highpal;
-		}
+		writeAttrRect(pos, 0, 1, 18, linepal);
+		if (pos < 19)
+			writeAttrRect(pos + 1, 0, 19 - pos, 18, highpal);
 	}
 }
 
 void Sgb::attrChr() {
-	unsigned x = command[1];
-	unsigned y = command[2];
-	unsigned n = command[3] | command[4] << 8;
+	unsigned x = command[1] & 0x1F;
+	unsigned y = command[2] & 0x1F;
+	unsigned nset = (command[3] | command[4] << 8) & 0x1FF;
+	if (nset == 0)
+		nset = 0x10000;
 
-	if (x > 19 || y > 17)
-		return;
+	unsigned vertical = command[5] & 1;
 
-	unsigned vertical = command[5];
-	for (unsigned i = 0; i < n; i++) {
-		unsigned char v = command[i / 4 + 6];
+	for (unsigned i = 0; i < nset; i++) {
+		unsigned char v = readCmdBuf(i / 4 + 6);
 		unsigned char pal = (v >> (((~i) & 3) << 1)) & 3;
-		attributes[y * 20 + x] = pal;
+		unsigned attrIndex = y * 20 + x;
+		if (attrIndex < sizeof attributes)
+			attributes[attrIndex] = pal;
+
 		if (vertical) {
-			y++;
+			y = (y + 1) & 0xFF;
 			if (y == 18) {
-				x++;
 				y = 0;
+				x = (x + 1) & 0xFF;
 				if (x == 20)
 					break;
 			}
 		} else {
-			x++;
+			x = (x + 1) & 0xFF;
 			if (x == 20) {
-				y++;
 				x = 0;
+				y = (y + 1) & 0xFF;
 				if (y == 18)
 					break;
 			}
@@ -684,44 +893,56 @@ void Sgb::attrChr() {
 
 void Sgb::attrSet() {
 	unsigned attr = command[1] & 0x3F;
-	if (attr < 45) {
-		for (unsigned i = 0; i < 90; i++) {
-			unsigned char b = systemAttributes[attr * 90 + i];
-			for (unsigned j = 0; j < 4; j++) {
-				attributes[j + i * 4] = b >> 6;
-				b <<= 2;
-			}
-		}
-	}
+	setAttrFile(attr);
+
 	if (command[1] & 0x40)
 		mask = 0;
 }
 
 void Sgb::palSet() {
-	unsigned p0 = command[1] | ((command[2] << 8) & 0x100);
 	for (unsigned i = 0; i < 4; i++) {
-		unsigned p = command[1 + i * 2] | ((command[1 + i * 2 + 1] << 8) & 0x100);
-		colors[i * 4 + 0] = systemColors[p0 * 4 + 0];
-		colors[i * 4 + 1] = systemColors[p  * 4 + 1];
-		colors[i * 4 + 2] = systemColors[p  * 4 + 2];
-		colors[i * 4 + 3] = systemColors[p  * 4 + 3];
+		unsigned p = (command[1 + i * 2] | (command[1 + i * 2 + 1] << 8)) & 0x1FF;
+		colors[i * 4 + 0] = systemColors[p * 4 + 0];
+		colors[i * 4 + 1] = systemColors[p * 4 + 1];
+		colors[i * 4 + 2] = systemColors[p * 4 + 2];
+		colors[i * 4 + 3] = systemColors[p * 4 + 3];
 	}
+
 	if (command[9] & 0x80) {
 		unsigned attr = command[9] & 0x3F;
-		if (attr < 45) {
-			for (unsigned i = 0; i < 90; i++) {
-				unsigned char b = systemAttributes[attr * 90 + i];
-				for (unsigned j = 0; j < 4; j++) {
-					attributes[j + i * 4] = b >> 6;
-					b <<= 2;
-				}
-			}
-		}
+		setAttrFile(attr);
 	}
+
 	if (command[9] & 0x40)
 		mask = 0;
 
 	refreshPalettes();
+}
+
+void Sgb::dataSnd() {
+	unsigned addr = command[1] << 8 | command[2];
+	unsigned bank = command[3];
+	unsigned len = command[4];
+	if (len == 0)
+		len = 0x100;
+
+	for (unsigned i = 0; i < len; i++) {
+		// These banks can address SNES WRAM
+		if (bank <= 0x3F || bank == 0x7E || (bank >= 0x80 && bank <= 0xBF)) {
+			// SGB hook area
+			if (addr >= 0x800 && addr <= 0xBFF) {
+				hookBuf[addr - 0x800] = readCmdBuf(i + 5);
+			}
+
+			// TODO: Allow writing elsewhere?
+		}
+
+		addr++;
+		if (addr == 0x10000) {
+			addr = 0;
+			bank = (bank + 1) & 0xFF;
+		}
+	}
 }
 
 void Sgb::cmdSound() {
@@ -761,6 +982,12 @@ SYNCFUNC(Sgb) {
 	NSS(packet);
 	NSS(command);
 	NSS(commandIndex);
+
+	NSS(disableCommands);
+	NSS(headerSent);
+
+	NSS(logoBuf);
+	NSS(hookBuf);
 
 	NSS(joypadIndex);
 	NSS(joypadMask);
