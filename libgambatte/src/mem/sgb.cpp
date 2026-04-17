@@ -204,7 +204,7 @@ void Sgb::updateScreen(bool blanklcd) {
 	if (!mask && !blanklcd)
 		std::memcpy(frameBuf_, frame, sizeof frame);
 
-	// border affects the colors within the gb area for whatever reason, so we need to go through that data too
+	// Border data can affect the GB area, so we need to go through that data too
 	uint_least32_t frame_[256 * 224];
 	uint_least32_t *gbFrame = &frame_[40 * 256 + 48];
 
@@ -217,6 +217,7 @@ void Sgb::updateScreen(bool blanklcd) {
 				gbFrame[y * 256 + x] = palette[attribute * 4 + frameBuf_[y * 160 + x]];
 			}
 		}
+
 		break;
 	case 2:
 	{
@@ -225,6 +226,7 @@ void Sgb::updateScreen(bool blanklcd) {
 			for (unsigned x = 0; x < 160; x++)
 				gbFrame[y * 256 + x] = black;
 		}
+
 		break;
 	}
 	case 3:
@@ -234,34 +236,38 @@ void Sgb::updateScreen(bool blanklcd) {
 			for (unsigned x = 0; x < 160; x++)
 				gbFrame[y * 256 + x] = pal0;
 		}
+
 		break;
 	}
 	}
 
-	if (borderFade && --borderFade == 32) {
+	if (borderFade && --borderFade == 72) {
 		std::memcpy(systemTiles,      tiles,      sizeof tiles);
 		std::memcpy(systemTilemap,    tilemap,    sizeof tilemap);
 		std::memcpy(systemTileColors, tileColors, sizeof tileColors);
 	}
 
 	unsigned long colors[16 * 4];
-	if (borderFade == 0 || borderFade > 64) {
+	if (borderFade == 0) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			colors[i] = gbcToRgb32(systemTileColors[i]);
-	} else if (borderFade > 32) {
+	} else if (borderFade > 78) {
 		for (unsigned i = 0; i < 16 * 4; i++)
-			colors[i] = gbcToRgb32(systemTileColors[i], 64 - borderFade);
+			colors[i] = gbcToRgb32(systemTileColors[i], (142 - borderFade) / 2);
+	} else if (borderFade < 64) {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i], borderFade / 2);
 	} else {
 		for (unsigned i = 0; i < 16 * 4; i++)
-			colors[i] = gbcToRgb32(systemTileColors[i], borderFade);
+			colors[i] = gbcToRgb32(0);
 	}
 
-	for (unsigned tileY = 0; tileY < 28; tileY++) {
-		for (unsigned tileX = 0; tileX < 32; tileX++) {
-			if (!(tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23)) // border area
-				continue;
-
+	for (unsigned tileY = 5; tileY < 23; tileY++) {
+		for (unsigned tileX = 6; tileX < 26; tileX++) {
 			unsigned short tile = systemTilemap[tileY * 32 + tileX];
+			if (borderFade > 68 && borderFade <= 76)
+				tile = 0;
+
 			if (tile & 0x300)
 				continue;
 
@@ -300,15 +306,18 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	std::memset(frame, 0, sizeof frame);
 
 	unsigned long colors[16 * 4];
-	if (borderFade == 0 || borderFade > 64) {
+	if (borderFade == 0) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			colors[i] = gbcToRgb32(systemTileColors[i]);
-	} else if (borderFade > 32) {
+	} else if (borderFade > 78) {
 		for (unsigned i = 0; i < 16 * 4; i++)
-			colors[i] = gbcToRgb32(systemTileColors[i], 64 - borderFade);
+			colors[i] = gbcToRgb32(systemTileColors[i], (142 - borderFade) / 2);
+	} else if (borderFade < 64) {
+		for (unsigned i = 0; i < 16 * 4; i++)
+			colors[i] = gbcToRgb32(systemTileColors[i], borderFade / 2);
 	} else {
 		for (unsigned i = 0; i < 16 * 4; i++)
-			colors[i] = gbcToRgb32(systemTileColors[i], borderFade);
+			colors[i] = gbcToRgb32(0);
 	}
 
 	uint_least32_t *gbFrame = &frame[40 * 256 + 48];
@@ -318,11 +327,18 @@ unsigned Sgb::updateScreenBorder(uint_least32_t *videoBuf, std::ptrdiff_t pitch)
 	}
 
 	for (unsigned tileY = 0; tileY < 28; tileY++) {
+		bool inGbFrameY = tileY >= 5 && tileY < 23;
 		for (unsigned tileX = 0; tileX < 32; tileX++) {
-			if (tileX >= 6 && tileX < 26 && tileY >= 5 && tileY < 23) // gb area
+			// Skip the GB area
+			if (tileX == 6 && inGbFrameY) {
+				tileX = 25;
 				continue;
+			}
 
 			unsigned short tile = systemTilemap[tileY * 32 + tileX];
+			if (borderFade > 68 && borderFade <= 76)
+				tile = 1;
+
 			if (tile & 0x300)
 				continue;
 
@@ -602,6 +618,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 			std::memcpy(dst + addr, src, len);
 			src += len;
 		}
+
 		break;
 	}
 	case PAL_TRN:
@@ -636,7 +653,7 @@ void Sgb::onTransfer(unsigned char *frame) {
 		for (unsigned i = 0; i < 16 * 4; i++)
 			dst[i] = src[i * 2] | src[i * 2 + 1] << 8;
 
-		borderFade = 105;
+		borderFade = 143;
 		break;
 	}
 	case ATTR_TRN:
@@ -955,18 +972,22 @@ void Sgb::cmdSound() {
 unsigned Sgb::generateSamples(short *soundBuf, std::size_t &samples) {
 	samples = samplesAccumulated_ / 65;
 	samplesAccumulated_ -= samples * 65;
+
 	short buf[2048 * 2];
 	spc.set_output(buf, 2048);
+
 	bool matched = true;
 	for (unsigned p = 0; p < 4; p++) {
 		if (spc.read_port(0, p) != soundControl[p])
 			matched = false;
 	}
+
 	if (matched) {
 		soundControl[0] = 0;
 		soundControl[1] = 0;
 		soundControl[2] = 0;
 	}
+
 	for (unsigned p = 0; p < 4; p++)
 		spc.write_port(0, p, soundControl[p]);
 
