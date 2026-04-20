@@ -32,7 +32,7 @@ namespace gambatte {
 
 enum { BG_PALETTE = 0, SP1_PALETTE = 1, SP2_PALETTE = 2 };
 
-typedef void (*MemoryCallback)(int32_t address, int64_t cycleOffset);
+typedef void (*MemoryCallback)(int32_t address, int64_t cycleOffset, uint32_t data);
 typedef void (*CDCallback)(int32_t addr, int32_t addrtype, int32_t flags);
 
 enum eCDLog_AddrType {
